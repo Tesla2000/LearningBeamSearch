@@ -3,7 +3,7 @@ from functools import partial
 
 import numpy as np
 
-from beam_search.cut_functions import sum_cut
+from beam_search.cut_functions import sum_cut, ml_cut
 from beam_search.generator import RandomNumberGenerator
 from beam_search.search import Tree
 
@@ -17,6 +17,7 @@ if __name__ == "__main__":
     tree = Tree(working_time_matrix)
     start = time.time()
     beam_value = tree.beam_search(partial(sum_cut, cut_parameter=.05))
+    # beam_value = tree.beam_search(partial(ml_cut, cut_model=None))
     print(beam_value.value)
     print(time.time() - start)
     start = time.time()

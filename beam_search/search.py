@@ -3,7 +3,7 @@ from typing import Callable
 
 import numpy as np
 
-from Node import Node
+from .Node import Node
 
 
 class Tree:
