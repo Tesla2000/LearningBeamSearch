@@ -1,9 +1,11 @@
 import time
+from functools import partial
 
 import numpy as np
 
-from generator import RandomNumberGenerator
-from search import Tree
+from beam_search.cut_functions import sum_cut
+from beam_search.generator import RandomNumberGenerator
+from beam_search.search import Tree
 
 if __name__ == "__main__":
     n_tasks = 7
@@ -13,6 +15,10 @@ if __name__ == "__main__":
         [[generator.nextInt(1, 99) for _ in range(n_tasks)] for _ in range(m_machines)]
     )
     tree = Tree(working_time_matrix)
+    start = time.time()
+    beam_value = tree.beam_search(partial(sum_cut, cut_parameter=.05))
+    print(beam_value.value)
+    print(time.time() - start)
     start = time.time()
     branch_value = tree.branch_and_bound()
     print(branch_value.value)
