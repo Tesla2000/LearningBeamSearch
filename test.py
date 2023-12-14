@@ -2,12 +2,14 @@ import time
 from functools import partial
 
 import numpy as np
+from torch import nn
 
-from beam_search.cut_functions import sum_cut, ml_cut
+from beam_search.cut_functions import ml_cut
 from beam_search.generator import RandomNumberGenerator
 from beam_search.search import Tree
 
-if __name__ == "__main__":
+
+def test(model: nn.Module):
     n_tasks = 7
     m_machines = 10
     generator = RandomNumberGenerator()
@@ -16,11 +18,15 @@ if __name__ == "__main__":
     )
     tree = Tree(working_time_matrix)
     start = time.time()
-    beam_value = tree.beam_search(partial(sum_cut, cut_parameter=.05))
-    # beam_value = tree.beam_search(partial(ml_cut, cut_model=None))
+    # beam_value = tree.beam_search(partial(sum_cut, cut_parameter=.05))
+    beam_value = tree.beam_search(partial(ml_cut, cut_model=model))
     print(beam_value.value)
     print(time.time() - start)
     start = time.time()
     branch_value = tree.branch_and_bound()
     print(branch_value.value)
     print(time.time() - start)
+
+
+if __name__ == "__main__":
+    test()
