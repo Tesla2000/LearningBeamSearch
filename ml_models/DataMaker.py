@@ -25,7 +25,7 @@ class DataMaker(Dataset):
     def __len__(self):
         return self.length
 
-    def __getitem__(self, idx):
+    def __getitem__(self, _):
         working_time_matrix = np.array(
             [[self.generator.nextInt(1, 99) for _ in range(self.m_machines)] for _ in range(self.rows)]
         )
@@ -33,4 +33,6 @@ class DataMaker(Dataset):
         working_time_matrix[0] -= np.min(working_time_matrix[0])
         self.tree = Tree(working_time_matrix)
         best_node = self.tree.branch_and_bound()
+        # test_value = self.tree.brute_force()
+        # assert best_node.value == test_value
         return working_time_matrix, best_node.value - np.max(working_time_matrix[0])

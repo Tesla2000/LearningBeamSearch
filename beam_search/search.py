@@ -1,4 +1,4 @@
-from itertools import filterfalse
+from itertools import filterfalse, permutations, product
 from typing import Callable
 
 import numpy as np
@@ -30,6 +30,20 @@ class Tree:
     def beam_search(self, cut: Callable[["Tree", float, Node, int, float], bool]):
         best_node, _ = self.get_best(self.root, self.n_tasks, cut)
         return best_node
+
+    def brute_force(self):
+        task_groups = permutations(range(self.n_tasks))
+        best = float('inf')
+        for group in task_groups:
+            working_time_matrix = self.working_time_matrix[list(group)]
+            for row, column in product(range(1, self.n_tasks), range(self.m_machines)):
+                if column == 0:
+                    working_time_matrix[row, column] += working_time_matrix[row - 1, column]
+                else:
+                    working_time_matrix[row, column] += max(working_time_matrix[row - 1, column],
+                                                            working_time_matrix[row, column - 1])
+            best = min(best, working_time_matrix[-1, -1])
+        return best
 
     def get_best(
         self,
