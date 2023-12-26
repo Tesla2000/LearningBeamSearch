@@ -13,6 +13,7 @@ class Node:
     working_time_matrix: np.array
     children: list[Self] = field(default_factory=list)
     state: np.array = None
+    predicted_value: float = None
     _value: float = 0.0
 
     @property

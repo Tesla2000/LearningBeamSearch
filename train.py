@@ -8,9 +8,9 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 
-from ml_models.ConvModel import ConvModel
+from Config import Config
 from ml_models.DataMaker import DataMaker
-from ml_models.LSTMModel import LSTMModel
+from ml_models.DenseModel import DenseModel
 
 
 def train(model: nn.Module, n_tasks: int, m_machines: int, rows: int):
@@ -48,7 +48,7 @@ def train(model: nn.Module, n_tasks: int, m_machines: int, rows: int):
             print(best_loss)
             torch.save(
                 model_weights,
-                f'output_models/{rows}_{best_loss:.3f}.pth',
+                f'{Config.OUTPUT_MODELS}/{type(model).__name__}_{rows}_{best_loss:.3f}.pth',
             )
             break
 
@@ -57,8 +57,9 @@ if __name__ == '__main__':
     torch.manual_seed(42)
     np.random.seed(42)
     n_tasks = 7
-    m_machines = 10
+    n_machines = 10
     rows = 5
     # model = ConvModel(rows)
-    model = LSTMModel(m_machines)
-    train(model, n_tasks, m_machines, rows)
+    # model = LSTMModel(n_machines)
+    model = DenseModel(rows, n_machines)
+    train(model, n_tasks, n_machines, rows)

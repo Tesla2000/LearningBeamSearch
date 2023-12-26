@@ -3,7 +3,7 @@ from itertools import filterfalse
 import numpy as np
 
 from .Node import Node
-from .search import Tree
+from .Tree import Tree
 
 
 def sum_cut(tree: "Tree", node_value: float, node: Node, n_tasks: int, ub: float, cut_parameter: float) -> bool:

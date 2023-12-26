@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 from beam_search.generator import RandomNumberGenerator
-from beam_search.search import Tree
+from beam_search.Tree import Tree
 
 
 class DataMaker(Dataset):
