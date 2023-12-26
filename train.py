@@ -1,4 +1,5 @@
 from collections import deque
+from copy import deepcopy
 from itertools import count
 from math import sqrt
 from statistics import mean
@@ -9,6 +10,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 
 from Config import Config
+from ml_models import ConvModel
 from ml_models.DataMaker import DataMaker
 from ml_models.DenseModel import DenseModel
 
@@ -43,13 +45,14 @@ def train(model: nn.Module, n_tasks: int, m_machines: int, rows: int):
         if epoch > average_size and average < best_loss:
             best_loss = average
             best_index = epoch
-            model_weights = model.state_dict()
+            model_weights = deepcopy(model.state_dict())
         if best_index + patience < epoch:
             print(best_loss)
             torch.save(
                 model_weights,
                 f'{Config.OUTPUT_MODELS}/{type(model).__name__}_{rows}_{best_loss:.3f}.pth',
             )
+
             break
 
 
@@ -59,7 +62,7 @@ if __name__ == '__main__':
     n_tasks = 7
     n_machines = 10
     rows = 5
-    # model = ConvModel(rows)
+    model = ConvModel(rows)
     # model = LSTMModel(n_machines)
-    model = DenseModel(rows, n_machines)
+    # model = DenseModel(rows, n_machines)
     train(model, n_tasks, n_machines, rows)

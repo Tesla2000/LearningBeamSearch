@@ -1,0 +1,8 @@
+[package]
+name = "your_project_name"
+version = "0.1.0"
+authors = ["Your Name <your.email@example.com>"]
+edition = "2018"
+
+[dependencies]
+ndarray = "0.15.4"  # Example dependency - specify the version you need
