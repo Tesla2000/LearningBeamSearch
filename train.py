@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 
 from ml_models.ConvModel import ConvModel
 from ml_models.DataMaker import DataMaker
+from ml_models.LSTMModel import LSTMModel
 
 
 def train(model: nn.Module, n_tasks: int, m_machines: int, rows: int):
@@ -39,12 +40,12 @@ def train(model: nn.Module, n_tasks: int, m_machines: int, rows: int):
         losses.append(running_loss)
         average = mean(loss / batch_size for loss in losses)
         print(epoch, average)
-        if average < best_loss:
+        if epoch > average_size and average < best_loss:
             best_loss = average
             best_index = epoch
             model_weights = model.state_dict()
         if best_index + patience < epoch:
-            print(sqrt(best_loss))
+            print(best_loss)
             torch.save(
                 model_weights,
                 f'output_models/{rows}_{best_loss:.3f}.pth',
@@ -58,5 +59,6 @@ if __name__ == '__main__':
     n_tasks = 7
     m_machines = 10
     rows = 5
-    model = ConvModel(rows)
+    # model = ConvModel(rows)
+    model = LSTMModel(m_machines)
     train(model, n_tasks, m_machines, rows)
