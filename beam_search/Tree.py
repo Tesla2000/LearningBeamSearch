@@ -62,6 +62,22 @@ class Tree:
             child_node.predicted_value = model(model_state) if model else model_state[0, 0, -1]
         return min((self._eval_with_model(child_node) for child_node in sorted(node.children, key=lambda node: node.predicted_value)[:2]), key=lambda item: item.value)
 
+    def eval_recurrent_model_with_model(self) -> Node:
+        return self._eval_with_recurrent_model(self.root)
+
+    def _eval_with_recurrent_model(self, node: Node) -> Node:
+        if len(node.tasks) == self.n_tasks:
+            return node
+        model = tuple(self.models.values())[0]
+        for task in filterfalse(node.tasks.__contains__, range(self.n_tasks)):
+            child_node = Node(
+                node, (*node.tasks, task), self.m_machines, self.working_time_matrix
+            )
+            node.children.append(child_node)
+            model_state = Tensor(np.append(child_node.get_state()[-1].reshape(1, -1), self.working_time_matrix[list(filterfalse(child_node.tasks.__contains__, range(self.n_tasks)))], axis=0)).unsqueeze(0)
+            child_node.predicted_value = model(model_state)
+        return min((self._eval_with_model(child_node) for child_node in sorted(node.children, key=lambda node: node.predicted_value)[:2]), key=lambda item: item.value)
+
     def brute_force(self):
         task_groups = permutations(range(self.n_tasks))
         best = float('inf')

@@ -2,7 +2,7 @@ from torch import nn
 
 
 class DenseModel(nn.Module):
-    def __init__(self, rows: int, n_machines: int):
+    def __init__(self, rows: int, n_machines: int, **_):
         super(DenseModel, self).__init__()
         self.relu = nn.ReLU(inplace=True)
         self.flatten = nn.Flatten()

@@ -1,0 +1,51 @@
+// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
+// then press Enter. You can now see whitespace characters in your code.
+public class Tree {
+    int n_tasks;
+    int m_machines;
+    int bestValue = Integer.MAX_VALUE;
+    int[][] workingTimeMatrix;
+    Node bestNode = null;
+
+    public Tree(int n_tasks, int m_machines, int[][] workingTimeMatrix) {
+        this.n_tasks = n_tasks;
+        this.m_machines = m_machines;
+        this.workingTimeMatrix = workingTimeMatrix;
+    }
+
+    public Node branchAndBound(Node root) {
+        innerBranchAndBound(root);
+        return bestNode;
+    }
+
+    private void innerBranchAndBound(Node root) {
+        if (root.tasks.length == n_tasks) {
+            if (root.getValue() < bestValue){
+                bestValue = root.getValue();
+                bestNode = root;
+            }
+            return;
+        }
+        for (int task = 0; task < n_tasks; task++) {
+            Node childNode = new Node(root, task);
+            int bestPossibleValue = childNode.getValue();
+            for (int not_done_task = 0; not_done_task < n_tasks; not_done_task++) {
+                if (!checkValueInArray(childNode.tasks, not_done_task)) {
+                    bestPossibleValue += workingTimeMatrix[not_done_task][workingTimeMatrix[0].length - 1];
+                }
+            }
+            if (bestPossibleValue < bestValue) {
+                branchAndBound(childNode);
+            }
+        }
+    }
+
+    public static boolean checkValueInArray(int[] array, int value) {
+        for (int element : array) {
+            if (element == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+}

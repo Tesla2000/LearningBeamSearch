@@ -3,7 +3,7 @@ from torch import nn
 
 
 class LSTMModel(nn.Module):
-    def __init__(self, n_machines: int, num_layers: int = 2, hidden_size: int = 256):
+    def __init__(self, n_machines: int, num_layers: int = 2, hidden_size: int = 256, **_):
         super(LSTMModel, self).__init__()
         self.n_machines = n_machines
         self.hidden_size = hidden_size
