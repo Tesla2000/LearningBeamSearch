@@ -23,6 +23,10 @@ class DataMaker(Dataset):
         return self.length
 
     def __getitem__(self, _):
-        working_time_matrix = np.array(tuple(map(ord, (data := self.data_file.read(self.expected_length))))).reshape((self.n_tasks, self.n_machines))
-        best_value = int((value := self.data_file.readline()).strip())
-        return working_time_matrix, best_value
+        prev_state = np.array(tuple(map(int, self.data_file.readline().split()))).reshape(1, -1)
+        working_time_matrix = np.array(tuple(map(ord, self.data_file.read(self.expected_length)))).reshape((self.n_tasks, self.n_machines))
+        best_value = int(self.data_file.readline().strip())
+        minimal_value = prev_state[0, 0]
+        prev_state -= minimal_value
+        best_value -= minimal_value
+        return np.append(prev_state, working_time_matrix, axis=0), best_value

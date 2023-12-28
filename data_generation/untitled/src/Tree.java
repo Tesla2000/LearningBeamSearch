@@ -42,7 +42,7 @@ public class Tree {
         }
     }
 
-    public static boolean isValueInArray(int[] array, int value) {
+    private static boolean isValueInArray(int[] array, int value) {
         for (int element : array) {
             if (element == value) {
                 return true;

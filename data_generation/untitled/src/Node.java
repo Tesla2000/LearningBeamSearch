@@ -57,9 +57,9 @@ public class Node {
         return array;
     }
 
-    public int[][] appendArrayToMatrix(int[][] matrix, int[] array) {
+    public static int[][] appendArrayToMatrix(int[][] matrix, int[] array) {
         int rows = matrix.length;
-        int columns = workingTimeMatrix[0].length;
+        int columns = array.length;
         int[][] newMatrix = new int[rows + 1][columns]; // Create a new matrix with an additional row
 
         // Copy the original matrix to the new matrix

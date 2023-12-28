@@ -9,15 +9,21 @@ public class Main {
 
     public static void main(String[] args) {
         int n_tasks = 7;
-        int m_machines = 10;
+        int n_machines = 10;
         for (int i = 0; i < 100; i++) {
             System.out.println(i);
-            int[][] workingTimeMatrix = generateRandomMatrix(n_tasks, m_machines);
-            Tree tree = new Tree(n_tasks, m_machines, workingTimeMatrix);
+            int[][] workingTimeMatrix = generateRandomMatrix(n_tasks, n_machines);
+            Tree tree = new Tree(n_tasks, n_machines, workingTimeMatrix);
             Node root = new Node(workingTimeMatrix);
             Node bestNode = tree.branchAndBound(root);
-            int[] flattenedArray = flattenMatrix(workingTimeMatrix);
-            saveToTxtFile(flattenedArray, bestNode.getValue(), "data/" + n_tasks + "_" + m_machines + ".txt");
+            for (int tasks = 0; tasks < n_tasks; tasks++) {
+                int[][] timeMatrix = new int[0][0];
+                for (int n_tasksChosen = tasks; n_tasksChosen < n_tasks; n_tasksChosen++) {
+                    timeMatrix = Node.appendArrayToMatrix(timeMatrix, workingTimeMatrix[bestNode.tasks[n_tasksChosen]]);
+                }
+                saveToTxtFile(bestNode.getState()[tasks], flattenMatrix(timeMatrix), bestNode.getValue(), "data/" + timeMatrix.length + "_" + n_machines + ".txt");
+            }
+
         }
 
     }
@@ -51,13 +57,17 @@ public class Main {
         return flattenedArray;
     }
 
-    public static void saveToTxtFile(int[] flattenedArray, int uint32Value, String fileName) {
+    public static void saveToTxtFile(int[] previousState, int[] flattenedArray, int uint32Value, String fileName) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
+            for (int b : previousState) {
+                writer.write(b + " ");
+            }
+            writer.newLine();
             for (int b : flattenedArray) {
                 writer.write((char) b);
             }
             writer.write(String.valueOf(uint32Value));
-            writer.newLine(); // Add a new line for the next set of data
+            writer.newLine();
         } catch (IOException e) {
             e.printStackTrace();
         }
