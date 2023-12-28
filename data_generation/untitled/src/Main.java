@@ -11,7 +11,9 @@ public class Main {
         Tree tree = new Tree(n_tasks, m_machines, workingTimeMatrix);
         Node root = new Node(workingTimeMatrix);
         Node bestNode = tree.branchAndBound(root);
-        System.out.println(bestNode.getValue());
+//        displayMatrix(workingTimeMatrix);
+//        System.out.println();
+//        displayMatrix(bestNode.getState());
     }
 
     public static int[][] generateRandomMatrix(int rows, int columns) {
@@ -26,5 +28,14 @@ public class Main {
         }
 
         return matrix;
+    }
+
+    public static void displayMatrix(int[][] matrix) {
+        for (int[] row : matrix) {
+            for (int value : row) {
+                System.out.printf("%4d", value); // Adjust formatting as needed
+            }
+            System.out.println();
+        }
     }
 }

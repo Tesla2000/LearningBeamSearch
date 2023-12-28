@@ -27,20 +27,22 @@ public class Tree {
             return;
         }
         for (int task = 0; task < n_tasks; task++) {
+            if (isValueInArray(root.tasks, task))
+                continue;
             Node childNode = new Node(root, task);
             int bestPossibleValue = childNode.getValue();
             for (int not_done_task = 0; not_done_task < n_tasks; not_done_task++) {
-                if (!checkValueInArray(childNode.tasks, not_done_task)) {
+                if (!isValueInArray(childNode.tasks, not_done_task)) {
                     bestPossibleValue += workingTimeMatrix[not_done_task][workingTimeMatrix[0].length - 1];
                 }
             }
             if (bestPossibleValue < bestValue) {
-                branchAndBound(childNode);
+                innerBranchAndBound(childNode);
             }
         }
     }
 
-    public static boolean checkValueInArray(int[] array, int value) {
+    public static boolean isValueInArray(int[] array, int value) {
         for (int element : array) {
             if (element == value) {
                 return true;

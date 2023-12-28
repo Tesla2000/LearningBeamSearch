@@ -23,7 +23,7 @@ public class Node {
     }
 
     public int getValue() {
-        if (state == null)
+        if (parent == null)
             return 0;
         if (value != 0)
             return value;
@@ -33,7 +33,7 @@ public class Node {
     }
 
     public int[][] getState() {
-        if (value != 0 || state.length == 0)
+        if (state != null)
             return state;
         state = appendArrayToMatrix(parent.getState(), workingTimeMatrix[tasks[tasks.length - 1]]);
         if (state.length == 1) {
@@ -57,10 +57,9 @@ public class Node {
         return array;
     }
 
-    public static int[][] appendArrayToMatrix(int[][] matrix, int[] array) {
+    public int[][] appendArrayToMatrix(int[][] matrix, int[] array) {
         int rows = matrix.length;
-        int columns = matrix[0].length;
-
+        int columns = workingTimeMatrix[0].length;
         int[][] newMatrix = new int[rows + 1][columns]; // Create a new matrix with an additional row
 
         // Copy the original matrix to the new matrix
