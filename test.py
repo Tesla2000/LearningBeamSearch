@@ -8,55 +8,40 @@ from torch import nn
 from Config import Config
 from beam_search.Tree import Tree
 from beam_search.generator import RandomNumberGenerator
-from ml_models import ConvModel, LSTMModel, DenseModel
+from ml_models import ConvModel, GRUModel, DenseModel
 
 
-def test(models: dict[int, nn.Module]):
+def test(models: dict[int, nn.Module], n_tasks, n_machines):
     generator = RandomNumberGenerator()
     working_time_matrix = np.array(
         [[generator.nextInt(1, 99) for _ in range(n_machines)] for _ in range(n_tasks)]
     )
-    tree = Tree(working_time_matrix, models)
+    model_tree = Tree(working_time_matrix, models)
+    branch_and_bound_tree = Tree(working_time_matrix, {})
     start = time.time()
-    model_value = tree.eval_with_model().value
+    model_value = model_tree.eval_with_model().value
     model_time = time.time() - start
     print("Model", model_value, model_time)
 
     start = time.time()
-    b_b_value = tree.branch_and_bound().value
+    b_b_value = branch_and_bound_tree.eval_with_model().value
     b_b_time = time.time() - start
     print("Branch And Bound", b_b_value, b_b_time)
 
 
-def test_recurrent(models: dict[int, nn.Module]):
-    generator = RandomNumberGenerator()
-    working_time_matrix = np.array(
-        [[generator.nextInt(1, 99) for _ in range(n_machines)] for _ in range(n_tasks)]
-    )
-    tree = Tree(working_time_matrix, models)
-    start = time.time()
-    model_value = tree.eval_recurrent_model_with_model().value
-    model_time = time.time() - start
-    print("Model", model_value, model_time)
-
-    start = time.time()
-    b_b_value = tree.branch_and_bound().value
-    b_b_time = time.time() - start
-    print("Branch And Bound", b_b_value, b_b_time)
-
-
-if __name__ == "__main__":
-    model_type = LSTMModel
+def main():
+    model_type = GRUModel
     n_tasks = 7
     n_machines = 10
+
     models = {}
-    if model_type == LSTMModel:
+    if model_type == GRUModel:
         model_parameters_path = tuple(Path(Config.OUTPUT_MODELS).glob(f'{model_type.__name__}_*'))
         model = model_type(**locals())
         model.load_state_dict(torch.load(model_parameters_path[0]))
         model.eval()
-        models[None] = model
-        test_recurrent(models)
+        for rows in range(2, n_tasks):
+            models[rows] = model
     else:
         for rows in range(2, n_tasks):
             model_parameters_path = tuple(Path(Config.OUTPUT_MODELS).glob(f'{model_type.__name__}_{rows}*'))
@@ -66,5 +51,8 @@ if __name__ == "__main__":
             model.load_state_dict(torch.load(model_parameters_path[0]))
             model.eval()
             models[rows] = model
-        test(models)
+    test(models, n_tasks, n_machines)
 
+
+if __name__ == "__main__":
+    main()

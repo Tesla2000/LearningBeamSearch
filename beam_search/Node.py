@@ -16,6 +16,7 @@ class Node:
     state: np.array = None
     predicted_value: float = None
     _value: float = 0.0
+    h: list = field(init=False)
 
     @property
     def value(self) -> float:

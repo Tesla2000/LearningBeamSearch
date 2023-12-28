@@ -59,14 +59,18 @@ public class Main {
 
     public static void saveToTxtFile(int[] previousState, int[] flattenedArray, int uint32Value, String fileName) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
+            int minimum = Integer.MAX_VALUE;
             for (int b : previousState) {
-                writer.write(b + " ");
+                minimum = Math.min(minimum, b);
+            }
+            for (int b : previousState) {
+                writer.write((b - minimum) + " ");
             }
             writer.newLine();
             for (int b : flattenedArray) {
                 writer.write((char) b);
             }
-            writer.write(String.valueOf(uint32Value));
+            writer.write(String.valueOf(uint32Value - minimum));
             writer.newLine();
         } catch (IOException e) {
             e.printStackTrace();

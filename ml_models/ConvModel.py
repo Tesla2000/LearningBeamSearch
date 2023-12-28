@@ -18,6 +18,7 @@ class ConvModel(nn.Module):
         x = x.float()
         if len(x.shape) != 4:
             x = x.unsqueeze(1)
+        min_value = x[:, 0, 0, 0]
         x = self.conv1(x)
         x = self.relu(x)
         x = self.conv2(x)
@@ -27,5 +28,5 @@ class ConvModel(nn.Module):
         x = self.dense1(x)
         x = self.drop2(x)
         x = self.dense2(x)
-        return x
+        return x + min_value
 
