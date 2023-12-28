@@ -2,10 +2,10 @@ from torch import nn
 
 
 class ConvModel(nn.Module):
-    def __init__(self, rows: int, **_):
+    def __init__(self, n_tasks: int, **_):
         super(ConvModel, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(rows, 3), padding='same')
-        self.conv2 = nn.Conv2d(in_channels=3, out_channels=9, kernel_size=(rows, 3), padding='same')
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(n_tasks, 3), padding='same')
+        self.conv2 = nn.Conv2d(in_channels=3, out_channels=9, kernel_size=(n_tasks, 3), padding='same')
         self.relu = nn.ReLU(inplace=True)
         self.avgpool = nn.AvgPool2d(kernel_size=3)
         self.flatten = nn.Flatten()

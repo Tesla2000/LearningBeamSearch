@@ -2,6 +2,7 @@ from collections import deque
 from copy import deepcopy
 from itertools import count
 from math import sqrt
+from pathlib import Path
 from statistics import mean
 
 import numpy as np
@@ -12,10 +13,9 @@ from torch.utils.data import DataLoader
 from Config import Config
 from ml_models import ConvModel
 from ml_models.DataMaker import DataMaker
-from ml_models.DenseModel import DenseModel
 
 
-def train(model: nn.Module, n_tasks: int, m_machines: int, rows: int):
+def train(model: nn.Module, n_tasks: int, m_machines: int):
     patience = 1000
     average_size = 100
     batch_size = 16
@@ -23,8 +23,9 @@ def train(model: nn.Module, n_tasks: int, m_machines: int, rows: int):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    data_maker = DataMaker(n_tasks=n_tasks, m_machines=m_machines, rows=rows, length=batch_size)
-    train_loader = DataLoader(data_maker, batch_size=batch_size, shuffle=True)
+    data_file = Path(f"data_generation/untitled/data/{n_tasks}_{n_machines}.txt").open()
+    data_maker = DataMaker(n_tasks=n_tasks, n_machines=m_machines, length=batch_size, data_file=data_file)
+    train_loader = DataLoader(data_maker, batch_size=batch_size)
     losses = deque(maxlen=average_size)
     best_loss = float('inf')
     best_index = 0
@@ -54,6 +55,7 @@ def train(model: nn.Module, n_tasks: int, m_machines: int, rows: int):
             )
 
             break
+    data_file.close()
 
 
 if __name__ == '__main__':
@@ -61,8 +63,7 @@ if __name__ == '__main__':
     np.random.seed(42)
     n_tasks = 7
     n_machines = 10
-    rows = 5
-    model = ConvModel(rows)
+    model = ConvModel(n_tasks)
     # model = LSTMModel(n_machines)
     # model = DenseModel(rows, n_machines)
-    train(model, n_tasks, n_machines, rows)
+    train(model, n_tasks, n_machines)
