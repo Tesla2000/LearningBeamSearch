@@ -8,10 +8,12 @@ import java.util.Random;
 public class Main {
 
     public static void main(String[] args) {
-        int n_tasks = 7;
-        int n_machines = 10;
-        for (int i = 0; i < 100; i++) {
+        int n_tasks = 10;
+        int n_machines = 25;
+        int i = 0;
+        while (true) {
             System.out.println(i);
+            i++;
             int[][] workingTimeMatrix = generateRandomMatrix(n_tasks, n_machines);
             Tree tree = new Tree(n_tasks, n_machines, workingTimeMatrix);
             Node root = new Node(workingTimeMatrix);
@@ -23,9 +25,7 @@ public class Main {
                 }
                 saveToTxtFile(bestNode.getState()[tasks], flattenMatrix(timeMatrix), bestNode.getValue(), "data/" + timeMatrix.length + "_" + n_machines + ".txt");
             }
-
         }
-
     }
 
     public static int[][] generateRandomMatrix(int rows, int columns) {
