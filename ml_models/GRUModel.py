@@ -14,7 +14,7 @@ class GRUModel(nn.Module):
 
     def forward(self, x):
         x = x.float()
-        min_value = x[0, 0, 0]
+        min_value = x[:, 0, -1].reshape(-1, 1)
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
         x, _ = self.gru(x, h0)
         x = x[:, -1, :]

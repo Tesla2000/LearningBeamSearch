@@ -2,6 +2,17 @@ from torch import nn
 
 
 class ConvModel(nn.Module):
+    in_features_translator = {
+        3: 900,
+        4: 1125,
+        5: 1350,
+        6: 1575,
+        7: 1800,
+        8: 2025,
+        9: 2250,
+        10: 2475,
+    }
+
     def __init__(self, n_tasks: int, **_):
         super(ConvModel, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(n_tasks, 3), padding='same')
@@ -10,7 +21,7 @@ class ConvModel(nn.Module):
         self.avgpool = nn.AvgPool2d(kernel_size=3)
         self.flatten = nn.Flatten()
         self.drop1 = nn.Dropout()
-        self.dense1 = nn.Linear(in_features=450, out_features=224)
+        self.dense1 = nn.Linear(in_features=self.in_features_translator[n_tasks], out_features=224)
         self.drop2 = nn.Dropout(.25)
         self.dense2 = nn.Linear(in_features=224, out_features=1)
 
@@ -18,7 +29,7 @@ class ConvModel(nn.Module):
         x = x.float()
         if len(x.shape) != 4:
             x = x.unsqueeze(1)
-        min_value = x[:, 0, 0, 0]
+        min_value = x[:, 0, 0, -1].reshape(-1, 1)
         x = self.conv1(x)
         x = self.relu(x)
         x = self.conv2(x)
@@ -29,4 +40,3 @@ class ConvModel(nn.Module):
         x = self.drop2(x)
         x = self.dense2(x)
         return x + min_value
-
