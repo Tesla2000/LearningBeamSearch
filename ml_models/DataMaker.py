@@ -10,17 +10,15 @@ class DataMaker(Dataset):
         self,
         n_tasks: int,
         n_machines: int,
-        length: int,
         data_file: IO
     ):
         self.n_tasks = n_tasks
         self.n_machines = n_machines
         self.expected_length = n_tasks * n_machines
-        self.length = length
         self.data_file = data_file
 
     def __len__(self):
-        return self.length
+        return int(1e9)
 
     def __getitem__(self, _):
         prev_state = np.array(tuple(map(int, self.data_file.readline().split()))).reshape(1, -1)
