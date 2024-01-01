@@ -1,7 +1,9 @@
 from torch import nn
 
+from ml_models.BaseModel import BaseModel
 
-class DenseModel(nn.Module):
+
+class DenseModel(BaseModel):
     def __init__(self, n_tasks: int, n_machines: int, **_):
         super(DenseModel, self).__init__()
         self.relu = nn.ReLU(inplace=True)
@@ -11,16 +13,10 @@ class DenseModel(nn.Module):
         self.drop2 = nn.Dropout(.25)
         self.dense2 = nn.Linear(in_features=224, out_features=1)
 
-    def forward(self, x):
-        x = x.float()
-        if len(x.shape) != 4:
-            x = x.unsqueeze(1)
-        min_value = x[:, 0, 0, -1].reshape(-1, 1)
+    def predict(self, x):
         x = self.flatten(x)
         x = self.drop1(x)
         x = self.dense1(x)
         x = self.relu(x)
         x = self.drop2(x)
-        x = self.dense2(x)
-        return x + min_value
-
+        return self.dense2(x)

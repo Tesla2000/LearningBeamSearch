@@ -1,7 +1,8 @@
 from collections import deque
-from copy import deepcopy
+from itertools import product
 from pathlib import Path
 from statistics import mean
+from time import time
 
 import numpy as np
 import torch
@@ -10,7 +11,7 @@ from torch.utils.data import DataLoader
 
 from Config import Config
 from ml_models import ConvModel, DenseModel, GRUModel
-from ml_models.DataMaker import DataMaker
+from ml_models.DataMaker import DataMaker, NoMoreSamplesException
 
 
 def train(model: nn.Module, n_tasks: int, m_machines: int):
@@ -21,17 +22,19 @@ def train(model: nn.Module, n_tasks: int, m_machines: int):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    data_file = Path(f"data_generation/untitled/data/{n_tasks}_{n_machines}.txt").open()
+    data_file = Path(f"{Config.TRAINING_DATA_PATH}/{n_tasks}_{n_machines}.txt").open()
     data_maker = DataMaker(n_tasks=n_tasks, n_machines=m_machines, data_file=data_file)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     losses = deque(maxlen=average_size)
     best_loss = float('inf')
-    best_index = 0
+    prediction_time = 0
     try:
         for index, (inputs, labels) in enumerate(train_loader):
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
+            start = time()
             outputs = model(inputs)
+            prediction_time += time() - start
             target = labels.float().unsqueeze(1)
             loss = criterion(outputs, target)
             loss.backward()
@@ -41,15 +44,14 @@ def train(model: nn.Module, n_tasks: int, m_machines: int):
             print(index, average)
             if index > average_size and average < best_loss:
                 best_loss = average
-                best_index = index
-                model_weights = deepcopy(model.state_dict())
-            if best_index + patience < index:
-                break
+    except NoMoreSamplesException:
+        pass
     finally:
         print(best_loss)
+        num_predictions = index*batch_size
         torch.save(
-            model_weights,
-            f'{Config.OUTPUT_MODELS}/{type(model).__name__}_{n_tasks}_{n_machines}_{index*batch_size}_{best_loss:.3f}.pth',
+            model.state_dict(),
+            f'{Config.OUTPUT_MODELS}/{type(model).__name__}_{n_tasks}_{n_machines}_{prediction_time / num_predictions}_{best_loss:.3f}.pth',
         )
         data_file.close()
 
@@ -58,8 +60,10 @@ if __name__ == '__main__':
     torch.manual_seed(42)
     np.random.seed(42)
     n_machines = 25
-    # model = GRUModel(n_machines)
-    for n_tasks in range(3, 11):
-        model = ConvModel(n_tasks)
-        # model = DenseModel(n_tasks, n_machines)
+    for model_type, n_tasks in product((
+        ConvModel,
+        DenseModel,
+        GRUModel,
+    ), range(3, 11)):
+        model = model_type(n_tasks=n_tasks, n_machines=n_machines)
         train(model, n_tasks, n_machines)
