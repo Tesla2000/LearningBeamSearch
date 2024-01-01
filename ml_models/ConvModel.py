@@ -1,9 +1,9 @@
 from torch import nn
 
-from ml_models.abstract.DropoutModel import DropoutModel
+from ml_models.abstract.BaseModel import BaseModel
 
 
-class ConvModel(DropoutModel):
+class ConvModel(BaseModel):
     # in_features_translator = {
     #     3: 900,
     #     4: 1125,
@@ -22,9 +22,7 @@ class ConvModel(DropoutModel):
         self.relu = nn.ReLU(inplace=True)
         self.avgpool = nn.AvgPool2d(kernel_size=3)
         self.flatten = nn.Flatten()
-        self.drop1 = nn.Dropout()
         self.dense1 = nn.Linear(in_features=(n_tasks + 1) * n_machines * 9, out_features=224)
-        self.drop2 = nn.Dropout(.25)
         self.dense2 = nn.Linear(in_features=224, out_features=1)
 
     def predict(self, x):
@@ -35,7 +33,5 @@ class ConvModel(DropoutModel):
         x = self.conv2(x)
         x = self.relu(x)
         x = self.flatten(x)
-        x = self.drop1(x)
         x = self.dense1(x)
-        x = self.drop2(x)
         return self.dense2(x)

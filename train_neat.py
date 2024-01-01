@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from Config import Config
 from ml_models.DataMaker import DataMaker
 from ml_models.NEAT import NEAT, NEATLearningBeamSearchTrainer
+from ml_models.Perceptron import Perceptron
 
 
 def train_neat(model: NEAT, n_tasks: int, n_machines: int):
@@ -59,7 +60,7 @@ def main():
     np.random.seed(42)
     n_machines = 25
     for n_tasks in range(3, 11):
-        model = NEAT(n_tasks, n_machines)
+        model = NEAT(n_tasks, n_machines, initial_weights=torch.load(next(Config.OUTPUT_MODELS.glob(f'{Perceptron.__name__}_{n_tasks}_{n_machines}*'))))
         train_neat(model, n_tasks, n_machines)
 
 

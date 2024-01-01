@@ -24,3 +24,9 @@ class BaseModel(nn.Module, ABC):
         x = self.relu(x)
         x = self.drop2(x)
         return self.dense2(x)
+
+    def __str__(self):
+        return type(self).__name__
+
+    def __repr__(self):
+        return self.__str__()

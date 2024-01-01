@@ -9,7 +9,7 @@ from torch import nn, Tensor
 
 class NEAT(nn.Module):
     def __init__(self, n_tasks: int, n_machines: int, checkpoint_file: Path | str = None,
-                 winner_path: Path | str = None):
+                 winner_path: Path | str = None, initial_weights=None):
         super().__init__()
         self.config = neat.Config(
             neat.DefaultGenome,
@@ -20,11 +20,17 @@ class NEAT(nn.Module):
         )
 
         stats = neat.StatisticsReporter()
-        checkpointer = neat.Checkpointer(50, filename_prefix=f'neat_checkpoints/{n_tasks}_{n_machines}')
+        checkpointer = neat.Checkpointer(50, filename_prefix=f'neat_checkpoints/{n_tasks}_{n_machines}_')
         if checkpoint_file is None:
             self.population = neat.Population(self.config)
         else:
             self.population = checkpointer.restore_checkpoint(checkpoint_file)
+        if initial_weights is not None:
+            weights, bias = initial_weights.values()
+            for _, specimen in self.population.population.items():
+                specimen.nodes[0].bias = float(bias)
+                for connection, weight in zip(specimen.connections.values(), map(float, weights[0])):
+                    connection.weight = weight
         if winner_path is None:
             self.winner = None
             self.winner_net = None
@@ -33,8 +39,6 @@ class NEAT(nn.Module):
                 self.winner = pickle.load(f)
             self.winner_net = neat.nn.FeedForwardNetwork.create(self.winner, self.config)
 
-        self.population.add_reporter(neat.StdOutReporter(True))
-        self.population.add_reporter(stats)
         self.population.add_reporter(checkpointer)
 
     def forward(self, x):
@@ -64,15 +68,14 @@ class NEATTrainer:
 
 
 class NEATLearningBeamSearchTrainer(NEATTrainer):
-    def _eval_genomes(self, genomes, config, inputs, targets):
-        for genome_id, genome in genomes:
-            net = neat.nn.FeedForwardNetwork.create(genome, config)
-            genome.fitness = self.score(net, inputs, targets)
+    def _eval_genomes(self, population, config, inputs, targets):
+        for _, specimen in population:
+            net = neat.nn.FeedForwardNetwork.create(specimen, config)
+            specimen.fitness = self.score(net, inputs, targets) / len(inputs)
 
     def score(self, net, inputs, targets):
         def get_output(x):
-            nonlocal net
-            min_value = x[0, -1]
+            min_value = float(x[0, -1])
             min_value += sum(x[1:, -1])
             x = net.activate(x.flatten())[0]
             return (x + min_value).reshape(1)
