@@ -1,9 +1,9 @@
 from torch import nn
 
-from ml_models.BaseModel import BaseModel
+from ml_models.abstract.DropoutModel import DropoutModel
 
 
-class ConvModel(BaseModel):
+class ConvModel(DropoutModel):
     # in_features_translator = {
     #     3: 900,
     #     4: 1125,

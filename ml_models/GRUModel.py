@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from ml_models.BaseModel import BaseModel
+from ml_models.abstract.BaseModel import BaseModel
 
 
 class GRUModel(BaseModel):

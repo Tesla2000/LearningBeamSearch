@@ -10,15 +10,16 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 
 from Config import Config
-from ml_models import ConvModel, DenseModel, GRUModel
+from ml_models import MultilayerPerceptron
 from ml_models.DataMaker import DataMaker, NoMoreSamplesException
+from ml_models.abstract.BaseModel import BaseModel
+from ml_models.abstract.DropoutModel import DropoutModel
 
 
-def train(model: nn.Module, n_tasks: int, m_machines: int):
-    patience = 1000
-    average_size = 100
+def train(model: BaseModel, n_tasks: int, m_machines: int):
+    average_size = 1000
     batch_size = 16
-    learning_rate = 0.0001
+    learning_rate = model.learning_rate
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -31,15 +32,21 @@ def train(model: nn.Module, n_tasks: int, m_machines: int):
     try:
         for index, (inputs, labels) in enumerate(train_loader):
             inputs, labels = inputs.to(device), labels.to(device)
+            target = labels.float().unsqueeze(1)
             optimizer.zero_grad()
+            if isinstance(model, DropoutModel):
+                model.eval()
+                outputs = model(inputs)
+                losses.append((target - outputs).abs().mean().item())
+                model.train()
             start = time()
             outputs = model(inputs)
             prediction_time += time() - start
-            target = labels.float().unsqueeze(1)
             loss = criterion(outputs, target)
             loss.backward()
             optimizer.step()
-            losses.append((target - outputs).abs().mean().item())
+            if not isinstance(model, DropoutModel):
+                losses.append((target - outputs).abs().mean().item())
             average = mean(losses)
             print(index, average)
             if index > average_size and average < best_loss:
@@ -61,9 +68,11 @@ if __name__ == '__main__':
     np.random.seed(42)
     n_machines = 25
     for model_type, n_tasks in product((
-        ConvModel,
-        DenseModel,
-        GRUModel,
+        # ConvModel,
+        MultilayerPerceptron,
+        # GRUModel,
+        # SumModel,
+        # Perceptron,
     ), range(3, 11)):
         model = model_type(n_tasks=n_tasks, n_machines=n_machines)
         train(model, n_tasks, n_machines)
