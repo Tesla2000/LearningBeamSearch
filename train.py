@@ -12,6 +12,8 @@ from torch.utils.data import DataLoader
 from Config import Config
 from ml_models.DataMaker import DataMaker, NoMoreSamplesException
 from ml_models.Perceptron import Perceptron
+from ml_models.WideConvModel import WideConvModel
+from ml_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 from ml_models.abstract.BaseModel import BaseModel
 
 
@@ -64,7 +66,9 @@ if __name__ == '__main__':
         # partial(MultilayerPerceptron, hidden_size=512),
         # GRUModel,
         # SumModel,
-        Perceptron,
+        # Perceptron,
+        # WideMultilayerPerceptron,
+        WideConvModel,
     ), range(3, 11)):
         model = model_type(n_tasks=n_tasks, n_machines=n_machines)
         train(model, n_tasks, n_machines)
