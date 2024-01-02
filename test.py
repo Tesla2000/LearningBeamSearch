@@ -8,7 +8,7 @@ from torch import nn
 from Config import Config
 from beam_search.Tree import Tree
 from beam_search.generator import RandomNumberGenerator
-from ml_models import ConvModel, GRUModel, DenseModel
+from ml_models import ConvModel, GRUModel, MultilayerPerceptron
 
 
 def test(models: dict[int, nn.Module], n_tasks, n_machines):

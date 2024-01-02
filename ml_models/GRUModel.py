@@ -1,8 +1,10 @@
 import torch
 from torch import nn
 
+from ml_models.abstract.BaseModel import BaseModel
 
-class GRUModel(nn.Module):
+
+class GRUModel(BaseModel):
     def __init__(self, n_machines: int, num_layers: int = 2, hidden_size: int = 256, **_):
         super(GRUModel, self).__init__()
         self.n_machines = n_machines
@@ -12,13 +14,10 @@ class GRUModel(nn.Module):
         self.dropout = nn.Dropout(p=.2)
         self.fc = nn.Linear(hidden_size, 1)
 
-    def forward(self, x):
-        x = x.float()
-        min_value = x[:, 0, -1].reshape(-1, 1)
+    def predict(self, x):
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
         x, _ = self.gru(x, h0)
         x = x[:, -1, :]
         x = self.dropout(x)
-        x = self.fc(x)
-        return x + min_value
+        return self.fc(x)
 
