@@ -5,12 +5,13 @@ import numpy as np
 from torch.utils.data import Dataset
 
 
-class RegressionDataset(Dataset):
+class ClassifierDataset(Dataset):
     def __init__(self, n_tasks: int, n_machines: int, data_file: IO):
         self.n_tasks = n_tasks
         self.n_machines = n_machines
         self.expected_length = n_tasks * n_machines
         self.data_file = data_file
+        self.one_hot_encoder = np.eye(n_tasks)
 
     def __len__(self):
         return int(1e9)
@@ -28,8 +29,9 @@ class RegressionDataset(Dataset):
         minimal_value = prev_state[0, 0]
         prev_state -= minimal_value
         best_value -= minimal_value
-        working_time_matrix = working_time_matrix[random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))]
-        return np.append(prev_state, working_time_matrix, axis=0), best_value
+        new_order_of_tasks = random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))
+        working_time_matrix = working_time_matrix[new_order_of_tasks]
+        return np.append(prev_state, working_time_matrix, axis=0), self.one_hot_encoder[new_order_of_tasks.index(0)]
 
 
 class NoMoreSamplesException(Exception):

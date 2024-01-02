@@ -37,7 +37,7 @@ def main():
     models = {}
     if model_type == GRURegressor:
         model_parameters_path = tuple(
-            Path(Config.OUTPUT_MODELS).glob(f"{model_type.__name__}_*")
+            Path(Config.OUTPUT_REGRESSION_MODELS).glob(f"{model_type.__name__}_*")
         )
         model = model_type(**locals())
         model.load_state_dict(torch.load(model_parameters_path[0]))
@@ -47,7 +47,7 @@ def main():
     else:
         for rows in range(2, n_tasks):
             model_parameters_path = tuple(
-                Path(Config.OUTPUT_MODELS).glob(f"{model_type.__name__}_{rows}*")
+                Path(Config.OUTPUT_REGRESSION_MODELS).glob(f"{model_type.__name__}_{rows}*")
             )
             if not model_parameters_path:
                 continue

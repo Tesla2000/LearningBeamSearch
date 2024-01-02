@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from Config import Config
-from regression_models.RegressionDataset import DataMaker
+from regression_models.RegressionDataset import RegressionDataset
 from regression_models.NEAT import NEAT, NEATLearningBeamSearchTrainer
 from regression_models.Perceptron import Perceptron
 
@@ -22,7 +22,7 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
     data_file = Path(
         f"data_generation/untitled/training_data/{n_tasks}_{n_machines}.txt"
     ).open()
-    data_maker = DataMaker(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
+    data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     average = 100
     patience = 1000
@@ -55,7 +55,7 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
         pass
     finally:
         model.save_winner(
-            f"{Config.OUTPUT_MODELS}/NEAT_{n_tasks}_{n_machines}.pkl", best_winner
+            f"{Config.OUTPUT_REGRESSION_MODELS}/NEAT_{n_tasks}_{n_machines}.pkl", best_winner
         )
 
 
@@ -69,7 +69,7 @@ def main():
             n_machines,
             initial_weights=torch.load(
                 next(
-                    Config.OUTPUT_MODELS.glob(
+                    Config.OUTPUT_REGRESSION_MODELS.glob(
                         f"{Perceptron.__name__}_{n_tasks}_{n_machines}*"
                     )
                 )

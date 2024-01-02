@@ -20,22 +20,7 @@ public class DataGenerator {
         return matrix;
     }
 
-    public static int[] flattenMatrix(int[][] matrix) {
-        int rows = matrix.length;
-        int cols = matrix[0].length;
-        int totalElements = rows * cols;
-        int[] flattenedArray = new int[totalElements];
-
-        int index = 0;
-        for (int[] row : matrix) {
-            for (int value : row) {
-                flattenedArray[index++] = value;
-            }
-        }
-        return flattenedArray;
-    }
-
-    public static void saveToTxtFile(int[] previousState, int[] flattenedArray, int uint32Value, String fileName) {
+    public static void saveToTxtFile(int[] previousState, int[][] timeMatrix, int uint32Value, String fileName) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
             int minimum = Integer.MAX_VALUE;
             for (int b : previousState) {
@@ -45,8 +30,10 @@ public class DataGenerator {
                 writer.write((b - minimum) + " ");
             }
             writer.newLine();
-            for (int b : flattenedArray) {
-                writer.write((char) b);
+            for (int[] line: timeMatrix) {
+                for (int b : line) {
+                    writer.write((char) b);
+                }
             }
             writer.write(String.valueOf(uint32Value - minimum));
             writer.newLine();
