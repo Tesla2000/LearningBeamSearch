@@ -6,9 +6,9 @@ import torch
 from torch.utils.data import DataLoader
 
 from Config import Config
-from ml_models.DataMaker import DataMaker
-from ml_models.NEAT import NEAT, NEATLearningBeamSearchTrainer
-from ml_models.Perceptron import Perceptron
+from regression_models.RegressionDataset import DataMaker
+from regression_models.NEAT import NEAT, NEATLearningBeamSearchTrainer
+from regression_models.Perceptron import Perceptron
 
 
 def train_neat(model: NEAT, n_tasks: int, n_machines: int):
@@ -19,7 +19,9 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
         return (output - target).abs()
 
     neat_trainer = NEATLearningBeamSearchTrainer(criterion)
-    data_file = Path(f"data_generation/untitled/training_data/{n_tasks}_{n_machines}.txt").open()
+    data_file = Path(
+        f"data_generation/untitled/training_data/{n_tasks}_{n_machines}.txt"
+    ).open()
     data_maker = DataMaker(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     average = 100
@@ -29,7 +31,7 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
     winner_nets = deque(maxlen=average)
     winners = deque(maxlen=average)
     best_winner = None
-    best_score = -float('inf')
+    best_score = -float("inf")
     best_score_index = None
     try:
         for index, (inputs, targets) in enumerate(train_loader):
@@ -52,7 +54,9 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
     except ValueError:
         pass
     finally:
-        model.save_winner(f'{Config.OUTPUT_MODELS}/NEAT_{n_tasks}_{n_machines}.pkl', best_winner)
+        model.save_winner(
+            f"{Config.OUTPUT_MODELS}/NEAT_{n_tasks}_{n_machines}.pkl", best_winner
+        )
 
 
 def main():
@@ -60,7 +64,17 @@ def main():
     np.random.seed(42)
     n_machines = 25
     for n_tasks in range(3, 11):
-        model = NEAT(n_tasks, n_machines, initial_weights=torch.load(next(Config.OUTPUT_MODELS.glob(f'{Perceptron.__name__}_{n_tasks}_{n_machines}*'))))
+        model = NEAT(
+            n_tasks,
+            n_machines,
+            initial_weights=torch.load(
+                next(
+                    Config.OUTPUT_MODELS.glob(
+                        f"{Perceptron.__name__}_{n_tasks}_{n_machines}*"
+                    )
+                )
+            ),
+        )
         train_neat(model, n_tasks, n_machines)
 
 

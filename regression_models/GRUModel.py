@@ -1,17 +1,19 @@
 import torch
 from torch import nn
 
-from ml_models.abstract.BaseModel import BaseModel
+from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-class GRUModel(BaseModel):
-    def __init__(self, n_machines: int, num_layers: int = 2, hidden_size: int = 256, **_):
-        super(GRUModel, self).__init__()
+class GRURegressor(BaseRegressor):
+    def __init__(
+        self, n_machines: int, num_layers: int = 2, hidden_size: int = 256, **_
+    ):
+        super(GRURegressor, self).__init__()
         self.n_machines = n_machines
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.gru = nn.GRU(n_machines, hidden_size, num_layers, batch_first=True)
-        self.dropout = nn.Dropout(p=.2)
+        self.dropout = nn.Dropout(p=0.2)
         self.fc = nn.Linear(hidden_size, 1)
 
     def predict(self, x):
@@ -20,4 +22,3 @@ class GRUModel(BaseModel):
         x = x[:, -1, :]
         x = self.dropout(x)
         return self.fc(x)
-

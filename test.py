@@ -8,7 +8,7 @@ from torch import nn
 from Config import Config
 from beam_search.Tree import Tree
 from beam_search.generator import RandomNumberGenerator
-from ml_models import ConvModel, GRUModel, MultilayerPerceptron
+from regression_models import ConvRegressor, GRURegressor, MultilayerPerceptron
 
 
 def test(models: dict[int, nn.Module], n_tasks, n_machines):
@@ -30,13 +30,15 @@ def test(models: dict[int, nn.Module], n_tasks, n_machines):
 
 
 def main():
-    model_type = GRUModel
+    model_type = GRURegressor
     n_tasks = 7
     n_machines = 10
 
     models = {}
-    if model_type == GRUModel:
-        model_parameters_path = tuple(Path(Config.OUTPUT_MODELS).glob(f'{model_type.__name__}_*'))
+    if model_type == GRURegressor:
+        model_parameters_path = tuple(
+            Path(Config.OUTPUT_MODELS).glob(f"{model_type.__name__}_*")
+        )
         model = model_type(**locals())
         model.load_state_dict(torch.load(model_parameters_path[0]))
         model.eval()
@@ -44,7 +46,9 @@ def main():
             models[rows] = model
     else:
         for rows in range(2, n_tasks):
-            model_parameters_path = tuple(Path(Config.OUTPUT_MODELS).glob(f'{model_type.__name__}_{rows}*'))
+            model_parameters_path = tuple(
+                Path(Config.OUTPUT_MODELS).glob(f"{model_type.__name__}_{rows}*")
+            )
             if not model_parameters_path:
                 continue
             model = model_type(**locals())

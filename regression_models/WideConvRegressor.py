@@ -1,15 +1,18 @@
 import torch
 from torch import nn
 
-from ml_models import ConvModel
+from regression_models import ConvRegressor
 
 
-class WideConvModel(ConvModel):
-
+class WideConvRegressor(ConvRegressor):
     def __init__(self, n_tasks: int, n_machines: int, hidden_size: int = 256):
-        super(WideConvModel, self).__init__(n_tasks, n_machines)
-        self.dense1 = nn.Linear(in_features=(n_tasks + 1) * n_machines * 9, out_features=hidden_size)
-        self.dense2 = nn.Linear(in_features=hidden_size + (n_tasks + 1) * n_machines * 9, out_features=1)
+        super(WideConvRegressor, self).__init__(n_tasks, n_machines)
+        self.dense1 = nn.Linear(
+            in_features=(n_tasks + 1) * n_machines * 9, out_features=hidden_size
+        )
+        self.dense2 = nn.Linear(
+            in_features=hidden_size + (n_tasks + 1) * n_machines * 9, out_features=1
+        )
 
     def predict(self, x):
         if len(x.shape) != 4:

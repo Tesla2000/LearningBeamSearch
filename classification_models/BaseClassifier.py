@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 
-class BaseModel(nn.Module, ABC):
+class BaseClassifier(nn.Module, ABC):
     learning_rate = 1e-4
 
     def _min_value(self, x):

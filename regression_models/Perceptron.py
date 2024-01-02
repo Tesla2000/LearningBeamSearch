@@ -1,9 +1,9 @@
 from torch import nn
 
-from ml_models.abstract.BaseModel import BaseModel
+from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-class Perceptron(BaseModel):
+class Perceptron(BaseRegressor):
     learning_rate = 1e-3
 
     def __init__(self, n_tasks: int, n_machines: int, **_):

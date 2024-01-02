@@ -10,14 +10,14 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 
 from Config import Config
-from ml_models.DataMaker import DataMaker, NoMoreSamplesException
-from ml_models.Perceptron import Perceptron
-from ml_models.WideConvModel import WideConvModel
-from ml_models.WideMultilayerPerceptron import WideMultilayerPerceptron
-from ml_models.abstract.BaseModel import BaseModel
+from regression_models.RegressionDataset import DataMaker, NoMoreSamplesException
+from regression_models.Perceptron import Perceptron
+from regression_models.WideConvRegressor import WideConvRegressor
+from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
+from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-def train(model: BaseModel, n_tasks: int, m_machines: int):
+def train(model: BaseRegressor, n_tasks: int, m_machines: int):
     average_size = 1000
     batch_size = 16
     learning_rate = model.learning_rate
@@ -28,7 +28,7 @@ def train(model: BaseModel, n_tasks: int, m_machines: int):
     data_maker = DataMaker(n_tasks=n_tasks, n_machines=m_machines, data_file=data_file)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     losses = deque(maxlen=average_size)
-    best_loss = float('inf')
+    best_loss = float("inf")
     prediction_time = 0
     try:
         for index, (inputs, labels) in enumerate(train_loader):
@@ -51,24 +51,27 @@ def train(model: BaseModel, n_tasks: int, m_machines: int):
         num_predictions = index * batch_size
         torch.save(
             model.state_dict(),
-            f'{Config.OUTPUT_MODELS}/{model}_{n_tasks}_{n_machines}_{(prediction_time / num_predictions):.2e}_{best_loss:.1f}.pth',
+            f"{Config.OUTPUT_MODELS}/{model}_{n_tasks}_{n_machines}_{(prediction_time / num_predictions):.2e}_{best_loss:.1f}.pth",
         )
         data_file.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     torch.manual_seed(42)
     np.random.seed(42)
     n_machines = 25
-    for model_type, n_tasks in product((
-        # ConvModel,
-        # MultilayerPerceptron,
-        # partial(MultilayerPerceptron, hidden_size=512),
-        # GRUModel,
-        # SumModel,
-        # Perceptron,
-        # WideMultilayerPerceptron,
-        WideConvModel,
-    ), range(3, 11)):
+    for model_type, n_tasks in product(
+        (
+            # ConvModel,
+            # MultilayerPerceptron,
+            # partial(MultilayerPerceptron, hidden_size=512),
+            # GRUModel,
+            # SumModel,
+            # Perceptron,
+            # WideMultilayerPerceptron,
+            WideConvRegressor,
+        ),
+        range(3, 11),
+    ):
         model = model_type(n_tasks=n_tasks, n_machines=n_machines)
         train(model, n_tasks, n_machines)
