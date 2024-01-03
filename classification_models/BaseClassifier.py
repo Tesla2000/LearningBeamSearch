@@ -32,6 +32,8 @@ class BaseClassifier(nn.Module, ABC):
                 left_to_choose = list(range(len(x)))
                 left_to_choose.pop(child_index)
                 x = Tensor(x[left_to_choose]).unsqueeze(0)
+            #     regression_predictions.append(float(self.model_regressor(x)))
+            # outputs.append(Tensor(regression_predictions))
                 regression_predictions.append(self.model_regressor(x)[0, 0])
             outputs.append(torch.stack(regression_predictions))
         return torch.stack(outputs)

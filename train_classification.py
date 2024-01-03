@@ -29,7 +29,7 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(classifier.parameters(), lr=learning_rate)
-    data_file = Path(f"{Config.TRAINING_DATA_REGRESSION_PATH}/{n_tasks}_{n_machines}.txt").open()
+    data_file = Path(f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/{n_tasks}_{n_machines}.txt").open()
     data_maker = ClassifierDataset(n_tasks=n_tasks, n_machines=m_machines, data_file=data_file)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     losses = deque(maxlen=average_size)
@@ -45,7 +45,7 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
             loss.backward()
             optimizer.step()
             torch.argmax(outputs, dim=1)
-            accuracy = float(torch.sum(labels * torch.nn.functional.one_hot(torch.argmax(outputs, dim=1))) / batch_size)
+            accuracy = float(torch.sum(labels * torch.nn.functional.one_hot(torch.argmax(outputs, dim=1), num_classes=n_tasks)) / batch_size)
             losses.append(accuracy)
             average = mean(losses)
             print(index, average)
@@ -72,10 +72,10 @@ if __name__ == "__main__":
             # MultilayerPerceptron,
             # partial(MultilayerPerceptron, hidden_size=512),
             # GRUModel,
-            SumRegressor,
+            # SumRegressor,
             # Perceptron,
             # WideMultilayerPerceptron,
-            # WideConvRegressor,
+            WideConvRegressor,
         ),
         range(4, 11),
     ):
