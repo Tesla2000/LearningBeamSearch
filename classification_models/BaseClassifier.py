@@ -39,12 +39,12 @@ class BaseClassifier(nn.Module, ABC):
         return torch.stack(outputs)
 
     @abstractmethod
-    def _predict(self, x):
+    def _predict(self, x, bound):
         pass
 
-    def forward(self, x):
+    def forward(self, x, bound):
         x = self._get_outputs(x)
-        return self._predict(x)
+        return self._predict(x, bound)
 
     def __str__(self):
         return type(self).__name__

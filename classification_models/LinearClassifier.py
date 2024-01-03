@@ -15,6 +15,6 @@ class LinearClassifier(BaseClassifier):
         self.fc = nn.Linear(n_tasks, n_tasks)
         self.softmax = nn.Softmax()
 
-    def _predict(self, x):
+    def _predict(self, x, bound):
         x = self.fc(x)
         return self.softmax(x)

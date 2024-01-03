@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 
 from classification_models.BaseClassifier import BaseClassifier
@@ -11,6 +10,6 @@ class MinClassifier(BaseClassifier):
         super(MinClassifier, self).__init__(model_regressor, n_tasks, learning_rate)
         self.softmax = nn.Softmax()
 
-    def _predict(self, x):
+    def _predict(self, x, bound):
         x = -x
         return self.softmax(x)

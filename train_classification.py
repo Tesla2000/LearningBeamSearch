@@ -27,20 +27,21 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
     batch_size = 16
     learning_rate = classifier.learning_rate
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCELoss()
     optimizer = optim.Adam(classifier.parameters(), lr=learning_rate)
-    data_file = Path(f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/{n_tasks}_{n_machines}.txt").open()
-    data_maker = ClassifierDataset(n_tasks=n_tasks, n_machines=m_machines, data_file=data_file)
+    data_file0 = Path(f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/0_{n_tasks}_{n_machines}.txt").open()
+    data_file1 = Path(f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/1_{n_tasks}_{n_machines}.txt").open()
+    data_maker = ClassifierDataset(n_tasks=n_tasks, n_machines=m_machines, data_file0=data_file0, data_file1=data_file1)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     losses = deque(maxlen=average_size)
     best_loss = float("inf")
     prediction_time = 0
     try:
-        for index, (inputs, labels) in enumerate(train_loader):
-            inputs, labels = inputs.to(device), labels.to(device)
+        for index, ((inputs, bound), labels) in enumerate(train_loader):
+            inputs, bound, labels = inputs.to(device), bound.to(device), labels.to(device)
             target = labels.float()
             optimizer.zero_grad()
-            outputs = classifier(inputs)
+            outputs = classifier(inputs, bound)
             loss = criterion(outputs, target)
             loss.backward()
             optimizer.step()
@@ -58,7 +59,8 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
             classifier.state_dict(),
             f"{Config.OUTPUT_CLASSIFIER_MODELS}/{classifier}_{n_tasks}_{n_machines}_{(prediction_time / num_predictions):.2e}_{best_loss:.1f}.pth",
         )
-        data_file.close()
+        data_file0.close()
+        data_file1.close()
 
 
 if __name__ == "__main__":

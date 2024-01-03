@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Node {
@@ -5,7 +6,9 @@ public class Node {
     int[][] state;
     int[][] workingTimeMatrix;
     Node parent;
+    ArrayList<Node> children = new ArrayList<>();
     int[] tasks;
+    int bestValueAtCreation = Integer.MAX_VALUE;
 
     public Node(Node parent, int task) {
         this.workingTimeMatrix = parent.workingTimeMatrix;
