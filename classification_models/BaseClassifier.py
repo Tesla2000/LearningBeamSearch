@@ -1,3 +1,5 @@
+from abc import abstractmethod, ABC
+
 import numpy as np
 import torch
 from torch import nn, Tensor
@@ -5,7 +7,7 @@ from torch import nn, Tensor
 from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-class BaseClassifier(nn.Module):
+class BaseClassifier(nn.Module, ABC):
 
     def __init__(self, model_regressor: BaseRegressor, n_tasks: int, learning_rate: float = 1e-4, **_):
         super(BaseClassifier, self).__init__()
@@ -13,10 +15,8 @@ class BaseClassifier(nn.Module):
         self.model_regressor.eval()
         self.learning_rate = learning_rate
         self.n_tasks = n_tasks
-        self.fc = nn.Linear(n_tasks, n_tasks)
-        self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x):
+    def _get_outputs(self, x):
         outputs = []
         for sample in x:
             regression_predictions = []
@@ -32,13 +32,17 @@ class BaseClassifier(nn.Module):
                 left_to_choose = list(range(len(x)))
                 left_to_choose.pop(child_index)
                 x = Tensor(x[left_to_choose]).unsqueeze(0)
-                regression_predictions.append(float(self.model_regressor(x)))
-            outputs.append(self.sigmoid(self.fc(Tensor(regression_predictions))))
+                regression_predictions.append(self.model_regressor(x)[0, 0])
+            outputs.append(torch.stack(regression_predictions))
         return torch.stack(outputs)
 
+    @abstractmethod
+    def _predict(self, x):
+        pass
 
-
-
+    def forward(self, x):
+        x = self._get_outputs(x)
+        return self._predict(x)
 
     def __str__(self):
         return type(self).__name__

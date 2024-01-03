@@ -1,5 +1,6 @@
 import random
 from collections import deque
+from functools import partial
 from itertools import product
 from pathlib import Path
 from statistics import mean
@@ -11,7 +12,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 
 from Config import Config
-from regression_models import GRURegressor
+from regression_models import GRURegressor, ConvRegressor, MultilayerPerceptron
 from regression_models.RegressionDataset import RegressionDataset, NoMoreSamplesException
 from regression_models.Perceptron import Perceptron
 from regression_models.SumRegressor import SumRegressor
@@ -66,14 +67,14 @@ if __name__ == "__main__":
     n_machines = 25
     for model_type, n_tasks in product(
         (
-            # ConvRegressor,
-            # MultilayerPerceptron,
-            # partial(MultilayerPerceptron, hidden_size=512),
-            # GRURegressor,
-            SumRegressor,
-            Perceptron,
-            # WideMultilayerPerceptron,
-            # WideConvRegressor,
+            ConvRegressor,
+            MultilayerPerceptron,
+            partial(MultilayerPerceptron, hidden_size=512),
+            GRURegressor,
+            # SumRegressor,
+            # Perceptron,
+            WideMultilayerPerceptron,
+            WideConvRegressor,
         ),
         range(3, 11),
     ):

@@ -10,7 +10,8 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 
 from Config import Config
-from classification_models.BaseClassifier import BaseClassifier
+from classification_models.LinearClassifier import LinearClassifier
+from classification_models.MinClassifier import MinClassifier
 from classification_models.ClassifierDataset import ClassifierDataset
 from regression_models.RegressionDataset import RegressionDataset, NoMoreSamplesException
 from regression_models.Perceptron import Perceptron
@@ -21,7 +22,7 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
 def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
-    classifier = BaseClassifier(regressor, n_tasks)
+    classifier = MinClassifier(regressor, n_tasks)
     average_size = 1000
     batch_size = 16
     learning_rate = classifier.learning_rate
@@ -43,7 +44,9 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
             loss = criterion(outputs, target)
             loss.backward()
             optimizer.step()
-            losses.append(loss.item())
+            torch.argmax(outputs, dim=1)
+            accuracy = float(torch.sum(labels * torch.nn.functional.one_hot(torch.argmax(outputs, dim=1))) / batch_size)
+            losses.append(accuracy)
             average = mean(losses)
             print(index, average)
             if index > average_size and average < best_loss:
@@ -60,6 +63,7 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
 
 if __name__ == "__main__":
     torch.manual_seed(42)
+    torch.autograd.set_detect_anomaly(True)
     np.random.seed(42)
     n_machines = 25
     for model_type, n_tasks in product(
