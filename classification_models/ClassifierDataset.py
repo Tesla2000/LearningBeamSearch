@@ -20,7 +20,6 @@ class ClassifierDataset(Dataset):
         file_size1 = self.data_file1.tell()
         self.data_file1.seek(0)
         self.prob0 = file_size0 / (file_size0 + file_size1)
-        self.one_hot_encoder = np.eye(2)
 
     def __len__(self):
         return int(1e9)
@@ -45,7 +44,7 @@ class ClassifierDataset(Dataset):
         bound -= minimal_value
         new_order_of_tasks = random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))
         working_time_matrix = working_time_matrix[new_order_of_tasks]
-        return (np.append(prev_state, working_time_matrix, axis=0), bound), self.one_hot_encoder[one]
+        return (np.append(prev_state, working_time_matrix, axis=0), bound), one
 
 
 class NoMoreSamplesException(Exception):

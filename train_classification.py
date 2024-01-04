@@ -1,11 +1,10 @@
 from collections import deque
 from itertools import product
 from pathlib import Path
-from statistics import mean
-from time import time
 
 import numpy as np
 import torch
+from sklearn.metrics import f1_score
 from torch import nn, optim
 from torch.utils.data import DataLoader
 
@@ -23,7 +22,7 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
     classifier = MinClassifier(regressor, n_tasks)
-    average_size = 1000
+    average_size = 10000
     batch_size = 16
     learning_rate = classifier.learning_rate
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -33,22 +32,22 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
     data_file1 = Path(f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/1_{n_tasks}_{n_machines}.txt").open()
     data_maker = ClassifierDataset(n_tasks=n_tasks, n_machines=m_machines, data_file0=data_file0, data_file1=data_file1)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
-    losses = deque(maxlen=average_size)
+    predicitions = deque(maxlen=average_size)
+    targets = deque(maxlen=average_size)
     best_loss = float("inf")
     prediction_time = 0
     try:
         for index, ((inputs, bound), labels) in enumerate(train_loader):
             inputs, bound, labels = inputs.to(device), bound.to(device), labels.to(device)
-            target = labels.float()
+            target = labels.float().reshape(-1, 1)
             optimizer.zero_grad()
             outputs = classifier(inputs, bound)
             loss = criterion(outputs, target)
             loss.backward()
             optimizer.step()
-            torch.argmax(outputs, dim=1)
-            accuracy = float(torch.sum(labels * torch.nn.functional.one_hot(torch.argmax(outputs, dim=1), num_classes=n_tasks)) / batch_size)
-            losses.append(accuracy)
-            average = mean(losses)
+            targets.extend(target.detach().numpy())
+            predicitions.extend(outputs.round().detach().numpy())
+            average = f1_score(targets, predicitions)
             print(index, average)
             if index > average_size and average < best_loss:
                 best_loss = average
@@ -81,7 +80,7 @@ if __name__ == "__main__":
         ),
         range(4, 11),
     ):
-        model: BaseRegressor = model_type(n_tasks=n_tasks - 1, n_machines=n_machines)
+        model: BaseRegressor = model_type(n_tasks=n_tasks, n_machines=n_machines)
         model.load_state_dict(
-            torch.load(next(Config.OUTPUT_REGRESSION_MODELS.glob(f"{model}_{n_tasks - 1}_{n_machines}_*"))))
+            torch.load(next(Config.OUTPUT_REGRESSION_MODELS.glob(f"{model}_{n_tasks}_{n_machines}_*"))))
         train_classifier(model, n_tasks, n_machines)
