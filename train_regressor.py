@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 
 from Config import Config
 from regression_models import GRURegressor, ConvRegressor, MultilayerPerceptron
+from regression_models.BranchAndBoundRegressor import BranchAndBoundRegressor
 from regression_models.RegressionDataset import RegressionDataset, NoMoreSamplesException
 from regression_models.Perceptron import Perceptron
 from regression_models.SumRegressor import SumRegressor
@@ -27,7 +28,8 @@ def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
     learning_rate = model.learning_rate
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    if tuple(model.parameters()):
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     data_file = Path(f"{Config.TRAINING_DATA_REGRESSION_PATH}/{n_tasks}_{n_machines}.txt").open()
     data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=m_machines, data_file=data_file)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
@@ -38,13 +40,15 @@ def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
         for index, (inputs, labels) in enumerate(train_loader):
             inputs, labels = inputs.to(device), labels.to(device)
             target = labels.float().unsqueeze(1)
-            optimizer.zero_grad()
+            if locals().get('model'):
+                optimizer.zero_grad()
             start = time()
             outputs = model(inputs)
             prediction_time += time() - start
-            loss = criterion(outputs, target)
-            loss.backward()
-            optimizer.step()
+            if locals().get('model'):
+                loss = criterion(outputs, target)
+                loss.backward()
+                optimizer.step()
             losses.append((target - outputs).abs().mean().item())
             average = mean(losses)
             print(index, average)
@@ -71,8 +75,8 @@ if __name__ == "__main__":
             MultilayerPerceptron,
             partial(MultilayerPerceptron, hidden_size=512),
             GRURegressor,
-            # SumRegressor,
-            # Perceptron,
+            SumRegressor,
+            Perceptron,
             WideMultilayerPerceptron,
             WideConvRegressor,
         ),

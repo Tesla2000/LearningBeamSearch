@@ -5,6 +5,8 @@ from typing import IO
 import numpy as np
 from torch.utils.data import Dataset
 
+from regression_models.RegressionDataset import NoMoreSamplesException
+
 
 class ClassifierDataset(Dataset):
     def __init__(self, n_tasks: int, n_machines: int, data_file0: IO, data_file1: IO):
@@ -45,7 +47,3 @@ class ClassifierDataset(Dataset):
         new_order_of_tasks = random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))
         working_time_matrix = working_time_matrix[new_order_of_tasks]
         return (np.append(prev_state, working_time_matrix, axis=0), bound), one
-
-
-class NoMoreSamplesException(Exception):
-    pass

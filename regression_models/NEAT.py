@@ -17,15 +17,19 @@ class NEAT(nn.Module):
         initial_weights=None,
     ):
         super().__init__()
+        config_path = f"neat_configurations/{n_tasks}_{n_machines}.txt"
+        Path(config_path).write_text(
+            Path(f"neat_configurations/base_config.txt").read_text().format(
+                pop_size=10, num_inputs=(n_tasks + 1) * n_machines)
+        )
         self.config = neat.Config(
             neat.DefaultGenome,
             neat.DefaultReproduction,
             neat.DefaultSpeciesSet,
             neat.DefaultStagnation,
-            f"neat_configurations/{n_tasks}_{n_machines}.txt",
+            config_path,
         )
 
-        stats = neat.StatisticsReporter()
         checkpointer = neat.Checkpointer(
             50, filename_prefix=f"neat_checkpoints/{n_tasks}_{n_machines}_"
         )

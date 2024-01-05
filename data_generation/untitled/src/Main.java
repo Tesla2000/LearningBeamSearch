@@ -7,7 +7,7 @@ public class Main extends DataGenerator {
     static int[] zeros = new int[10];
 
     public static void main(String[] args) {
-        int n_tasks = 10;
+        int n_tasks = 9;
         int n_machines = 25;
         int iteration = 0;
         OutputPath outputPath = OutputPath.CLASSIFICATION;
