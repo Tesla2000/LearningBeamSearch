@@ -16,12 +16,12 @@ from regression_models.WideConvRegressor import WideConvRegressor
 from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-def test(models: dict[int, BaseClassifier], n_tasks, n_machines):
+def test(models: dict[int, BaseClassifier], n_tasks: int, n_machines: int, beta: float):
     generator = RandomNumberGenerator()
     working_time_matrix = np.array(
         [[generator.nextInt(1, 255) for _ in range(n_machines)] for _ in range(n_tasks)]
     )
-    model_tree = Tree(working_time_matrix, models)
+    model_tree = Tree(working_time_matrix, models, beta=beta)
     branch_and_bound_tree = Tree(working_time_matrix, {})
     start = time.time()
     model_value = model_tree.eval_with_model().value
@@ -37,9 +37,10 @@ def test(models: dict[int, BaseClassifier], n_tasks, n_machines):
 def main():
     regressor_type: Type[BaseRegressor] = WideConvRegressor
     classifier_type: Type[BaseClassifier] = MinClassifier
+    beta = .1
     max_tasks = 10
     n_machines = 25
-    min_tasks = 3
+    min_tasks = 7
 
     classifier_models = {}
     # if model_type == GRURegressor:
@@ -68,7 +69,7 @@ def main():
         classifier.load_state_dict(torch.load(classifier_parameters_path[0]))
         classifier.eval()
         classifier_models[n_tasks] = classifier
-    test(classifier_models, max_tasks, n_machines)
+    test(classifier_models, max_tasks, n_machines, beta)
 
 
 if __name__ == "__main__":
