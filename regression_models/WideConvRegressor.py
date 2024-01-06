@@ -25,6 +25,3 @@ class WideConvRegressor(ConvRegressor):
         out = self.dense1(x)
         x = torch.concat((x, out), dim=1)
         return self.dense2(x)
-
-
-WideConvRegressor.__name__ += '256'

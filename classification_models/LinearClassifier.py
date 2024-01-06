@@ -15,4 +15,6 @@ class LinearClassifier(BaseClassifier):
         self.fc = nn.Linear(1, 1)
 
     def _predict(self, x, bound):
-        return self.sigmoid(bound.reshape(-1, 1) - self.fc(x))
+        difference = torch.sub(bound.reshape(-1, 1), x)
+        difference = torch.div(difference, 100)
+        return self.sigmoid(self.fc(difference))

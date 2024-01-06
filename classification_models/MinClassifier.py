@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 from classification_models.BaseClassifier import BaseClassifier
@@ -10,4 +11,6 @@ class MinClassifier(BaseClassifier):
         super(MinClassifier, self).__init__(model_regressor, learning_rate)
 
     def _predict(self, x, bound):
-        return self.sigmoid(bound.reshape(-1, 1) - x)
+        difference = bound.reshape(-1, 1) - x
+        difference = torch.div(difference, 100)
+        return self.sigmoid(difference)

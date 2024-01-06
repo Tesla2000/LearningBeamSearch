@@ -5,8 +5,8 @@ from time import time
 
 import numpy as np
 import torch
-from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, roc_auc_score
-from torch import nn, optim
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, roc_auc_score, fbeta_score
+from torch import nn, optim, Tensor
 from torch.utils.data import DataLoader
 
 from Config import Config
@@ -26,11 +26,15 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
     for param in regressor.parameters():
         param.requires_grad = False
     classifier = LinearClassifier(regressor, n_tasks)
+    beta = 0
+    if not 0 <= beta <= 1:
+        raise ValueError("Beta must be between 0 and 1")
     average_size = 10000
     batch_size = 16
     learning_rate = classifier.learning_rate
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    criterion = nn.BCELoss()
+    criterion = nn.BCELoss(reduction='none')
+    # criterion = nn.BCELoss()
     if tuple(p for p in classifier.parameters() if p.requires_grad):
         optimizer = optim.Adam(classifier.parameters(), lr=learning_rate)
     data_file0 = Path(f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/0_{n_tasks}_{n_machines}.txt").open()
@@ -52,13 +56,18 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
             prediction_time += time() - start
             if locals().get('optimizer'):
                 loss = criterion(outputs, target)
+                loss = torch.divide(loss, 100)
+                loss = torch.mul(loss, torch.maximum(target, torch.full_like(loss, beta)))
+                loss = torch.mean(loss)
                 loss.backward()
                 optimizer.step()
             targets.extend(target.detach().numpy())
-            predicitions.extend(outputs.detach().numpy())
+            predicitions.extend(outputs.round().detach().numpy())
             try:
-                auc = roc_auc_score(targets, predicitions)
-                print(index, f"{auc:.3f}")
+                precision = precision_score(targets, predicitions)
+                recall = recall_score(targets, predicitions)
+                f_beta = fbeta_score(targets, predicitions, beta=beta)
+                print(index, f"{precision=:.3f} {recall=:.3f} {f_beta=:.3f}")
             except ValueError:
                 pass
     except NoMoreSamplesException:
@@ -66,7 +75,7 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
         num_predictions = index * batch_size
         torch.save(
             classifier.state_dict(),
-            f"{Config.OUTPUT_CLASSIFIER_MODELS}/{classifier}_{regressor}_{n_tasks}_{n_machines}_{(prediction_time / num_predictions):.2e}_{auc:.3f}.pth",
+            f"{Config.OUTPUT_CLASSIFIER_MODELS}/{classifier}_{regressor}_{n_tasks}_{n_machines}_{(prediction_time / num_predictions):.2e}_{f_beta:.3f}_{beta}.pth",
         )
         data_file0.close()
         data_file1.close()
@@ -86,7 +95,7 @@ if __name__ == "__main__":
             # Perceptron,
             # WideMultilayerPerceptron,
             # BranchAndBoundRegressor,
-            SumRegressor,
+            # SumRegressor,
             WideConvRegressor,
         ),
         range(3, 10),
