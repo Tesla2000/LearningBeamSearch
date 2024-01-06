@@ -1,13 +1,14 @@
 import torch
 from torch import nn
 
-from ml_models.abstract.BaseModel import BaseModel
+from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-class SumModel(BaseModel):
+class SumRegressor(BaseRegressor):
     learning_rate = 1e-3
+
     def __init__(self, **_):
-        super(SumModel, self).__init__()
+        super(SumRegressor, self).__init__()
         self.fc = nn.Linear(1, 1)
 
     def predict(self, x):

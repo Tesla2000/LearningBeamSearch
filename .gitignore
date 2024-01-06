@@ -1,3 +1,6 @@
 /data_generation/untitled/training_data/*
 /data_generation/untitled/validation_data/*
 /data_generation/untitled/training_data_regression/*
+/output_classifier_models/
+/output_regression_models/
+/data_generation/untitled/training_data_classification/

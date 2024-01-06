@@ -61,5 +61,9 @@ class Node:
             self.state = np.append(parent_state, np.empty((1, self.m_machines)), axis=0)
             self.fill_state()
         else:
-            self.state = np.array(tuple(accumulate(self.working_time_matrix[self.tasks[-1]], operator.add))).reshape(1, -1)
+            self.state = np.array(
+                tuple(
+                    accumulate(self.working_time_matrix[self.tasks[-1]], operator.add)
+                )
+            ).reshape(1, -1)
         return self.state

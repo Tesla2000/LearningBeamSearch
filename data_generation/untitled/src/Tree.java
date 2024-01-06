@@ -1,5 +1,3 @@
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
 public class Tree {
     int n_tasks;
     int m_machines;
@@ -30,7 +28,9 @@ public class Tree {
             if (isValueInArray(root.tasks, task))
                 continue;
             Node childNode = new Node(root, task);
+            root.children.add(childNode);
             int bestPossibleValue = childNode.getValue();
+            childNode.bestValueAtCreation = bestValue;
             for (int not_done_task = 0; not_done_task < n_tasks; not_done_task++) {
                 if (!isValueInArray(childNode.tasks, not_done_task)) {
                     bestPossibleValue += workingTimeMatrix[not_done_task][workingTimeMatrix[0].length - 1];
@@ -42,7 +42,7 @@ public class Tree {
         }
     }
 
-    private static boolean isValueInArray(int[] array, int value) {
+    public static boolean isValueInArray(int[] array, int value) {
         for (int element : array) {
             if (element == value) {
                 return true;

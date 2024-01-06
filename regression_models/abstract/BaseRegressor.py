@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 
-class BaseModel(nn.Module, ABC):
+class BaseRegressor(nn.Module, ABC):
     learning_rate = 1e-4
 
     def _min_value(self, x):
@@ -18,12 +18,7 @@ class BaseModel(nn.Module, ABC):
 
     @abstractmethod
     def predict(self, x):
-        x = self.flatten(x)
-        x = self.drop1(x)
-        x = self.dense1(x)
-        x = self.relu(x)
-        x = self.drop2(x)
-        return self.dense2(x)
+        pass
 
     def __str__(self):
         return type(self).__name__

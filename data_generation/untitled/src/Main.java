@@ -1,79 +1,84 @@
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
 
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
-public class Main {
+public class Main extends DataGenerator {
+    static Random random = new Random();
+    static int[] once = new int[10];
+    static int[] zeros = new int[10];
 
     public static void main(String[] args) {
-        int n_tasks = 10;
+        int n_tasks = 9;
         int n_machines = 25;
-        int i = 0;
+        int iteration = 0;
+        OutputPath outputPath = OutputPath.CLASSIFICATION;
+        String outputDir = null;
+        if (outputPath == OutputPath.CLASSIFICATION){
+            outputDir = "training_data_classification";
+        } else if (outputPath == OutputPath.REGRESSION) {
+            outputDir = "training_data_regression";
+        }
         while (true) {
-            System.out.println(i);
-            i++;
+            System.out.println(iteration);
+            iteration++;
             int[][] workingTimeMatrix = generateRandomMatrix(n_tasks, n_machines);
             Tree tree = new Tree(n_tasks, n_machines, workingTimeMatrix);
             Node root = new Node(workingTimeMatrix);
             Node bestNode = tree.branchAndBound(root);
-            for (int tasks = 0; tasks < n_tasks; tasks++) {
-                int[][] timeMatrix = new int[0][0];
-                for (int n_tasksChosen = tasks; n_tasksChosen < n_tasks; n_tasksChosen++) {
-                    timeMatrix = Node.appendArrayToMatrix(timeMatrix, workingTimeMatrix[bestNode.tasks[n_tasksChosen]]);
+            if (outputPath == OutputPath.CLASSIFICATION){
+                ArrayList<Node> correctPath = new ArrayList<>();
+                while (bestNode != null) {
+                    correctPath.add(bestNode);
+                    bestNode = bestNode.parent;
                 }
-                saveToTxtFile(bestNode.getState()[tasks], flattenMatrix(timeMatrix), bestNode.getValue(), "data/" + timeMatrix.length + "_" + n_machines + ".txt");
+                saveClassification(n_tasks, n_machines, workingTimeMatrix, root, outputDir, correctPath, 5);
+            } else if (outputPath == OutputPath.REGRESSION) {
+                saveRegression(n_tasks, n_machines, workingTimeMatrix, bestNode, outputDir);
+            }
+
+        }
+    }
+
+    public static void saveRegression(int n_tasks, int n_machines, int[][] workingTimeMatrix, Node bestNode, String outputDir) {
+        for (int tasks = -1; tasks < n_tasks; tasks++) {
+            int[][] timeMatrix = new int[0][0];
+            for (int n_tasksChosen = tasks + 1; n_tasksChosen < n_tasks; n_tasksChosen++) {
+                timeMatrix = Node.appendArrayToMatrix(timeMatrix, workingTimeMatrix[bestNode.tasks[n_tasksChosen]]);
+            }
+            if (timeMatrix.length == 0)
+                break;
+            if (timeMatrix.length < 3)
+                return;
+            if (tasks == -1) {
+                saveToTxtFile(new int[n_machines], timeMatrix, bestNode.getValue(), outputDir + "/" + timeMatrix.length + "_" + n_machines + ".txt");
+            } else {
+                saveToTxtFile(bestNode.getState()[tasks], timeMatrix, bestNode.getValue(), outputDir + "/" + timeMatrix.length + "_" + n_machines + ".txt");
             }
         }
     }
 
-    public static int[][] generateRandomMatrix(int rows, int columns) {
-        int[][] matrix = new int[rows][columns];
-        Random rand = new Random();
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                // Generate random integers in the range 1 to 99
-                matrix[i][j] = rand.nextInt(255) + 1;
+    public static void saveClassification(int n_tasks, int n_machines, int[][] workingTimeMatrix, Node root, String outputDir, ArrayList<Node> correctPath, float zerosRate) {
+        Node node = root;
+        int tasks = node.getState().length-1;
+        if (tasks != -1) {
+            int[][] timeMatrix = new int[0][0];
+            for (int task = 0; task < n_tasks; task++) {
+                if (Tree.isValueInArray(node.tasks, task))
+                    continue;
+                timeMatrix = Node.appendArrayToMatrix(timeMatrix, workingTimeMatrix[task]);
+            }
+            if (timeMatrix.length != 0) {
+                if (correctPath.contains(node)) {
+                    saveToTxtFile(node.getState()[tasks], timeMatrix, node.bestValueAtCreation, outputDir + "/" + 1 + "_" + timeMatrix.length + "_" + n_machines + ".txt");
+                    once[tasks]++;
+                }
+                if (random.nextDouble() < 1.0 / tasks / tasks && once[tasks]*zerosRate > zeros[tasks]) {
+                    saveToTxtFile(node.getState()[tasks], timeMatrix, node.bestValueAtCreation, outputDir + "/" + 0 + "_" + timeMatrix.length + "_" + n_machines + ".txt");
+                    zeros[tasks]++;
+                }
             }
         }
-
-        return matrix;
-    }
-
-    public static int[] flattenMatrix(int[][] matrix) {
-        int rows = matrix.length;
-        int cols = matrix[0].length;
-        int totalElements = rows * cols;
-        int[] flattenedArray = new int[totalElements];
-
-        int index = 0;
-        for (int[] row : matrix) {
-            for (int value : row) {
-                flattenedArray[index++] = value;
-            }
-        }
-        return flattenedArray;
-    }
-
-    public static void saveToTxtFile(int[] previousState, int[] flattenedArray, int uint32Value, String fileName) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
-            int minimum = Integer.MAX_VALUE;
-            for (int b : previousState) {
-                minimum = Math.min(minimum, b);
-            }
-            for (int b : previousState) {
-                writer.write((b - minimum) + " ");
-            }
-            writer.newLine();
-            for (int b : flattenedArray) {
-                writer.write((char) b);
-            }
-            writer.write(String.valueOf(uint32Value - minimum));
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (Node childNode: node.children) {
+            saveClassification(n_tasks, n_machines, workingTimeMatrix, childNode, outputDir, correctPath, zerosRate);
         }
     }
 }
