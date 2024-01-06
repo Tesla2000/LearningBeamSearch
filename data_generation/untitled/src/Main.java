@@ -46,6 +46,8 @@ public class Main extends DataGenerator {
             }
             if (timeMatrix.length == 0)
                 break;
+            if (timeMatrix.length < 3)
+                return;
             if (tasks == -1) {
                 saveToTxtFile(new int[n_machines], timeMatrix, bestNode.getValue(), outputDir + "/" + timeMatrix.length + "_" + n_machines + ".txt");
             } else {

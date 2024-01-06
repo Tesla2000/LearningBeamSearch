@@ -25,15 +25,16 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     best_winner = None
     best_score = -float("inf")
+    winner_net = None
     try:
         for index, (inputs, targets) in enumerate(train_loader):
+            if winner_net:
+                score = neat_trainer.score(winner_net, inputs, targets, verbose=True)
+                print(index, score / batch_size)
+                if score > best_score:
+                    best_score = score
+                    best_winner = winner
             winner, winner_net = neat_trainer.train(model, inputs, targets, n=1)
-            score = neat_trainer.score(winner_net, inputs, targets)
-            print(index, score / batch_size)
-            if score > best_score:
-                best_score = score
-                best_winner = winner
-
     except ValueError:
         pass
     finally:

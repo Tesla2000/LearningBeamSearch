@@ -74,7 +74,6 @@ if __name__ == "__main__":
             ConvRegressor,
             MultilayerPerceptron,
             partial(MultilayerPerceptron, hidden_size=512),
-            GRURegressor,
             SumRegressor,
             Perceptron,
             WideMultilayerPerceptron,

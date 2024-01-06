@@ -25,7 +25,7 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
     for param in regressor.parameters():
         param.requires_grad = False
-    classifier = MinClassifier(regressor, n_tasks)
+    classifier = LinearClassifier(regressor, n_tasks)
     average_size = 10000
     batch_size = 16
     learning_rate = classifier.learning_rate

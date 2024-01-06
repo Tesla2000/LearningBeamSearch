@@ -7,12 +7,12 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 class BaseClassifier(nn.Module, ABC):
 
-    def __init__(self, model_regressor: BaseRegressor, n_tasks: int, learning_rate: float = 1e-4, **_):
+    def __init__(self, model_regressor: BaseRegressor, learning_rate: float = 1e-4, **_):
         super(BaseClassifier, self).__init__()
         self.model_regressor = model_regressor
         self.model_regressor.eval()
         self.learning_rate = learning_rate
-        self.n_tasks = n_tasks
+        self.sigmoid = nn.Sigmoid()
 
     # def _get_outputs(self, x):
     #     outputs = []

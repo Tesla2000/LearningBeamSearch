@@ -16,28 +16,23 @@ class Tree:
         self.root = Node(None, tuple(), self.m_machines, self.working_time_matrix)
         self.models = models
 
-    def _get_minimal_value(
-        self, node: Node, node_value: float, not_used_machines: list[int]
-    ) -> float:
-        return (
-            node_value + np.sum(self.working_time_matrix[not_used_machines, -1])
-            if (model := self.models.get(len(not_used_machines))) is None
-            else float(
-                model(
-                    Tensor(
-                        np.append(
-                            (
-                                np.zeros((1, node.m_machines))
-                                if node.state is None
-                                else node.state
-                            )[-1].reshape(1, -1),
-                            self.working_time_matrix[not_used_machines],
-                            axis=0,
-                        )
-                    ).unsqueeze(0)
-                )
-            )
-        )
+    def _cut(self, node: Node, node_value: float, not_used_machines: list[int], ub: float) -> bool:
+        if (model := self.models.get(len(not_used_machines))) is None:
+            return node_value + np.sum(self.working_time_matrix[not_used_machines, -1]) > ub
+        else:
+            return bool(model(
+                Tensor(
+                    np.append(
+                        (
+                            np.zeros((1, node.m_machines))
+                            if node.state is None
+                            else node.state
+                        )[-1].reshape(1, -1),
+                        self.working_time_matrix[not_used_machines],
+                        axis=0,
+                    )
+                ).unsqueeze(0)
+            ).round())
 
     def _eval_with_model(
         self,
@@ -48,8 +43,7 @@ class Tree:
         not_used_machines = list(
             filterfalse(node.tasks.__contains__, range(self.n_tasks))
         )
-        minimal_value = self._get_minimal_value(node, node_value, not_used_machines)
-        if minimal_value > ub:
+        if self._cut(node, node_value, not_used_machines, ub):
             return None, ub
         if len(node.tasks) == self.n_tasks:
             return node, node_value

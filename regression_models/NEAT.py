@@ -5,6 +5,9 @@ from typing import Callable
 
 import neat
 from torch import nn, Tensor
+from time import time
+
+time_coefficient = .01
 
 
 class NEAT(nn.Module):
@@ -96,17 +99,23 @@ class NEATLearningBeamSearchTrainer(NEATTrainer):
             net = neat.nn.FeedForwardNetwork.create(specimen, config)
             specimen.fitness = self.score(net, inputs, targets) / len(inputs)
 
-    def score(self, net, inputs, targets):
+    def score(self, net, inputs, targets, verbose=False):
         def get_output(x):
             min_value = float(x[0, -1])
             min_value += sum(x[1:, -1])
             x = net.activate(x.flatten())[0]
             return (x + min_value).reshape(1)
 
-        return -sum(
+        start = time()
+        result = -sum(
             map(
                 self.scoring_function,
                 map(get_output, inputs),
                 Tensor(targets).reshape(-1, 1),
             )
         ).item()
+        time_result = time() + start
+        time_result *= time_coefficient / len(inputs)
+        if verbose:
+            print(result, time_result)
+        return result - time_result
