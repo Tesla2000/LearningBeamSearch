@@ -13,9 +13,9 @@ class RegressionDataset(Dataset):
         self.data_file = data_file
 
     def __len__(self):
-        return int(1e9)
+        return 158833
 
-    def __getitem__(self, _):
+    def __getitem__(self, index):
         prev_state = np.array(
             tuple(map(int, self.data_file.readline().split()))
         ).reshape(1, -1)
@@ -31,6 +31,3 @@ class RegressionDataset(Dataset):
         working_time_matrix = working_time_matrix[random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))]
         return np.append(prev_state, working_time_matrix, axis=0), best_value
 
-
-class NoMoreSamplesException(Exception):
-    pass

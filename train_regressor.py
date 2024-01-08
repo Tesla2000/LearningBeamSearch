@@ -1,6 +1,5 @@
 import random
 from collections import deque
-from functools import partial
 from itertools import product
 from pathlib import Path
 from statistics import mean
@@ -22,7 +21,7 @@ from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
+def train_regressor(model: BaseRegressor, n_tasks: int, n_machines: int):
     average_size = 1000
     batch_size = 16
     learning_rate = model.learning_rate
@@ -31,7 +30,7 @@ def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
     if tuple(model.parameters()):
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     data_file = Path(f"{Config.TRAINING_DATA_REGRESSION_PATH}/{n_tasks}_{n_machines}.txt").open()
-    data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=m_machines, data_file=data_file)
+    data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     losses = deque(maxlen=average_size)
     best_loss = float("inf")
@@ -71,13 +70,13 @@ if __name__ == "__main__":
     n_machines = 25
     for model_type, n_tasks in product(
         (
-            ConvRegressor,
-            MultilayerPerceptron,
-            partial(MultilayerPerceptron, hidden_size=512),
-            SumRegressor,
+            # ConvRegressor,
+            # MultilayerPerceptron,
+            # partial(MultilayerPerceptron, hidden_size=512),
+            # SumRegressor,
             Perceptron,
-            WideMultilayerPerceptron,
-            WideConvRegressor,
+            # WideMultilayerPerceptron,
+            # WideConvRegressor,
         ),
         range(3, 11),
     ):
