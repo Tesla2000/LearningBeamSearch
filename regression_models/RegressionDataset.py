@@ -19,8 +19,6 @@ class RegressionDataset(Dataset):
         prev_state = np.array(
             tuple(map(int, self.data_file.readline().split()))
         ).reshape(1, -1)
-        if prev_state.shape == (1, 0):
-            raise NoMoreSamplesException
         working_time_matrix = np.array(
             tuple(map(ord, self.data_file.read(self.expected_length)))
         ).reshape((self.n_tasks, self.n_machines))

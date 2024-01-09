@@ -1,4 +1,5 @@
 import re
+from itertools import count
 from pathlib import Path
 
 import numpy as np
@@ -12,38 +13,51 @@ from regression_models.Perceptron import Perceptron
 
 
 def train_neat(model: NEAT, n_tasks: int, n_machines: int):
-    batch_size = 1000
 
     # criterion = nn.MSELoss()
     def criterion(output, target):
         return (output - target).abs()
 
     neat_trainer = NEATLearningBeamSearchTrainer(model, criterion)
-    data_file = Path(
-        f"data_generation/untitled/training_data_regression/{n_tasks}_{n_machines}.txt"
-    ).open()
-    data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
-    train_loader = DataLoader(data_maker, batch_size=batch_size)
+    batch_size = 10000
+    # data_file = Path(
+    #     f"data_generation/untitled/training_data_regression/{n_tasks}_{n_machines}.txt"
+    # ).open()
+    # data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
+    # train_loader = DataLoader(data_maker, batch_size=batch_size)
     best_winner = None
     best_score = -float("inf")
     winner_net = None
-    try:
-        for index, (inputs, targets) in enumerate(train_loader):
-            if winner_net:
-                score = neat_trainer.score(winner_net, inputs, targets,
-                                           # verbose=True
-                                           )
-                print(index, score / batch_size)
-                if score > best_score:
-                    best_score = score
-                    best_winner = winner
-            winner, winner_net = neat_trainer.train(model, inputs, targets, n=1)
-    except ValueError:
-        pass
-    finally:
-        model.save_winner(
-            f"{Config.OUTPUT_REGRESSION_MODELS}/NEAT_{n_tasks}_{n_machines}.pkl", best_winner
-        )
+    for index in count():
+        data_file = Path(
+            f"data_generation/untitled/training_data_regression/{n_tasks}_{n_machines}.txt"
+        ).open()
+        data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
+        train_loader = DataLoader(data_maker, batch_size=batch_size)
+        inputs, targets = next(iter(train_loader))
+        winner, winner_net = neat_trainer.train(model, inputs, targets, n=1)
+        score = winner.fitness
+        if score > best_score:
+            best_score = score
+            best_winner = winner
+        print(index, score)
+    # try:
+    #     for index, (inputs, targets) in enumerate(train_loader):
+    #         if winner_net:
+    #             score = neat_trainer.score(winner_net, inputs, targets,
+    #                                        # verbose=True
+    #                                        )
+    #             print(index, score / batch_size)
+    #             if score > best_score:
+    #                 best_score = score
+    #                 best_winner = winner
+    #         winner, winner_net = neat_trainer.train(model, inputs, targets, n=1)
+    # except ValueError:
+    #     pass
+    # finally:
+    #     model.save_winner(
+    #         f"{Config.OUTPUT_REGRESSION_MODELS}/NEAT_{n_tasks}_{n_machines}.pkl", best_winner
+    #     )
 
 
 def main():

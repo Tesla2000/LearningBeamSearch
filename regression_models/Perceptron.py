@@ -37,22 +37,17 @@ if __name__ == '__main__':
         labels = labels.numpy() - torch.sum(inputs[:, :, -1], axis=1).numpy()
         model = LinearRegression()
         model.fit(inputs.flatten(start_dim=1).numpy(), labels)
-        distances = np.sort(np.abs(labels - model.predict(inputs.flatten(start_dim=1).numpy())))
-        for alpha in (.1, .05, .01):
-            print(n_tasks, alpha, distances[-int(len(distances) * alpha)])
-        plt.hist(distances[:-int(len(distances) * alpha)])
-        plt.show()
-        # perceptron = Perceptron(n_tasks, n_machines)
-        # with torch.no_grad():
-        #     perceptron.fc.weight = Parameter(Tensor(model.coef_).unsqueeze(0))
-        #     perceptron.fc.bias = Parameter(Tensor([model.intercept_]))
-        #     del model
-        #     start = time()
-        #     line_outputs = np.array(perceptron.predict(Tensor(inputs).float()))[:, -1]
-        #     prediction_time = time() - start
-        #     result = np.mean(np.abs(labels - line_outputs))
-        #     print(n_tasks, result)
-        #     torch.save(
-        #         perceptron.state_dict(),
-        #         f"{Config.OUTPUT_REGRESSION_MODELS}/{perceptron}_{n_tasks}_{n_machines}_{(prediction_time / len(data_maker)):.2e}_{result:.1f}.pth",
-        #     )
+        perceptron = Perceptron(n_tasks, n_machines)
+        with torch.no_grad():
+            perceptron.fc.weight = Parameter(Tensor(model.coef_).unsqueeze(0))
+            perceptron.fc.bias = Parameter(Tensor([model.intercept_]))
+            del model
+            start = time()
+            line_outputs = np.array(perceptron.predict(Tensor(inputs).float()))[:, -1]
+            prediction_time = time() - start
+            result = np.mean(np.abs(labels - line_outputs))
+            print(n_tasks, result)
+            torch.save(
+                perceptron.state_dict(),
+                f"{Config.OUTPUT_REGRESSION_MODELS}/{perceptron}_{n_tasks}_{n_machines}_{(prediction_time / len(data_maker)):.2e}_{result:.1f}.pth",
+            )
