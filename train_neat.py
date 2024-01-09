@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +18,7 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
     def criterion(output, target):
         return (output - target).abs()
 
-    neat_trainer = NEATLearningBeamSearchTrainer(criterion)
+    neat_trainer = NEATLearningBeamSearchTrainer(model, criterion)
     data_file = Path(
         f"data_generation/untitled/training_data_regression/{n_tasks}_{n_machines}.txt"
     ).open()
@@ -29,7 +30,9 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
     try:
         for index, (inputs, targets) in enumerate(train_loader):
             if winner_net:
-                score = neat_trainer.score(winner_net, inputs, targets, verbose=True)
+                score = neat_trainer.score(winner_net, inputs, targets,
+                                           # verbose=True
+                                           )
                 print(index, score / batch_size)
                 if score > best_score:
                     best_score = score
@@ -48,16 +51,16 @@ def main():
     np.random.seed(42)
     n_machines = 25
     for n_tasks in range(3, 11):
+        model_path = next(
+            Config.OUTPUT_REGRESSION_MODELS.glob(
+                f"{Perceptron.__name__}_{n_tasks}_{n_machines}*"
+            )
+        )
         model = NEAT(
             n_tasks,
             n_machines,
-            initial_weights=torch.load(
-                next(
-                    Config.OUTPUT_REGRESSION_MODELS.glob(
-                        f"{Perceptron.__name__}_{n_tasks}_{n_machines}*"
-                    )
-                )
-            ),
+            initial_weights=torch.load(model_path),
+            initial_fitness=float(re.findall(r'[\d\.]+', model_path.name)[-1][:-1])
         )
         train_neat(model, n_tasks, n_machines)
 

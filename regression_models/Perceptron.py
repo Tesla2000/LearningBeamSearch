@@ -1,6 +1,7 @@
 from pathlib import Path
 from time import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.linear_model import LinearRegression
@@ -14,7 +15,7 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
 class Perceptron(BaseRegressor):
-    learning_rate = 1e-3
+    learning_rate = 1e-4
 
     def __init__(self, n_tasks: int, n_machines: int, **_):
         super(Perceptron, self).__init__()
@@ -36,17 +37,22 @@ if __name__ == '__main__':
         labels = labels.numpy() - torch.sum(inputs[:, :, -1], axis=1).numpy()
         model = LinearRegression()
         model.fit(inputs.flatten(start_dim=1).numpy(), labels)
-        perceptron = Perceptron(n_tasks, n_machines)
-        with torch.no_grad():
-            perceptron.fc.weight = Parameter(Tensor(model.coef_).unsqueeze(0))
-            perceptron.fc.bias = Parameter(Tensor([model.intercept_]))
-            del model
-            start = time()
-            line_outputs = np.array(perceptron.predict(Tensor(inputs).float()))[:, -1]
-            prediction_time = time() - start
-            result = np.mean(np.abs(labels - line_outputs))
-            print(n_tasks, result)
-            torch.save(
-                perceptron.state_dict(),
-                f"{Config.OUTPUT_REGRESSION_MODELS}/{perceptron}_{n_tasks}_{n_machines}_{(prediction_time / len(data_maker)):.2e}_{result:.1f}.pth",
-            )
+        distances = np.sort(np.abs(labels - model.predict(inputs.flatten(start_dim=1).numpy())))
+        for alpha in (.1, .05, .01):
+            print(n_tasks, alpha, distances[-int(len(distances) * alpha)])
+        plt.hist(distances[:-int(len(distances) * alpha)])
+        plt.show()
+        # perceptron = Perceptron(n_tasks, n_machines)
+        # with torch.no_grad():
+        #     perceptron.fc.weight = Parameter(Tensor(model.coef_).unsqueeze(0))
+        #     perceptron.fc.bias = Parameter(Tensor([model.intercept_]))
+        #     del model
+        #     start = time()
+        #     line_outputs = np.array(perceptron.predict(Tensor(inputs).float()))[:, -1]
+        #     prediction_time = time() - start
+        #     result = np.mean(np.abs(labels - line_outputs))
+        #     print(n_tasks, result)
+        #     torch.save(
+        #         perceptron.state_dict(),
+        #         f"{Config.OUTPUT_REGRESSION_MODELS}/{perceptron}_{n_tasks}_{n_machines}_{(prediction_time / len(data_maker)):.2e}_{result:.1f}.pth",
+        #     )

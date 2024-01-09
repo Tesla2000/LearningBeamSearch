@@ -18,6 +18,7 @@ class NEAT(nn.Module):
         checkpoint_file: Path | str = None,
         winner_path: Path | str = None,
         initial_weights=None,
+        initial_fitness: float = None
     ):
         super().__init__()
         config_path = f"neat_configurations/{n_tasks}_{n_machines}.txt"
@@ -32,7 +33,7 @@ class NEAT(nn.Module):
             neat.DefaultStagnation,
             config_path,
         )
-
+        self.initial_fitness = initial_fitness
         checkpointer = neat.Checkpointer(
             50, filename_prefix=f"neat_checkpoints/{n_tasks}_{n_machines}_"
         )
@@ -69,19 +70,20 @@ class NEAT(nn.Module):
 
 
 class NEATTrainer:
-    def __init__(self, scoring_function: Callable[[Tensor, Tensor], Tensor]):
+    def __init__(self, neat: NEAT, scoring_function: Callable[[Tensor, Tensor], Tensor]):
+        self.neat = neat
         self.scoring_function = scoring_function
 
-    def _eval_genomes(self, genomes, config, inputs, targets):
-        for genome_id, genome in genomes:
-            net = neat.nn.FeedForwardNetwork.create(genome, config)
-            genome.fitness = -sum(
-                map(
-                    self.scoring_function,
-                    map(Tensor, map(net.activate, inputs)),
-                    Tensor(targets).reshape(-1, 1),
-                )
-            ).item()
+    # def _eval_genomes(self, genomes, config, inputs, targets):
+    #     for genome_id, genome in genomes:
+    #         net = neat.nn.FeedForwardNetwork.create(genome, config)
+    #         genome.fitness = -sum(
+    #             map(
+    #                 self.scoring_function,
+    #                 map(Tensor, map(net.activate, inputs)),
+    #                 Tensor(targets).reshape(-1, 1),
+    #             )
+    #         ).item()
 
     def train(self, neat_instance: NEAT, inputs, targets, n: int):
         neat_instance.winner = neat_instance.population.run(
@@ -95,11 +97,19 @@ class NEATTrainer:
 
 class NEATLearningBeamSearchTrainer(NEATTrainer):
     def _eval_genomes(self, population, config, inputs, targets):
-        for _, specimen in population:
+        for specimen_id, specimen in population:
+            if specimen_id - 1 in range(len(population)) and self.neat.initial_fitness is not None:
+                specimen.fitness = -self.neat.initial_fitness
+                continue
             net = neat.nn.FeedForwardNetwork.create(specimen, config)
-            specimen.fitness = self.score(net, inputs, targets) / len(inputs)
+            if tuple(len(item[5]) for item in net.node_evals) == (100,):
+                specimen.fitness = -1e9
+            else:
+                specimen.fitness = self.score(net, inputs, targets) / len(inputs)
 
-    def score(self, net, inputs, targets, verbose=False):
+    def score(self, net, inputs, targets,
+              # verbose=False
+              ):
         def get_output(x):
             min_value = float(x[0, -1])
             min_value += sum(x[1:, -1])
@@ -116,6 +126,6 @@ class NEATLearningBeamSearchTrainer(NEATTrainer):
         ).item()
         time_result = time() + start
         time_result *= time_coefficient / len(inputs)
-        if verbose:
-            print(result, time_result)
-        return result - time_result
+        # if verbose:
+        #     print(result, time_result)
+        return result
