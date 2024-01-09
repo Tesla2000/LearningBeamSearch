@@ -1,6 +1,7 @@
 import pickle
 from functools import partial
 from pathlib import Path
+from statistics import mean
 from typing import Callable
 
 import neat
@@ -18,13 +19,14 @@ class NEAT(nn.Module):
         checkpoint_file: Path | str = None,
         winner_path: Path | str = None,
         initial_weights=None,
-        initial_fitness: float = None
+        initial_fitness: float = None,
+        pop_size: int = 10,
     ):
         super().__init__()
         config_path = f"neat_configurations/{n_tasks}_{n_machines}.txt"
         Path(config_path).write_text(
             Path(f"neat_configurations/base_config.txt").read_text().format(
-                pop_size=10, num_inputs=(n_tasks + 1) * n_machines)
+                pop_size=pop_size, num_inputs=(n_tasks + 1) * n_machines)
         )
         self.config = neat.Config(
             neat.DefaultGenome,
@@ -106,6 +108,8 @@ class NEATLearningBeamSearchTrainer(NEATTrainer):
                 specimen.fitness = -1e9
             else:
                 specimen.fitness = self.score(net, inputs, targets) / len(inputs)
+        print(mean(specimen.fitness for _, specimen in population),
+              tuple(specimen.fitness for _, specimen in population))
 
     def score(self, net, inputs, targets,
               # verbose=False

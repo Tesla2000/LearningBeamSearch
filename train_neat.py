@@ -1,6 +1,7 @@
 import re
 from itertools import count
 from pathlib import Path
+from statistics import mean
 
 import numpy as np
 import torch
@@ -19,7 +20,7 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
         return (output - target).abs()
 
     neat_trainer = NEATLearningBeamSearchTrainer(model, criterion)
-    batch_size = 10000
+    batch_size = 1000
     # data_file = Path(
     #     f"data_generation/untitled/training_data_regression/{n_tasks}_{n_machines}.txt"
     # ).open()
@@ -73,6 +74,7 @@ def main():
         model = NEAT(
             n_tasks,
             n_machines,
+            pop_size=10,
             initial_weights=torch.load(model_path),
             initial_fitness=float(re.findall(r'[\d\.]+', model_path.name)[-1][:-1])
         )
