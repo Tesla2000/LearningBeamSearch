@@ -1,8 +1,6 @@
-import operator
 import random
 import re
-from functools import partial
-from itertools import combinations, starmap, chain, pairwise, islice, count
+from itertools import chain, pairwise, islice, count, combinations_with_replacement
 from math import comb
 from pathlib import Path
 from typing import Sequence, Optional
@@ -17,12 +15,9 @@ from regression_models.RegressionDataset import RegressionDataset
 
 
 def conv_to_two_d(array: np.array, mask: Sequence[bool]):
-    coefs = array[:-1]
-    array = np.append(array, coefs ** 2)
-    coef_combinations = np.array(tuple(starmap(operator.mul, combinations(coefs, 2))))
+    coef_combinations = np.array(tuple(combinations_with_replacement(range(len(array[0]) - 1), 2)))
     coef_combinations = coef_combinations[mask == 1]
-    array = np.append(array, coef_combinations)
-    return array
+    return np.concatenate((array, *tuple(np.multiply(array[:, combo[0]], array[:, combo[1]]).reshape(-1, 1) for combo in coef_combinations)), axis=1)
 
 
 def init_state(
@@ -91,7 +86,7 @@ def init_population(
 ) -> tuple:
     return tuple(
         np.random.choice(
-            [0, 1], size=comb(len(base_input[0]) - 1, 2), p=[1 - prob_1, prob_1]
+            [0, 1], size=len(base_input[0]) - 1 + comb(len(base_input[0]) - 1, 2), p=[1 - prob_1, prob_1]
         )
         for _ in range(pop_size)
     )
@@ -101,25 +96,23 @@ def main():
     n_machines = 25
     elitism = 2
     batch_size = 10_000
-    load_latest = True
+    load_latest = False
     for n_tasks in range(3, 11):
         base_input, targets, best_result = init_state(
             n_tasks, n_machines, batch_size=batch_size
         )
         start_generation = 0
         if load_latest:
-            path = max(Config.POPULATIONS.glob(f'{n_tasks}_{n_machines}_*.txt'), key=lambda path: int(re.findall(r'\d+', path.name)[-1])).read_text()
+            path = max(Config.POPULATIONS.glob(f'{n_tasks}_{n_machines}_*.txt'), key=lambda path: int(re.findall(r'\d+', path.name)[-1]))
             start_generation = int(re.findall(r'\d+', path.name)[-1])
-            population = list(map(np.array, eval(path)))
+            population = list(map(np.array, eval(path.read_text())))
         else:
             population = init_population(base_input, prob_1=.01)
         print(best_result)
         for generation in tqdm(count(start_generation), "Evaluating generation..."):
             fitness = []
             for specimen in population:
-                mod_input = np.array(
-                    tuple(map(partial(conv_to_two_d, mask=specimen), base_input))
-                )
+                mod_input = conv_to_two_d(base_input, mask=specimen)
                 result = calc_result(mod_input, targets)
                 fitness.append(result)
                 if best_result is None:
