@@ -17,7 +17,7 @@ from regression_models.RegressionDataset import RegressionDataset
 
 def conv_to_two_d(array: np.array, mask: Sequence[bool]):
     coefs = array[:-1]
-    array = np.append(array, coefs**2)
+    array = np.append(array, coefs ** 2)
     coef_combinations = np.array(tuple(starmap(operator.mul, combinations(coefs, 2))))
     coef_combinations = coef_combinations[mask == 1]
     array = np.append(array, coef_combinations)
@@ -132,9 +132,7 @@ def main():
                     ),
                 )
             )
-            Path(f'populations/{n_tasks}_{n_machines}_{best_result}_{generation}.txt').write_text(str(population))
-
-
+            Path(f'{Config.POPULATIONS}/{n_tasks}_{n_machines}_{best_result:.3f}_{generation}.txt').write_text(str(population))
 
 
 if __name__ == "__main__":

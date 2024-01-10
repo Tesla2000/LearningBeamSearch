@@ -8,6 +8,7 @@ class Config:
     TRAINING_DATA_REGRESSION_PATH = ROOT / Path(
         "data_generation/untitled/training_data_regression"
     )
+    POPULATIONS = ROOT / 'populations'
     TRAINING_DATA_CLASSIFICATION_PATH = ROOT / Path(
         "data_generation/untitled/training_data_classification"
     )
