@@ -106,12 +106,15 @@ def main():
         base_input, targets, best_result = init_state(
             n_tasks, n_machines, batch_size=batch_size
         )
+        start_generation = 0
         if load_latest:
-            population = list(map(np.array, eval(max(Config.POPULATIONS.glob(f'{n_tasks}_{n_machines}_*.txt'), key=lambda path: int(re.findall(r'\d+', path.name)[-1])).read_text())))
+            path = max(Config.POPULATIONS.glob(f'{n_tasks}_{n_machines}_*.txt'), key=lambda path: int(re.findall(r'\d+', path.name)[-1])).read_text()
+            start_generation = int(re.findall(r'\d+', path.name)[-1])
+            population = list(map(np.array, eval(path)))
         else:
             population = init_population(base_input, prob_1=.01)
         print(best_result)
-        for generation in tqdm(count(), "Evaluating generation..."):
+        for generation in tqdm(count(start_generation), "Evaluating generation..."):
             fitness = []
             for specimen in population:
                 mod_input = np.array(
