@@ -132,10 +132,10 @@ def main():
                     ),
                 )
             )
-            Path(f'{Config.POPULATIONS}/{n_tasks}_{n_machines}_{best_result:.3f}_{generation}.txt').write_text(str(population))
+            Path(f'{Config.POPULATIONS}/{n_tasks}_{n_machines}_{best_result:.3f}_{generation}.txt').write_text(f"[{','.join(str(list(specimen)) for specimen in population)}]")
 
 
 if __name__ == "__main__":
     np.random.seed(42)
-    random.seed = 42
+    random.seed(42)
     main()

@@ -73,7 +73,7 @@ def train_regressor(model: BaseRegressor, n_tasks: int, n_machines: int):
 if __name__ == "__main__":
     torch.manual_seed(42)
     np.random.seed(42)
-    random.seed = 42
+    random.seed(42)
     n_machines = 25
     for model_type, n_tasks in product(
         (
