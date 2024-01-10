@@ -14,7 +14,6 @@ from regression_models.Perceptron import Perceptron
 
 
 def train_neat(model: NEAT, n_tasks: int, n_machines: int):
-
     # criterion = nn.MSELoss()
     def criterion(output, target):
         return (output - target).abs()
@@ -33,7 +32,9 @@ def train_neat(model: NEAT, n_tasks: int, n_machines: int):
         data_file = Path(
             f"data_generation/untitled/training_data_regression/{n_tasks}_{n_machines}.txt"
         ).open()
-        data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
+        data_maker = RegressionDataset(
+            n_tasks=n_tasks, n_machines=n_machines, data_file=data_file
+        )
         train_loader = DataLoader(data_maker, batch_size=batch_size)
         inputs, targets = next(iter(train_loader))
         winner, winner_net = neat_trainer.train(model, inputs, targets, n=1)
@@ -76,7 +77,7 @@ def main():
             n_machines,
             pop_size=10,
             initial_weights=torch.load(model_path),
-            initial_fitness=float(re.findall(r'[\d\.]+', model_path.name)[-1][:-1])
+            initial_fitness=float(re.findall(r"[\d\.]+", model_path.name)[-1][:-1]),
         )
         train_neat(model, n_tasks, n_machines)
 

@@ -8,7 +8,7 @@ import neat
 from torch import nn, Tensor
 from time import time
 
-time_coefficient = .01
+time_coefficient = 0.01
 
 
 class NEAT(nn.Module):
@@ -25,8 +25,9 @@ class NEAT(nn.Module):
         super().__init__()
         config_path = f"neat_configurations/{n_tasks}_{n_machines}.txt"
         Path(config_path).write_text(
-            Path(f"neat_configurations/base_config.txt").read_text().format(
-                pop_size=pop_size, num_inputs=(n_tasks + 1) * n_machines)
+            Path(f"neat_configurations/base_config.txt")
+            .read_text()
+            .format(pop_size=pop_size, num_inputs=(n_tasks + 1) * n_machines)
         )
         self.config = neat.Config(
             neat.DefaultGenome,
@@ -72,7 +73,9 @@ class NEAT(nn.Module):
 
 
 class NEATTrainer:
-    def __init__(self, neat: NEAT, scoring_function: Callable[[Tensor, Tensor], Tensor]):
+    def __init__(
+        self, neat: NEAT, scoring_function: Callable[[Tensor, Tensor], Tensor]
+    ):
         self.neat = neat
         self.scoring_function = scoring_function
 
@@ -100,7 +103,10 @@ class NEATTrainer:
 class NEATLearningBeamSearchTrainer(NEATTrainer):
     def _eval_genomes(self, population, config, inputs, targets):
         for specimen_id, specimen in population:
-            if specimen_id - 1 in range(len(population)) and self.neat.initial_fitness is not None:
+            if (
+                specimen_id - 1 in range(len(population))
+                and self.neat.initial_fitness is not None
+            ):
                 specimen.fitness = -self.neat.initial_fitness
                 continue
             net = neat.nn.FeedForwardNetwork.create(specimen, config)
@@ -108,12 +114,18 @@ class NEATLearningBeamSearchTrainer(NEATTrainer):
                 specimen.fitness = -1e9
             else:
                 specimen.fitness = self.score(net, inputs, targets) / len(inputs)
-        print(mean(specimen.fitness for _, specimen in population),
-              tuple(specimen.fitness for _, specimen in population))
+        print(
+            mean(specimen.fitness for _, specimen in population),
+            tuple(specimen.fitness for _, specimen in population),
+        )
 
-    def score(self, net, inputs, targets,
-              # verbose=False
-              ):
+    def score(
+        self,
+        net,
+        inputs,
+        targets,
+        # verbose=False
+    ):
         def get_output(x):
             min_value = float(x[0, -1])
             min_value += sum(x[1:, -1])

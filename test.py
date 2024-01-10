@@ -37,7 +37,7 @@ def test(models: dict[int, BaseClassifier], n_tasks: int, n_machines: int):
 def main():
     regressor_type: Type[BaseRegressor] = WideConvRegressor
     classifier_type: Type[BaseClassifier] = MinClassifier
-    beta = .1
+    beta = 0.1
     max_tasks = 10
     n_machines = 25
     min_tasks = 7
@@ -55,10 +55,14 @@ def main():
     # else:
     for n_tasks in range(min_tasks, max_tasks + 1):
         regressor_parameters_path = tuple(
-            Path(Config.OUTPUT_REGRESSION_MODELS).glob(f"{regressor_type.__name__}_{n_tasks}*")
+            Path(Config.OUTPUT_REGRESSION_MODELS).glob(
+                f"{regressor_type.__name__}_{n_tasks}*"
+            )
         )
         classifier_parameters_path = tuple(
-            Path(Config.OUTPUT_CLASSIFIER_MODELS).glob(f"{classifier_type.__name__}_{regressor_type.__name__}_{n_tasks}*")
+            Path(Config.OUTPUT_CLASSIFIER_MODELS).glob(
+                f"{classifier_type.__name__}_{regressor_type.__name__}_{n_tasks}*"
+            )
         )
         if not regressor_parameters_path or not classifier_parameters_path:
             continue

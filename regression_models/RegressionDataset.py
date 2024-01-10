@@ -26,6 +26,7 @@ class RegressionDataset(Dataset):
         minimal_value = prev_state[0, 0]
         prev_state -= minimal_value
         best_value -= minimal_value
-        working_time_matrix = working_time_matrix[random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))]
+        working_time_matrix = working_time_matrix[
+            random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))
+        ]
         return np.append(prev_state, working_time_matrix, axis=0), best_value
-

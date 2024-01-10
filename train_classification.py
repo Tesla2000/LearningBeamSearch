@@ -5,7 +5,14 @@ from time import time
 
 import numpy as np
 import torch
-from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, roc_auc_score, fbeta_score
+from sklearn.metrics import (
+    f1_score,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+    fbeta_score,
+)
 from torch import nn, optim, Tensor
 from torch.utils.data import DataLoader
 
@@ -14,7 +21,10 @@ from classification_models.LinearClassifier import LinearClassifier
 from classification_models.MinClassifier import MinClassifier
 from classification_models.ClassifierDataset import ClassifierDataset
 from regression_models.BranchAndBoundRegressor import BranchAndBoundRegressor
-from regression_models.RegressionDataset import RegressionDataset, NoMoreSamplesException
+from regression_models.RegressionDataset import (
+    RegressionDataset,
+    NoMoreSamplesException,
+)
 from regression_models.Perceptron import Perceptron
 from regression_models.SumRegressor import SumRegressor
 from regression_models.WideConvRegressor import WideConvRegressor
@@ -33,13 +43,22 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
     batch_size = 16
     learning_rate = classifier.learning_rate
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    criterion = nn.BCELoss(reduction='none')
+    criterion = nn.BCELoss(reduction="none")
     # criterion = nn.BCELoss()
     if tuple(p for p in classifier.parameters() if p.requires_grad):
         optimizer = optim.Adam(classifier.parameters(), lr=learning_rate)
-    data_file0 = Path(f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/0_{n_tasks}_{n_machines}.txt").open()
-    data_file1 = Path(f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/1_{n_tasks}_{n_machines}.txt").open()
-    data_maker = ClassifierDataset(n_tasks=n_tasks, n_machines=m_machines, data_file0=data_file0, data_file1=data_file1)
+    data_file0 = Path(
+        f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/0_{n_tasks}_{n_machines}.txt"
+    ).open()
+    data_file1 = Path(
+        f"{Config.TRAINING_DATA_CLASSIFICATION_PATH}/1_{n_tasks}_{n_machines}.txt"
+    ).open()
+    data_maker = ClassifierDataset(
+        n_tasks=n_tasks,
+        n_machines=m_machines,
+        data_file0=data_file0,
+        data_file1=data_file1,
+    )
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     predicitions = deque(maxlen=average_size)
     targets = deque(maxlen=average_size)
@@ -47,17 +66,23 @@ def train_classifier(regressor: BaseRegressor, n_tasks: int, m_machines: int):
     prediction_time = 0
     try:
         for index, ((inputs, bound), labels) in enumerate(train_loader):
-            inputs, bound, labels = inputs.to(device), bound.to(device), labels.to(device)
+            inputs, bound, labels = (
+                inputs.to(device),
+                bound.to(device),
+                labels.to(device),
+            )
             target = labels.float().reshape(-1, 1)
-            if locals().get('optimizer'):
+            if locals().get("optimizer"):
                 optimizer.zero_grad()
             start = time()
             outputs = classifier(inputs, bound)
             prediction_time += time() - start
-            if locals().get('optimizer'):
+            if locals().get("optimizer"):
                 loss = criterion(outputs, target)
                 loss = torch.divide(loss, 100)
-                loss = torch.mul(loss, torch.maximum(target, torch.full_like(loss, beta)))
+                loss = torch.mul(
+                    loss, torch.maximum(target, torch.full_like(loss, beta))
+                )
                 loss = torch.mean(loss)
                 loss.backward()
                 optimizer.step()
@@ -102,5 +127,12 @@ if __name__ == "__main__":
     ):
         model: BaseRegressor = model_type(n_tasks=n_tasks, n_machines=n_machines)
         model.load_state_dict(
-            torch.load(next(Config.OUTPUT_REGRESSION_MODELS.glob(f"{model}_{n_tasks}_{n_machines}_*"))))
+            torch.load(
+                next(
+                    Config.OUTPUT_REGRESSION_MODELS.glob(
+                        f"{model}_{n_tasks}_{n_machines}_*"
+                    )
+                )
+            )
+        )
         train_classifier(model, n_tasks, n_machines)

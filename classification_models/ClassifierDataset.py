@@ -32,9 +32,7 @@ class ClassifierDataset(Dataset):
             io = self.data_file1
         else:
             io = self.data_file0
-        prev_state = np.array(
-            tuple(map(int, io.readline().split()))
-        ).reshape(1, -1)
+        prev_state = np.array(tuple(map(int, io.readline().split()))).reshape(1, -1)
         if prev_state.shape == (1, 0):
             raise NoMoreSamplesException
         working_time_matrix = np.array(
@@ -44,6 +42,8 @@ class ClassifierDataset(Dataset):
         minimal_value = prev_state[0, 0]
         prev_state -= minimal_value
         bound -= minimal_value
-        new_order_of_tasks = random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))
+        new_order_of_tasks = random.sample(
+            range(len(working_time_matrix)), k=len(working_time_matrix)
+        )
         working_time_matrix = working_time_matrix[new_order_of_tasks]
         return (np.append(prev_state, working_time_matrix, axis=0), bound), one

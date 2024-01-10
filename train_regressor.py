@@ -13,7 +13,10 @@ from torch.utils.data import DataLoader
 from Config import Config
 from regression_models import GRURegressor, ConvRegressor, MultilayerPerceptron
 from regression_models.BranchAndBoundRegressor import BranchAndBoundRegressor
-from regression_models.RegressionDataset import RegressionDataset, NoMoreSamplesException
+from regression_models.RegressionDataset import (
+    RegressionDataset,
+    NoMoreSamplesException,
+)
 from regression_models.Perceptron import Perceptron
 from regression_models.SumRegressor import SumRegressor
 from regression_models.WideConvRegressor import WideConvRegressor
@@ -29,8 +32,12 @@ def train_regressor(model: BaseRegressor, n_tasks: int, n_machines: int):
     criterion = nn.MSELoss()
     if tuple(model.parameters()):
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    data_file = Path(f"{Config.TRAINING_DATA_REGRESSION_PATH}/{n_tasks}_{n_machines}.txt").open()
-    data_maker = RegressionDataset(n_tasks=n_tasks, n_machines=n_machines, data_file=data_file)
+    data_file = Path(
+        f"{Config.TRAINING_DATA_REGRESSION_PATH}/{n_tasks}_{n_machines}.txt"
+    ).open()
+    data_maker = RegressionDataset(
+        n_tasks=n_tasks, n_machines=n_machines, data_file=data_file
+    )
     train_loader = DataLoader(data_maker, batch_size=batch_size)
     losses = deque(maxlen=average_size)
     best_loss = float("inf")
@@ -39,12 +46,12 @@ def train_regressor(model: BaseRegressor, n_tasks: int, n_machines: int):
         for index, (inputs, labels) in enumerate(train_loader):
             inputs, labels = inputs.to(device), labels.to(device)
             target = labels.float().unsqueeze(1)
-            if locals().get('model'):
+            if locals().get("model"):
                 optimizer.zero_grad()
             start = time()
             outputs = model(inputs)
             prediction_time += time() - start
-            if locals().get('model'):
+            if locals().get("model"):
                 loss = criterion(outputs, target)
                 loss.backward()
                 optimizer.step()
