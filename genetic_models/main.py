@@ -1,5 +1,6 @@
 import operator
 import random
+import re
 from functools import partial
 from itertools import combinations, starmap, chain, pairwise, islice, count
 from math import comb
@@ -100,11 +101,15 @@ def main():
     n_machines = 25
     elitism = 2
     batch_size = 10_000
+    load_latest = True
     for n_tasks in range(3, 11):
         base_input, targets, best_result = init_state(
             n_tasks, n_machines, batch_size=batch_size
         )
-        population = init_population(base_input, prob_1=.01)
+        if load_latest:
+            population = list(map(np.array, eval(max(Config.POPULATIONS.glob(f'{n_tasks}_{n_machines}_*.txt'), key=lambda path: int(re.findall(r'\d+', path.name)[-1])).read_text())))
+        else:
+            population = init_population(base_input, prob_1=.01)
         print(best_result)
         for generation in tqdm(count(), "Evaluating generation..."):
             fitness = []
