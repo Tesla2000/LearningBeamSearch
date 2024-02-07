@@ -17,7 +17,7 @@ class GRURegressor(BaseRegressor):
         self.fc = nn.Linear(hidden_size, 1)
 
     def predict(self, x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        h0 = torch.zeros(self.num_layers, x.n_tasks(0), self.hidden_size)
         x, _ = self.gru(x, h0)
         x = x[:, -1, :]
         x = self.dropout(x)
