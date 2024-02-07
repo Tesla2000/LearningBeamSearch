@@ -1,5 +1,5 @@
-from collections import deque
-from statistics import mean
+from copy import deepcopy
+from itertools import count
 from time import time
 
 import torch
@@ -15,42 +15,46 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
 def train_regressor(model: BaseRegressor, n_tasks: int, n_machines: int):
-    average_size = 1000
-    batch_size = 16
+    batch_size = 32
+    test_percentage = .2
     learning_rate = model.learning_rate
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
-    if tuple(model.parameters()):
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-        scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=.1)
-    best_loss = float("inf")
-    prediction_time = 0
-    losses = deque(maxlen=average_size)
-    for epoch in range(3):
-        data_maker = RegressionDataset(
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=.9)
+    best_result = float('inf')
+    for epoch in count():
+        dataset = RegressionDataset(
             n_tasks=n_tasks, n_machines=n_machines
         )
-        train_loader = DataLoader(data_maker, batch_size=batch_size)
+        train_set, val_set = torch.utils.data.random_split(dataset, [
+            len(dataset) - int(test_percentage * len(dataset)), int(test_percentage * len(dataset))])
+        del dataset
+        train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+        val_loader = DataLoader(val_set, batch_size=len(val_set))
         for index, (inputs, labels) in enumerate(train_loader):
             inputs, labels = inputs.to(device), labels.to(device)
             target = labels.float().unsqueeze(1)
-            if locals().get("model"):
-                optimizer.zero_grad()
-            start = time()
+            optimizer.zero_grad()
             outputs = model(inputs)
-            prediction_time += time() - start
-            if locals().get("model"):
-                loss = criterion(outputs, target)
-                loss.backward()
-                optimizer.step()
-            losses.append((target - outputs).abs().mean().item())
-            average = mean(losses)
-            print(index, average)
+            loss = criterion(outputs, target)
+            loss.backward()
+            optimizer.step()
         scheduler.step()
-    print(best_loss)
-    num_predictions = index * batch_size
-    torch.save(
-        model.state_dict(),
-        f"{Config.OUTPUT_REGRESSION_MODELS}/{model}_{n_tasks}_{n_machines}_{(prediction_time / num_predictions):.2e}_{best_loss:.1f}.pth",
-    )
-
+        inputs, labels = next(iter(val_loader))
+        inputs, labels = inputs.to(device), labels.to(device)
+        target = labels.float().unsqueeze(1)
+        model.eval()
+        start = time()
+        outputs = model(inputs)
+        prediction_time = (time() - start) / len(outputs)
+        result = (target - outputs).abs().mean()
+        if result > best_result:
+            torch.save(
+                state_dict,
+                f"{Config.OUTPUT_REGRESSION_MODELS}/{model}_{n_tasks}_{n_machines}_{prediction_time:.2e}_{best_result:.1f}.pth",
+            )
+            return
+        state_dict = deepcopy(model.state_dict())
+        best_result = result
+        print(epoch, result.item())
