@@ -1,4 +1,5 @@
 from itertools import filterfalse, permutations, product
+from math import factorial
 from typing import Optional
 
 import numpy as np
@@ -70,3 +71,12 @@ class Tree:
             if value < best_value:
                 best_value = value
         return best_value
+
+    def fast_brute_force(self):
+        states = np.zeros((factorial(self.n_tasks), self.n_tasks + 1, self.m_machines + 1))
+        states[:, 1:, 1:] = self.working_time_matrix[list(list(permutation) for permutation in permutations(range(self.n_tasks)))]
+        for row, column in product(
+            range(1, self.n_tasks + 1), range(1, self.m_machines + 1)
+        ):
+            states[:, row, column] += np.maximum(states[:, row - 1, column], states[:, row, column - 1])
+        return np.min(states[:, -1, -1])

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     torch.manual_seed(42)
     np.random.seed(42)
     random.seed(42)
-    n_machines = 25
+    m_machines = 25
     for model_type, n_tasks in product(
         (
             # ConvRegressor,
@@ -24,5 +24,5 @@ if __name__ == "__main__":
         ),
         range(3, 11),
     ):
-        model = model_type(n_tasks=n_tasks, n_machines=n_machines)
-        train_regressor(model, n_tasks, n_machines)
+        model = model_type(n_tasks=n_tasks, m_machines=m_machines)
+        train_regressor(model, n_tasks, m_machines)

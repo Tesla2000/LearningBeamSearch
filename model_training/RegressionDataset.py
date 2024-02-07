@@ -18,7 +18,5 @@ class RegressionDataset(Dataset):
 
     def __getitem__(self, index):
         self.cur.execute(f"SELECT * FROM {self.table} WHERE id = ?", (index + 1,))
-        result = tuple(
-            int.from_bytes(value, "little") for value in self.cur.fetchone()[1:]
-        )
+        result = self.cur.fetchone()[1:]
         return Tensor(result[:-1]).reshape(1, -1), result[-1]

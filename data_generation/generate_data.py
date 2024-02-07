@@ -1,5 +1,6 @@
 import multiprocessing
 import sqlite3
+from time import time
 
 import numpy as np
 
@@ -38,9 +39,9 @@ def generate_data(args: tuple[int, int, int]):
 
 
 if __name__ == "__main__":
-    num_cores = 4
-    n_tasks, m_machines = 3, 25
-    limit = 25000
+    num_cores = 1
+    n_tasks, m_machines = 9, 25
+    limit = 1
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()
     min_size = 3
