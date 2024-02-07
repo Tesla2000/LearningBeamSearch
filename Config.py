@@ -12,3 +12,4 @@ class Config:
     TRAINING_DATA_CLASSIFICATION_PATH = ROOT / Path(
         "data_generation/untitled/training_data_classification"
     )
+    DATA_PATH = ROOT / Path('data.db')

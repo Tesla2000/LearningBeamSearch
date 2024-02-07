@@ -8,12 +8,14 @@ from Config import Config
 
 if __name__ == '__main__':
     n_machines = 25
+    conn = sqlite3.connect(Config.DATA_PATH)
     for n_tasks in range(3, 11):
-        conn = sqlite3.connect(f'data_{n_tasks}_{n_machines}.db')
+        print(n_tasks)
+        table = f'Samples_{n_tasks}_{n_machines}'
         cur = conn.cursor()
-        cur.execute('''CREATE TABLE IF NOT EXISTS Samples (
+        cur.execute('''CREATE TABLE IF NOT EXISTS {} (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        {},{},value INTEGER UNSIGNED)'''.format(','.join(map('prev_state_{} INTEGER UNSIGNED'.format, range(n_machines))),
+                        {},{},value INTEGER UNSIGNED)'''.format(table, ','.join(map('prev_state_{} INTEGER UNSIGNED'.format, range(n_machines))),
                                          ','.join(
                                              map('worktime_{} TINYINT UNSIGNED'.format, range(n_machines * n_tasks)))))
         data_file = Path(
@@ -38,9 +40,9 @@ if __name__ == '__main__':
                 random.sample(range(len(working_time_matrix)), k=len(working_time_matrix))
             ]
             data = np.append(prev_state[0], working_time_matrix)
-            cur.execute('INSERT INTO Samples ({}, value) VALUES ({})'.format(
+            cur.execute('INSERT INTO {} ({}, value) VALUES ({})'.format(table,
                 ','.join(map('prev_state_{}'.format, range(n_machines))) + ',' + ','.join(
                     map('worktime_{}'.format, range(n_machines * n_tasks))), ','.join((n_machines * (n_tasks + 1) + 1) * '?')),
                 list(data) + [best_value])
         conn.commit()
-        conn.close()
+    conn.close()

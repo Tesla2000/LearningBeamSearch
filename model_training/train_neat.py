@@ -1,14 +1,13 @@
 import re
 from itertools import count
 from pathlib import Path
-from statistics import mean
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
 from Config import Config
-from regression_models.RegressionDataset import RegressionDataset
+from model_training.RegressionDataset import RegressionDataset
 from regression_models.NEAT import NEAT, NEATLearningBeamSearchTrainer
 from regression_models.Perceptron import Perceptron
 
