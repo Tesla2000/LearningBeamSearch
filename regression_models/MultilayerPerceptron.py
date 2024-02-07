@@ -4,12 +4,12 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
 class MultilayerPerceptron(BaseRegressor):
-    def __init__(self, n_tasks: int, n_machines: int, hidden_size: int = 256, **_):
+    def __init__(self, n_tasks: int, m_machines: int, hidden_size: int = 256, **_):
         super(MultilayerPerceptron, self).__init__()
         self.hidden_size = hidden_size
         self.flatten = nn.Flatten()
         self.dense1 = nn.Linear(
-            in_features=(n_tasks + 1) * n_machines, out_features=hidden_size
+            in_features=(n_tasks + 1) * m_machines, out_features=hidden_size
         )
         self.dense2 = nn.Linear(in_features=hidden_size, out_features=1)
 

@@ -15,7 +15,7 @@ class NEAT(nn.Module):
     def __init__(
         self,
         n_tasks: int,
-        n_machines: int,
+        m_machines: int,
         checkpoint_file: Path | str = None,
         winner_path: Path | str = None,
         initial_weights=None,
@@ -23,11 +23,11 @@ class NEAT(nn.Module):
         pop_size: int = 10,
     ):
         super().__init__()
-        config_path = f"neat_configurations/{n_tasks}_{n_machines}.txt"
+        config_path = f"neat_configurations/{n_tasks}_{m_machines}.txt"
         Path(config_path).write_text(
             Path(f"neat_configurations/base_config.txt")
             .read_text()
-            .format(pop_size=pop_size, num_inputs=(n_tasks + 1) * n_machines)
+            .format(pop_size=pop_size, num_inputs=(n_tasks + 1) * m_machines)
         )
         self.config = neat.Config(
             neat.DefaultGenome,
@@ -38,7 +38,7 @@ class NEAT(nn.Module):
         )
         self.initial_fitness = initial_fitness
         checkpointer = neat.Checkpointer(
-            50, filename_prefix=f"neat_checkpoints/{n_tasks}_{n_machines}_"
+            50, filename_prefix=f"neat_checkpoints/{n_tasks}_{m_machines}_"
         )
         if checkpoint_file is None:
             self.population = neat.Population(self.config)

@@ -2,7 +2,10 @@ from copy import deepcopy
 from itertools import count
 from time import time
 
+import numpy as np
 import torch
+from matplotlib import pyplot as plt
+from scipy.stats import shapiro
 from torch import nn, optim
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
@@ -14,7 +17,7 @@ from model_training.RegressionDataset import (
 from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-def train_regressor(model: BaseRegressor, n_tasks: int, n_machines: int):
+def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
     batch_size = 32
     test_percentage = .2
     learning_rate = model.learning_rate
@@ -25,7 +28,7 @@ def train_regressor(model: BaseRegressor, n_tasks: int, n_machines: int):
     best_result = float('inf')
     for epoch in count():
         dataset = RegressionDataset(
-            n_tasks=n_tasks, n_machines=n_machines
+            n_tasks=n_tasks, m_machines=m_machines
         )
         train_set, val_set = torch.utils.data.random_split(dataset, [
             len(dataset) - int(test_percentage * len(dataset)), int(test_percentage * len(dataset))])
@@ -52,9 +55,14 @@ def train_regressor(model: BaseRegressor, n_tasks: int, n_machines: int):
         if result > best_result:
             torch.save(
                 state_dict,
-                f"{Config.OUTPUT_REGRESSION_MODELS}/{model}_{n_tasks}_{n_machines}_{prediction_time:.2e}_{best_result:.1f}.pth",
+                f"{Config.OUTPUT_REGRESSION_MODELS}/{model}_{n_tasks}_{m_machines}_{prediction_time:.2e}_{best_result:.1f}.pth",
             )
             return
         state_dict = deepcopy(model.state_dict())
         best_result = result
+        best_results = np.sort((target - outputs).detach().numpy().flatten())
+        best_results = best_results[int(.001 * len(best_results)):-int(.001 * len(best_results))]
         print(epoch, result.item())
+        print(shapiro(best_results).pvalue)
+        plt.hist(best_results)
+        plt.show()

@@ -14,6 +14,8 @@ class BaseRegressor(nn.Module, ABC):
         x = x.float()
         min_value = self._min_value(x)
         x = self.predict(x)
+        if not self.training:
+            x = nn.ReLU()(x)
         return x + min_value
 
     @abstractmethod
