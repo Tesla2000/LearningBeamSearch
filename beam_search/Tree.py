@@ -21,10 +21,7 @@ class Tree:
     def _cut(
         self, node: Node, node_value: float, not_used_machines: list[int], ub: float
     ) -> bool:
-        return (
-            node_value + np.sum(self.working_time_matrix[not_used_machines, -1])
-            > ub
-        )
+        return node_value + np.sum(self.working_time_matrix[not_used_machines, -1]) > ub
 
     def _beam_search(
         self,
@@ -58,13 +55,17 @@ class Tree:
         return self._beam_search(self.root)[0]
 
     def brute_force(self):
-        best_value = float('inf')
+        best_value = float("inf")
         for permutation in permutations(range(self.n_tasks)):
             state = self.working_time_matrix[list(permutation)]
             state[0] = np.add.accumulate(state[0])
             state[:, 0] = np.add.accumulate(state[:, 0])
-            for row, column in product(range(1, self.n_tasks), range(1, self.m_machines)):
-                state[row, column] += max(state[row - 1, column], state[row, column - 1])
+            for row, column in product(
+                range(1, self.n_tasks), range(1, self.m_machines)
+            ):
+                state[row, column] += max(
+                    state[row - 1, column], state[row, column - 1]
+                )
             value = state[-1, -1]
             if value < best_value:
                 best_value = value
