@@ -2,10 +2,7 @@ from copy import deepcopy
 from itertools import count
 from time import time
 
-import numpy as np
 import torch
-from matplotlib import pyplot as plt
-from scipy.stats import shapiro
 from torch import nn, optim
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
@@ -63,11 +60,4 @@ def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
             return
         state_dict = deepcopy(model.state_dict())
         best_result = result
-        best_results = np.sort((target - outputs).detach().numpy().flatten())
-        best_results = best_results[
-            int(0.001 * len(best_results)) : -int(0.001 * len(best_results))
-        ]
         print(epoch, result.item())
-        print(shapiro(best_results).pvalue)
-        plt.hist(best_results)
-        plt.show()

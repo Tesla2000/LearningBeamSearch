@@ -1,19 +1,17 @@
-import multiprocessing
 import sqlite3
 
 import numpy as np
+from tqdm import tqdm
 
 from Config import Config
 from beam_search.Tree import Tree
 
 
-def generate_data(args: tuple[int, int, int]):
-    n_tasks, m_machines, limit = args
-    for _ in range(limit):
+def generate_data(n_tasks, m_machines, limit):
+    for _ in tqdm(range(limit)):
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         tree = Tree(working_time_matrix)
-        tree.faster_brute_force()
-        result = tree.beam_search()
+        result = tree.fast_brute_force()
         for tasks in range(min_size, n_tasks + 1):
             table = f"Samples_{tasks}_{m_machines}"
             fill_strings[tasks] = fill_strings.get(
@@ -39,9 +37,8 @@ def generate_data(args: tuple[int, int, int]):
 
 
 if __name__ == "__main__":
-    num_cores = 1
-    n_tasks, m_machines = 6, 25
-    limit = 1
+    n_tasks, m_machines = 3, 25
+    limit = 100_000
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()
     min_size = 3
@@ -63,8 +60,5 @@ if __name__ == "__main__":
             )
         )
     conn.commit()
-    with multiprocessing.Pool(num_cores) as pool:
-        pool.map(
-            generate_data, [(n_tasks, m_machines, limit) for _ in range(num_cores)]
-        )
+    generate_data(n_tasks, m_machines, limit)
     conn.close()

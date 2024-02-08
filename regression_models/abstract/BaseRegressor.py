@@ -8,14 +8,12 @@ class BaseRegressor(nn.Module, ABC):
     learning_rate = 1e-4
 
     def _min_value(self, x):
-        return torch.sum(x[:, :, -1], axis=1).reshape(-1, 1)
+        return (torch.max(torch.sum(x[:, :, :-1], dim=2), dim=1)[0] + torch.sum(x[:, :, -1], dim=1)).reshape(-1, 1)
 
     def forward(self, x):
         x = x.float()
         min_value = self._min_value(x)
         x = self.predict(x)
-        if not self.training:
-            x = nn.ReLU()(x)
         return x + min_value
 
     @abstractmethod

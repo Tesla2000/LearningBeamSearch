@@ -22,7 +22,7 @@ if __name__ == "__main__":
             # WideMultilayerPerceptron,
             # WideConvRegressor,
         ),
-        range(3, 11),
+        range(3, 4),
     ):
         model = model_type(n_tasks=n_tasks, m_machines=m_machines)
         train_regressor(model, n_tasks, m_machines)
