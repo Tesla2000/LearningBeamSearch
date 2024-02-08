@@ -1,7 +1,7 @@
-from itertools import filterfalse, permutations, product
+from itertools import filterfalse, permutations, product, chain
 from math import factorial
 from typing import Optional
-
+import torch
 import numpy as np
 
 from .Node import Node
@@ -55,6 +55,15 @@ class Tree:
     def beam_search(self) -> Node:
         return self._beam_search(self.root)[0]
 
+    @staticmethod
+    def fast_beam_search(working_time_matrices: np.array) -> np.array:
+        n_matrices, n_tasks, m_machines = working_time_matrices.shape
+        states = np.zeros((n_matrices, n_tasks + 1, m_machines + 1))
+        best_values = np.full(n_matrices, 1e9)
+        exploration_stages = np.array(sorted(map(lambda children: np.append(np.array(children), np.full(n_tasks, -1))[:n_tasks], chain.from_iterable((permutations(range(n_tasks), r) for r in range(1, n_tasks + 1)))), key=tuple))
+        exploration_states = tuple(exploration_stages[n_tasks-1] for _ in range(n_matrices))
+        max_stage = 0
+
     def brute_force(self):
         best_value = float("inf")
         for permutation in permutations(range(self.n_tasks)):
@@ -74,9 +83,20 @@ class Tree:
 
     def fast_brute_force(self):
         states = np.zeros((factorial(self.n_tasks), self.n_tasks + 1, self.m_machines + 1))
-        states[:, 1:, 1:] = self.working_time_matrix[list(list(permutation) for permutation in permutations(range(self.n_tasks)))]
+        states[:, 1:, 1:] = self.working_time_matrix[
+            list(list(permutation) for permutation in permutations(range(self.n_tasks)))]
         for row, column in product(
             range(1, self.n_tasks + 1), range(1, self.m_machines + 1)
         ):
             states[:, row, column] += np.maximum(states[:, row - 1, column], states[:, row, column - 1])
         return np.min(states[:, -1, -1])
+
+    def faster_brute_force(self):
+        states = torch.zeros((factorial(self.n_tasks), self.n_tasks + 1, self.m_machines + 1))
+        states[:, 1:, 1:] = torch.Tensor(self.working_time_matrix)[
+            list(list(permutation) for permutation in permutations(range(self.n_tasks)))]
+        for row, column in product(
+            range(1, self.n_tasks + 1), range(1, self.m_machines + 1)
+        ):
+            states[:, row, column] += torch.maximum(states[:, row - 1, column], states[:, row, column - 1])
+        return torch.min(states[:, -1, -1])
