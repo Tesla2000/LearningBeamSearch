@@ -4,7 +4,6 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
 class Perceptron(BaseRegressor):
-    learning_rate = 1e-4
 
     def __init__(self, n_tasks: int, m_machines: int, **_):
         super(Perceptron, self).__init__()

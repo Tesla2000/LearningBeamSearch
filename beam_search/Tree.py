@@ -81,7 +81,7 @@ class Tree:
         ):
             states[:, row, column] += np.maximum(states[:, row - 1, column], states[:, row, column - 1])
         index = np.argmin(states[:, -1, -1])
-        return Node(None, perms[index], self.m_machines, self.working_time_matrix, state=states[index], _value=np.min(states[:, -1, -1]))
+        return Node(None, perms[index], self.m_machines, self.working_time_matrix, state=states[index, 1:, 1:], _value=np.min(states[:, -1, -1]))
 
     def faster_brute_force(self):
         states = torch.zeros((factorial(self.n_tasks), self.n_tasks + 1, self.m_machines + 1))

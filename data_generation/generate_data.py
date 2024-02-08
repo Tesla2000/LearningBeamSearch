@@ -27,17 +27,15 @@ def generate_data(n_tasks, m_machines, limit):
             if tasks == n_tasks:
                 header = np.zeros((1, m_machines))
             else:
-                header = result.state[[result.tasks[-tasks - 1]]]
-            value = result.value - header[0, 0]
-            header -= header[0, 0]
+                header = result.state[-tasks - 1].reshape(1, -1)
             data = working_time_matrix[list(result.tasks[-tasks:])]
             data = np.append(header, data)
-            cur.execute(fill_strings[tasks], list(data) + [value])
+            cur.execute(fill_strings[tasks], list(data) + [result.value])
         conn.commit()
 
 
 if __name__ == "__main__":
-    n_tasks, m_machines = 3, 25
+    n_tasks, m_machines = 6, 25
     limit = 100_000
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()

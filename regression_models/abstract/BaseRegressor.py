@@ -1,20 +1,15 @@
 from abc import abstractmethod, ABC
 
-import torch
 from torch import nn
 
 
 class BaseRegressor(nn.Module, ABC):
-    learning_rate = 1e-4
-
-    def _min_value(self, x):
-        return (torch.max(torch.sum(x[:, :, :-1], dim=2), dim=1)[0] + torch.sum(x[:, :, -1], dim=1)).reshape(-1, 1)
+    learning_rate = 5e-5
 
     def forward(self, x):
         x = x.float()
-        min_value = self._min_value(x)
         x = self.predict(x)
-        return x + min_value
+        return x
 
     @abstractmethod
     def predict(self, x):
