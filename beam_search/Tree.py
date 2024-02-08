@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from itertools import filterfalse, permutations, product, chain
 from math import factorial
 from typing import Optional
@@ -55,14 +56,43 @@ class Tree:
     def beam_search(self) -> Node:
         return self._beam_search(self.root)[0]
 
-    @staticmethod
-    def fast_beam_search(working_time_matrices: np.array) -> np.array:
-        n_matrices, n_tasks, m_machines = working_time_matrices.shape
-        states = np.zeros((n_matrices, n_tasks + 1, m_machines + 1))
-        best_values = np.full(n_matrices, 1e9)
-        exploration_stages = np.array(sorted(map(lambda children: np.append(np.array(children), np.full(n_tasks, -1))[:n_tasks], chain.from_iterable((permutations(range(n_tasks), r) for r in range(1, n_tasks + 1)))), key=tuple))
-        exploration_states = tuple(exploration_stages[n_tasks-1] for _ in range(n_matrices))
-        max_stage = 0
+    def fast_beam_search(self, r: int = 5) -> Node:
+        permutes = list(permutations(range(self.n_tasks), r))
+        working_time_matrices = np.zeros((len(permutes), self.n_tasks + 1, self.m_machines + 1))
+        working_time_matrices[:, 1:r + 1, 1:] = self.working_time_matrix[permutes]
+        nodes = list(
+            Node(None, tasks, self.m_machines, working_time_matrices[index]) for index, tasks in enumerate(permutes))
+        ub = float('inf')
+        pass
+        # ordered_exploration_stages = np.array(tuple(map(lambda stage: (stage + n_tasks * [-1])[:n_tasks], sorted(
+        #     map(list, chain.from_iterable((permutations(range(n_tasks), r) for r in range(1, n_tasks + 1))))))))
+        # n_exploration_stages = len(ordered_exploration_stages)
+        # exploration_indexes = np.full(n_matrices, n_tasks - 1)
+        # while True:
+        #     states = np.zeros((n_matrices, n_tasks + 1, m_machines + 1))
+        #     exploration_states = ordered_exploration_stages[exploration_indexes]
+        #     states[:, 1:, 1:] = np.array(
+        #         tuple(matrix[state] for matrix, state in
+        #               zip(working_time_matrices, exploration_states)))
+        #     lb = np.sum(states[:, 1], axis=1) + np.sum(states[:, 2:, -1], axis=1)
+        #     if np.argwhere(lb > ub).shape != (0, 1):
+        #         for index in np.argwhere(lb > ub):
+        #             index = index[0]
+        #             exploration_index = exploration_indexes[index]
+        #             empty = np.count_nonzero(ordered_exploration_stages[exploration_index] == -1)
+        #             for i in range(exploration_index + 1, n_exploration_stages):
+        #                 if empty == np.count_nonzero(ordered_exploration_stages[i] == -1):
+        #                     exploration_indexes[index] = i
+        #                     break
+        #
+        #     for row, column in product(
+        #         range(1, n_tasks + 1), range(1, m_machines + 1)
+        #     ):
+        #         states[:, row, column] += np.maximum(states[:, row - 1, column], states[:, row, column - 1])
+        #     ub = np.minimum(ub, states[:, -1, -1])
+        #     exploration_indexes += 1
+        #     if np.where(exploration_indexes == n_exploration_stages):
+        #         pass
 
     def brute_force(self):
         best_value = float("inf")
