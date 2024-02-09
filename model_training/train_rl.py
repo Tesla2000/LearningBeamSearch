@@ -1,4 +1,5 @@
 from collections import deque
+from itertools import count
 from statistics import mean
 from time import time
 from typing import IO
@@ -8,6 +9,7 @@ import torch
 from torch import nn, Tensor, optim
 from torch.utils.data import DataLoader
 
+from Config import Config
 from beam_search.Tree import Tree
 from model_training.RLDataset import RLDataset
 
@@ -15,14 +17,14 @@ from model_training.RLDataset import RLDataset
 def train_rl(
     n_tasks: int,
     m_machines: int,
-    limit: int,
+    comparison_period: int,
     min_size: int,
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
 ):
     training_buffers = dict((key, deque(maxlen=100)) for key in models)
     results = []
-    buffered_results = deque(maxlen=1000)
+    buffered_results = deque(maxlen=100)
     batch_size = 32
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
@@ -31,9 +33,9 @@ def train_rl(
         for model in models.values()
     )
     start = time()
-    for epoch in range(limit):
+    for epoch in count():
         working_time_matrix = Tensor(np.random.randint(1, 255, (n_tasks, m_machines)))
-        tree = Tree(working_time_matrix, models)
+        tree = Tree(working_time_matrix, models, Config.beta)
         task_order, state = tree.beam_search()
         for tasks in range(min_size, n_tasks + 1):
             if tasks == n_tasks:
@@ -47,7 +49,11 @@ def train_rl(
         buffered_results.append(label.item())
         if epoch > 10:
             results.append(mean(buffered_results))
-            output_file.write(f"{int(time() - start)},{results[-1]}\n")
+            output_file.write(f"{int(time() - start)},{results[-1]:.2f}\n")
+        if epoch > 2 * comparison_period and mean(results[-2 * comparison_period:-comparison_period]) < mean(
+            results[-comparison_period:]):
+            save_models(models, results[-1])
+            return
         print(epoch, mean(buffered_results))
         for tasks, model in models.items():
             model.train()
@@ -62,3 +68,11 @@ def train_rl(
                 loss = criterion(outputs, target)
                 loss.backward()
                 optimizer.step()
+
+
+def save_models(models: dict[int, nn.Module], best_result: int):
+    for tasks, model in models.items():
+        torch.save(
+            model.state_dict(),
+            f"{Config.OUTPUT_REGRESSION_MODELS}/{model}_{tasks}_{Config.m_machines}_{best_result}.pth",
+        )

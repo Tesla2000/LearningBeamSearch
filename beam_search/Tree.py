@@ -1,4 +1,3 @@
-from collections import defaultdict
 from itertools import filterfalse, permutations, product, chain
 import numpy as np
 import torch
@@ -19,8 +18,6 @@ class Tree:
         self.working_time_matrix = working_time_matrix
         self.root = list()
         self.beta = beta
-        if beta is None:
-            self.beta = defaultdict(lambda: 50)
         self.models = models
         if models is None:
             self.models = {}
