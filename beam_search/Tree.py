@@ -39,7 +39,7 @@ class Tree:
                 states = self.working_time_matrix[remaining_tasks]
                 states = torch.concat((headers, states), dim=1)
                 predictions = self.models[tasks](states).flatten()
-                temp_buffer = temp_buffer[torch.argsort(predictions)[-self.beta[tasks]:]]
+                temp_buffer = temp_buffer[torch.argsort(predictions)[:self.beta[tasks]]]
             buffer = temp_buffer
         final_permutations = np.array(tuple(chain.from_iterable(map(lambda remainder: np.append(state, remainder), permutations(
             filterfalse(state.__contains__, range(self.n_tasks)))) for state in temp_buffer)))
