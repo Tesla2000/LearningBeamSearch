@@ -22,6 +22,8 @@ class Tree:
         self.models = models
         if models is None:
             self.models = {}
+        for model in models.values():
+            model.eval()
 
     def beam_search(self, buffer: list[list[int]] = None):
         if buffer is None:
