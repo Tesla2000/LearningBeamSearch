@@ -11,12 +11,17 @@ from model_training.RLDataset import RLDataset
 from regression_models.Perceptron import Perceptron
 
 
-def train_rl(n_tasks: int, m_machines: int, limit: int, models: dict[int, nn.Module] = None):
+def train_rl(
+    n_tasks: int, m_machines: int, limit: int, models: dict[int, nn.Module] = None
+):
     training_buffers = dict((key, deque(maxlen=100)) for key in models)
     batch_size = 32
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
-    optimizers = dict((model, optim.Adam(model.parameters(), lr=model.learning_rate)) for model in models.values())
+    optimizers = dict(
+        (model, optim.Adam(model.parameters(), lr=model.learning_rate))
+        for model in models.values()
+    )
     for _ in tqdm(range(limit)):
         working_time_matrix = Tensor(np.random.randint(1, 255, (n_tasks, m_machines)))
         tree = Tree(working_time_matrix, models)
@@ -49,6 +54,8 @@ if __name__ == "__main__":
     n_tasks, m_machines = 10, 25
     min_size = 5
     limit = 10_000
-    models = dict((tasks, Perceptron(tasks, m_machines)) for tasks in range(min_size, n_tasks + 1))
+    models = dict(
+        (tasks, Perceptron(tasks, m_machines)) for tasks in range(min_size, n_tasks + 1)
+    )
     fill_strings = {}
     train_rl(n_tasks, m_machines, limit, models)
