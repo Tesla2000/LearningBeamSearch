@@ -51,7 +51,7 @@ class Tree:
                 states = torch.concat((headers, states), dim=1)
                 predictions = self.models[tasks](states).flatten()
                 temp_buffer = temp_buffer[
-                    torch.argsort(predictions)[:self.beta[tasks]]
+                    torch.argsort(predictions)[: self.beta[tasks]]
                 ]
             buffer = temp_buffer
         final_permutations = np.array(
@@ -83,7 +83,9 @@ class Tree:
         return perms[index], self._get_states([perms[index]])[0]
 
     def _get_states(self, perms: np.array):
-        states = torch.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1)).to(self.device)
+        states = torch.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1)).to(
+            self.device
+        )
         states[:, 1:, 1:] = self.working_time_matrix[perms].to(self.device)
         for row, column in product(
             range(1, len(perms[0]) + 1), range(1, self.m_machines + 1)
