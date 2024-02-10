@@ -1,8 +1,9 @@
-from collections import defaultdict
 from itertools import filterfalse, permutations, product, chain
 import numpy as np
 import torch
 from torch import nn, Tensor
+
+from Config import Config
 
 
 class Tree:
@@ -10,26 +11,21 @@ class Tree:
         self,
         working_time_matrix: Tensor,
         models: dict[int, nn.Module] = None,
-        beta: dict[int, int] = None,
     ) -> None:
         """The greater beta is the more results are accepted which leads to better results and longer calculations"""
         self.n_tasks, self.m_machines = working_time_matrix.shape
         self.working_time_matrix = working_time_matrix
         self.root = list()
-        self.beta = beta
-        if beta is None:
-            self.beta = defaultdict(lambda: 50)
         self.models = models
         if models is None:
             self.models = {}
 
-    def beam_search(self, buffer: list[list[int]] = None):
-        if buffer is None:
-            buffer = [self.root]
+    def beam_search(self):
+        buffer = [self.root]
         for tasks in range(self.n_tasks - 1, 0, -1):
             temp_buffer = np.array(tuple(
                 [*node, task] for node in buffer for task in filterfalse(node.__contains__, range(self.n_tasks))))
-            if len(temp_buffer) > self.beta[tasks]:
+            if len(temp_buffer) > Config.beta[tasks]:
                 if tasks not in self.models:
                     break
                 states = self._get_states(temp_buffer)
@@ -39,7 +35,7 @@ class Tree:
                 states = self.working_time_matrix[remaining_tasks]
                 states = torch.concat((headers, states), dim=1)
                 predictions = self.models[tasks](states).flatten()
-                temp_buffer = temp_buffer[torch.argsort(predictions)[:self.beta[tasks]]]
+                temp_buffer = temp_buffer[torch.argsort(predictions)[:Config.beta[tasks]]]
             buffer = temp_buffer
         final_permutations = np.array(tuple(chain.from_iterable(map(lambda remainder: np.append(state, remainder), permutations(
             filterfalse(state.__contains__, range(self.n_tasks)))) for state in temp_buffer)))

@@ -1,13 +1,11 @@
 import sqlite3
 
 import numpy as np
-import torch
 from torch import nn, Tensor
 from tqdm import tqdm
 
 from Config import Config
 from beam_search.Tree import Tree
-from regression_models.Perceptron import Perceptron
 
 
 def generate_data(n_tasks, m_machines, limit, models: dict[int, nn.Module] = None):
@@ -18,7 +16,7 @@ def generate_data(n_tasks, m_machines, limit, models: dict[int, nn.Module] = Non
             task_order, state = tree.fast_brute_force()
         else:
             task_order, state = tree.beam_search()
-        for tasks in range(min_size, n_tasks + 1):
+        for tasks in range(Config.min_size, n_tasks + 1):
             table = f"Samples_{tasks}_{m_machines}"
             fill_strings[tasks] = fill_strings.get(
                 tasks,
@@ -41,33 +39,30 @@ def generate_data(n_tasks, m_machines, limit, models: dict[int, nn.Module] = Non
 
 
 if __name__ == "__main__":
-    n_tasks, m_machines = 7, 25
-    limit = 100_000
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()
-    min_size = 3
     models = None
     # models = dict((tasks, (model := Perceptron(tasks, m_machines),
     #                        model.load_state_dict(torch.load(next(Config.OUTPUT_REGRESSION_MODELS.glob(
     #                            f'{type(model).__name__}_{tasks}_{m_machines}*')))), model.eval())[0]) for tasks in
     #               range(min_size, 7))
     fill_strings = {}
-    for tasks in range(min_size, n_tasks + 1):
-        table = f"Samples_{tasks}_{m_machines}"
+    for tasks in range(Config.min_size, Config.n_tasks + 1):
+        table = f"Samples_{tasks}_{Config.m_machines}"
         cur.execute(
             """CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 {},{},value INTEGER UNSIGNED)""".format(
                 table,
                 ",".join(
-                    map("prev_state_{} INTEGER UNSIGNED".format, range(m_machines))
+                    map("prev_state_{} INTEGER UNSIGNED".format, range(Config.m_machines))
                 ),
                 ",".join(
                     map(
-                        "worktime_{} TINYINT UNSIGNED".format, range(m_machines * tasks)
+                        "worktime_{} TINYINT UNSIGNED".format, range(Config.m_machines * tasks)
                     )
                 ),
             )
         )
     conn.commit()
-    generate_data(n_tasks, m_machines, limit, models)
+    generate_data(Config.n_tasks, Config.m_machines, Config.n_generated_samples, models)
     conn.close()
