@@ -1,6 +1,8 @@
 from collections import defaultdict
 from pathlib import Path
 
+from regression_models.Perceptron import Perceptron
+
 
 class Config:
     ROOT = Path(__file__).parent
@@ -10,7 +12,14 @@ class Config:
     MODEL_RESULTS.mkdir(exist_ok=True)
     DATA_PATH = ROOT / Path("data.db")
 
-    n_tasks, m_machines = 10, 25
+    model_type = Perceptron
+
+    n_tasks, m_machines = 15, 25
     min_size = 5
-    comparison_period = 500
+    iterations = 2000
+    minimal_counting_epoch_number = 10
+    results_average_size = 500
+    training_buffer_size = 5000
     beta = defaultdict(lambda: 50)
+    alpha = .01
+    training_buffer_retention_rate = 0.95

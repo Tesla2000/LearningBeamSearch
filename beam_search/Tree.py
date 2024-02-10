@@ -24,9 +24,8 @@ class Tree:
         for model in models.values():
             model.eval()
 
-    def beam_search(self, buffer: list[list[int]] = None):
-        if buffer is None:
-            buffer = [self.root]
+    def beam_search(self):
+        buffer = [self.root]
         for tasks in range(self.n_tasks - 1, 0, -1):
             temp_buffer = np.array(
                 tuple(

@@ -1,6 +1,5 @@
 from collections import deque
-from itertools import count
-from statistics import mean
+from statistics import fmean
 from time import time
 from typing import IO
 
@@ -17,14 +16,14 @@ from model_training.RLDataset import RLDataset
 def train_rl(
     n_tasks: int,
     m_machines: int,
-    comparison_period: int,
+    iterations: int,
     min_size: int,
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
 ):
     training_buffers = dict((key, deque(maxlen=100)) for key in models)
     results = []
-    buffered_results = deque(maxlen=100)
+    buffered_results = deque(maxlen=Config.results_average_size)
     batch_size = 32
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
@@ -33,7 +32,7 @@ def train_rl(
         for model in models.values()
     )
     start = time()
-    for epoch in count():
+    for epoch in range(iterations):
         working_time_matrix = Tensor(np.random.randint(1, 255, (n_tasks, m_machines)))
         tree = Tree(working_time_matrix, models, Config.beta)
         task_order, state = tree.beam_search()
@@ -47,14 +46,10 @@ def train_rl(
             label = state[-1, -1]
             training_buffers[tasks].append((data, label))
         buffered_results.append(label.item())
-        if epoch > 10:
-            results.append(mean(buffered_results))
+        if epoch > Config.minimal_counting_epoch_number:
+            results.append(fmean(buffered_results))
             output_file.write(f"{int(time() - start)},{results[-1]:.2f}\n")
-        if epoch > 2 * comparison_period and mean(results[-2 * comparison_period:-comparison_period]) < mean(
-            results[-comparison_period:]):
-            save_models(models, results[-1])
-            return
-        print(epoch, mean(buffered_results))
+            print(epoch, results[-1])
         for tasks, model in models.items():
             model.train()
             optimizer = optimizers[model]
@@ -68,6 +63,7 @@ def train_rl(
                 loss = criterion(outputs, target)
                 loss.backward()
                 optimizer.step()
+    save_models(models, results[-1])
 
 
 def save_models(models: dict[int, nn.Module], best_result: int):
