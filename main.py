@@ -5,6 +5,7 @@ from itertools import product
 import numpy as np
 import torch
 
+from Config import Config
 from model_training.train_regressor import train_regressor
 from regression_models import MultilayerPerceptron, ConvRegressor
 from regression_models.Perceptron import Perceptron
@@ -18,15 +19,15 @@ if __name__ == "__main__":
     m_machines = 25
     for model_type, n_tasks in product(
         (
-            ConvRegressor,
-            MultilayerPerceptron,
-            partial(MultilayerPerceptron, hidden_size=512),
+            # ConvRegressor,
+            # MultilayerPerceptron,
+            # partial(MultilayerPerceptron, hidden_size=512),
             # SumRegressor,
-            # Perceptron,
-            WideMultilayerPerceptron,
+            Perceptron,
+            # WideMultilayerPerceptron,
             # WideConvRegressor,
         ),
-        range(3, 7),
+        range(Config.min_size, Config.n_tasks + 1),
     ):
         model = model_type(n_tasks=n_tasks, m_machines=m_machines)
         train_regressor(model, n_tasks, m_machines)

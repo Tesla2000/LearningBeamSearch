@@ -13,5 +13,6 @@ class Config:
 
     beta = defaultdict(lambda: 50)
     min_size = 5
-    n_tasks, m_machines = 8, 25
-    n_generated_samples = 200_000
+    n_tasks, m_machines = 7, 25
+    n_generated_samples = 100_000
+    num_processes = 3
