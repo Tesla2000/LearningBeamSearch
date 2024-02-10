@@ -11,8 +11,10 @@ class Config:
     DATA_PATH = ROOT / Path("data.db")
     minimal_counting_epoch_number = 500
 
+    table_name = "Samples_{}_{}".format
+
     beta = defaultdict(lambda: 50)
     min_size = 5
     n_tasks, m_machines = 7, 25
-    n_generated_samples = 100_000
-    num_processes = 3
+    n_generated_samples = 50_000
+    num_processes = 4

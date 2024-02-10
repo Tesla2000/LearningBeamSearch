@@ -11,7 +11,6 @@ from beam_search.Tree import Tree
 
 
 def generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[int, nn.Module] = None):
-    # for _ in tqdm(range(iterations)):
     for _ in range(iterations):
         working_time_matrix = Tensor(np.random.randint(1, 255, (n_tasks, m_machines)))
         tree = Tree(working_time_matrix, models)
@@ -26,7 +25,7 @@ def generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[in
                 header = state[-tasks - 1].reshape(1, -1)
             data = working_time_matrix[list(task_order[-tasks:])]
             data = np.append(header, data)
-            output_queue.put((tasks, list(data) + [state[-1, -1].item()]))
+            output_queue.put((tasks, list(map(int, data)) + [int(state[-1, -1].item())]))
 
 
 if __name__ == "__main__":
@@ -39,7 +38,7 @@ if __name__ == "__main__":
     #               range(min_size, 7))
     fill_strings = {}
     for tasks in range(Config.min_size, Config.n_tasks + 1):
-        table = f"Samples_{tasks}_{Config.m_machines}"
+        table = Config.table_name(tasks, Config.m_machines)
         cur.execute(
             """CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 {},{},value INTEGER UNSIGNED)""".format(
@@ -66,7 +65,7 @@ if __name__ == "__main__":
         while not queue.empty():
             next(counter)
             tasks, data = queue.get()
-            table = f"Samples_{tasks}_{Config.m_machines}"
+            table = Config.table_name(tasks, Config.m_machines)
             fill_strings[tasks] = fill_strings.get(
                 tasks,
                 "INSERT INTO {} ({}, value) VALUES ({})".format(
@@ -78,6 +77,7 @@ if __name__ == "__main__":
                 ),
             )
             cur.execute(fill_strings[tasks], data)
+            conn.commit()
     for process in processes:
         process.join()
 

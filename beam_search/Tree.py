@@ -19,6 +19,7 @@ class Tree:
         self.models = models
         if models is None:
             self.models = {}
+            self.perms = list(list(permutation) for permutation in permutations(range(self.n_tasks)))
 
     def beam_search(self):
         buffer = [self.root]
@@ -44,10 +45,9 @@ class Tree:
         return final_permutations[index], self._get_states([final_permutations[index]])[0]
 
     def fast_brute_force(self):
-        perms = list(list(permutation) for permutation in permutations(range(self.n_tasks)))
-        states = self._get_states(perms)
+        states = self._get_states(self.perms)
         index = np.argmin(states[:, -1, -1])
-        return perms[index], self._get_states([perms[index]])[0]
+        return self.perms[index], self._get_states([self.perms[index]])[0]
 
     def _get_states(self, perms: np.array):
         states = torch.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1))
