@@ -46,10 +46,9 @@ def train_rl(
             label = state[-1, -1]
             training_buffers[tasks].append((data, label))
         buffered_results.append(label.item())
-        if epoch > Config.minimal_counting_epoch_number:
-            results.append(fmean(buffered_results))
-            output_file.write(f"{int(time() - start)},{results[-1]:.2f}\n")
-            print(epoch, results[-1])
+        results.append(fmean(buffered_results))
+        output_file.write(f"{int(time() - start)},{results[-1]:.2f}\n")
+        print(epoch, results[-1])
         for tasks, model in models.items():
             model.train()
             optimizer = optimizers[model]

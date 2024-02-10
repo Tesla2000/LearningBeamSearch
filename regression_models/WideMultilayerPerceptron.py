@@ -13,6 +13,6 @@ class WideMultilayerPerceptron(MultilayerPerceptron):
 
     def predict(self, x):
         x = self.flatten(x)
-        out = self.dense1(x)
+        out = self.first_dense(x)
         x = torch.concat((x, out), dim=1)
         return self.dense2(x)
