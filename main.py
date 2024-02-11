@@ -20,11 +20,10 @@ if __name__ == "__main__":
     for model_type, n_tasks in product(
         (
             # ConvRegressor,
-            # MultilayerPerceptron,
+            MultilayerPerceptron,
             # partial(MultilayerPerceptron, hidden_size=512),
-            # SumRegressor,
             Perceptron,
-            # WideMultilayerPerceptron,
+            WideMultilayerPerceptron,
             # WideConvRegressor,
         ),
         range(Config.min_size, Config.n_tasks + 1),
