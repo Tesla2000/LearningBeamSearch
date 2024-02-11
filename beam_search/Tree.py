@@ -1,7 +1,7 @@
 from itertools import filterfalse, permutations, product, chain
 import numpy as np
 import torch
-from torch import nn, Tensor
+from torch import nn
 
 from Config import Config
 
@@ -9,7 +9,7 @@ from Config import Config
 class Tree:
     def __init__(
         self,
-        working_time_matrix: Tensor,
+        working_time_matrix: np.array,
         models: dict[int, nn.Module] = None,
     ) -> None:
         """The greater beta is the more results are accepted which leads to better results and longer calculations"""
@@ -19,7 +19,7 @@ class Tree:
         self.models = models
         if models is None:
             self.models = {}
-            self.perms = list(list(permutation) for permutation in permutations(range(self.n_tasks)))
+        self.perms = None
 
     def beam_search(self):
         buffer = [self.root]
@@ -45,15 +45,17 @@ class Tree:
         return final_permutations[index], self._get_states([final_permutations[index]])[0]
 
     def fast_brute_force(self):
+        if self.perms is None:
+            self.perms = list(list(permutation) for permutation in permutations(range(self.n_tasks)))
         states = self._get_states(self.perms)
         index = np.argmin(states[:, -1, -1])
         return self.perms[index], self._get_states([self.perms[index]])[0]
 
     def _get_states(self, perms: np.array):
-        states = torch.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1))
+        states = np.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1))
         states[:, 1:, 1:] = self.working_time_matrix[perms]
         for row, column in product(
             range(1, len(perms[0]) + 1), range(1, self.m_machines + 1)
         ):
-            states[:, row, column] += torch.maximum(states[:, row - 1, column], states[:, row, column - 1])
+            states[:, row, column] += np.maximum(states[:, row - 1, column], states[:, row, column - 1])
         return states[:, 1:, 1:]
