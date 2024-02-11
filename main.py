@@ -21,12 +21,11 @@ if __name__ == "__main__":
         (
             # ConvRegressor,
             MultilayerPerceptron,
-            # partial(MultilayerPerceptron, hidden_size=512),
             Perceptron,
-            WideMultilayerPerceptron,
+            # WideMultilayerPerceptron,
             # WideConvRegressor,
         ),
-        range(Config.min_size, Config.n_tasks + 1),
+        range(7, Config.n_tasks),
     ):
         model = model_type(n_tasks=n_tasks, m_machines=m_machines)
         train_regressor(model, n_tasks, m_machines)

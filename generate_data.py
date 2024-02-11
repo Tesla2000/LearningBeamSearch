@@ -3,16 +3,18 @@ import sqlite3
 from itertools import count
 
 import numpy as np
-from torch import nn, Tensor
+import torch
+from torch import nn
 from tqdm import tqdm
 
 from Config import Config
 from beam_search.Tree import Tree
+from regression_models.Perceptron import Perceptron
 
 
 def generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[int, nn.Module] = None):
     for _ in range(iterations):
-        working_time_matrix = Tensor(np.random.randint(1, 255, (n_tasks, m_machines)))
+        working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         tree = Tree(working_time_matrix, models)
         if not models:
             task_order, state = tree.fast_brute_force()
@@ -20,9 +22,8 @@ def generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[in
             task_order, state = tree.beam_search()
         for tasks in range(Config.min_size, n_tasks + 1):
             if tasks == n_tasks:
-                header = np.zeros((1, m_machines))
-            else:
-                header = state[-tasks - 1].reshape(1, -1)
+                continue
+            header = state[-tasks - 1].reshape(1, -1)
             data = working_time_matrix[list(task_order[-tasks:])]
             data = np.append(header, data)
             output_queue.put((tasks, list(map(int, data)) + [int(state[-1, -1].item())]))
@@ -31,11 +32,11 @@ def generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[in
 if __name__ == "__main__":
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()
-    models = None
-    # models = dict((tasks, (model := Perceptron(tasks, m_machines),
-    #                        model.load_state_dict(torch.load(next(Config.OUTPUT_REGRESSION_MODELS.glob(
-    #                            f'{type(model).__name__}_{tasks}_{m_machines}*')))), model.eval())[0]) for tasks in
-    #               range(min_size, 7))
+    # models = None
+    models = dict((tasks, (model := Perceptron(tasks, Config.m_machines),
+                           model.load_state_dict(torch.load(next(Config.OUTPUT_REGRESSION_MODELS.glob(
+                               f'{type(model).__name__}_{tasks}_{Config.m_machines}*')))), model.eval())[0]) for tasks in
+                  range(Config.min_size, 8))
     fill_strings = {}
     for tasks in range(Config.min_size, Config.n_tasks + 1):
         table = Config.table_name(tasks, Config.m_machines)
