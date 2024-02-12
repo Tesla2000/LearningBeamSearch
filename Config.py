@@ -31,9 +31,9 @@ class Config:
         MultilayerPerceptron,
     )
 
-    n_tasks, m_machines = 50, 25
+    n_tasks, m_machines = 10, 25
     min_size = 4
-    iterations = 10000
+    train_time = 3600
     minimal_counting_epoch_number = 500
     results_average_size = 100
     training_buffer_size = 5000
@@ -41,3 +41,4 @@ class Config:
     beta_attrition = 0.999
     gamma = 0.999
     eval_iterations = 500
+    save_interval = 1000

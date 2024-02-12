@@ -23,7 +23,6 @@ if __name__ == "__main__":
             train_rl(
                 Config.n_tasks,
                 Config.m_machines,
-                Config.iterations,
                 Config.min_size,
                 models,
                 Config.MODEL_RESULTS.joinpath(

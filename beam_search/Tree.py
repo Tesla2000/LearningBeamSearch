@@ -29,7 +29,6 @@ class Tree:
     def beam_search(self):
         buffer = [self.root]
         for tasks in range(self.n_tasks - 1, 0, -1):
-            print(tasks)
             temp_buffer = np.array(
                 tuple(
                     [*node, task]

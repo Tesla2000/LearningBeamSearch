@@ -1,4 +1,5 @@
 from collections import deque
+from itertools import count
 from statistics import fmean
 from time import time
 from typing import IO
@@ -17,7 +18,6 @@ from model_training.RLDataset import RLDataset
 def train_rl(
     n_tasks: int,
     m_machines: int,
-    iterations: int,
     min_size: int,
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
@@ -37,7 +37,9 @@ def train_rl(
         for optimizer in optimizers.values()
     )
     start = time()
-    for epoch in range(iterations):
+    for epoch in count(1):
+        if start + Config.train_time > time():
+            break
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         tree = Tree(working_time_matrix, models)
         task_order, state = tree.beam_search()
@@ -71,6 +73,8 @@ def train_rl(
             for key in Config.beta:
                 Config.beta[key] *= Config.beta_attrition
             schedulers[optimizer].step()
+        if epoch % Config.save_interval == 0:
+            save_models(models)
     save_models(models)
 
 
