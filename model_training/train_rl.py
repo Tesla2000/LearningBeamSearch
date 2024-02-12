@@ -5,7 +5,7 @@ from typing import IO
 
 import numpy as np
 import torch
-from torch import nn, Tensor, optim
+from torch import nn, optim
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 
@@ -32,10 +32,10 @@ def train_rl(
         (model, optim.Adam(model.parameters(), lr=model.learning_rate))
         for model in models.values()
     )
-    schedulers = dict((optimizer, ExponentialLR(optimizer, 0.999)) for optimizer in optimizers.values())
+    schedulers = dict((optimizer, ExponentialLR(optimizer, Config.gamma)) for optimizer in optimizers.values())
     start = time()
     for epoch in range(iterations):
-        working_time_matrix = Tensor(np.random.randint(1, 255, (n_tasks, m_machines)))
+        working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         tree = Tree(working_time_matrix, models)
         task_order, state = tree.beam_search()
         for tasks in range(min_size, n_tasks + 1):

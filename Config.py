@@ -30,10 +30,9 @@ class Config:
 
     n_tasks, m_machines = 20, 25
     min_size = 4
-    iterations = 10000
+    iterations = 2000
     minimal_counting_epoch_number = 500
     results_average_size = 100
     training_buffer_size = 5000
     beta = defaultdict(lambda: 50)
-    alpha = .01
-    training_buffer_retention_rate = 0.95
+    gamma = 0.999

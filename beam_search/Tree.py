@@ -42,7 +42,7 @@ class Tree:
                 )
                 states = self.working_time_matrix[remaining_tasks]
                 states = np.append(headers, states, axis=1)
-                predictions = self.models[tasks](Tensor(states)).flatten()
+                predictions = self.models[tasks](Tensor(states).to(self.device)).flatten()
                 temp_buffer = temp_buffer[torch.argsort(predictions)[:Config.beta[tasks]]]
             buffer = temp_buffer
         final_permutations = np.array(
@@ -94,7 +94,7 @@ class Tree:
         )
         states = self._get_states(perms)
         index = np.argmin(states[:, -1, -1])
-        return perms[index], self._get_states([self.perms[index]])[0]
+        return perms[index], self._get_states([perms[index]])[0]
 
     def _get_states(self, perms: np.array):
         states = np.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1))
