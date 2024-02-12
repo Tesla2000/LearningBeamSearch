@@ -13,9 +13,10 @@ class Config:
 
     table_name = "Samples_{}_{}".format
 
-    beta = defaultdict(lambda: 9 * 8 * 7)
-    patience = 2
-    min_size = 5
     n_tasks, m_machines = 9, 25
+    beta = defaultdict(lambda: Config.n_tasks * (Config.n_tasks - 1))
+    patience = 2
+    min_model_size = 5
+    min_saving_size = 7
     n_generated_samples = 50_000
     num_processes = 4

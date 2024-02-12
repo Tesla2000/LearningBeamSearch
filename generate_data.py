@@ -1,4 +1,5 @@
 import multiprocessing
+import re
 import sqlite3
 from itertools import count
 
@@ -12,7 +13,7 @@ from beam_search.Tree import Tree
 from regression_models.Perceptron import Perceptron
 
 
-def generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[int, nn.Module] = None):
+def _generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[int, nn.Module] = None):
     for _ in range(iterations):
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         tree = Tree(working_time_matrix, models)
@@ -20,25 +21,24 @@ def generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[in
             task_order, state = tree.fast_brute_force()
         else:
             task_order, state = tree.beam_search()
-        for tasks in range(Config.min_size, n_tasks + 1):
-            if tasks == n_tasks:
-                continue
+        for tasks in range(Config.min_saving_size, n_tasks):
             header = state[-tasks - 1].reshape(1, -1)
             data = working_time_matrix[list(task_order[-tasks:])]
             data = np.append(header, data)
             output_queue.put((tasks, list(map(int, data)) + [int(state[-1, -1].item())]))
 
 
-if __name__ == "__main__":
+def generate_data(n_tasks: int):
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()
-    # models = None
-    models = dict((tasks, (model := Perceptron(tasks, Config.m_machines),
-                           model.load_state_dict(torch.load(next(Config.OUTPUT_REGRESSION_MODELS.glob(
-                               f'{type(model).__name__}_{tasks}_{Config.m_machines}*')))), model.eval())[0]) for tasks in
-                  range(Config.min_size, 8))
+    model_type = Perceptron
+    models = dict((int(re.findall(r'\d+', model_path.name)[0]),
+                   (model := model_type(int(re.findall(r'\d+', model_path.name)[0]), Config.m_machines),
+                    model.load_state_dict(torch.load(model_path)), model.eval())[0]) for model_path in
+                  Config.OUTPUT_REGRESSION_MODELS.glob(
+                      f'{model_type.__name__}_*'))
     fill_strings = {}
-    for tasks in range(Config.min_size, Config.n_tasks + 1):
+    for tasks in range(Config.min_model_size, n_tasks + 1):
         table = Config.table_name(tasks, Config.m_machines)
         cur.execute(
             """CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,7 +58,8 @@ if __name__ == "__main__":
     queue = multiprocessing.Queue()
     processes = []
     for i in range(Config.num_processes):
-        process = multiprocessing.Process(target=generate_data, args=(queue, Config.n_tasks, Config.m_machines, Config.n_generated_samples, models))
+        process = multiprocessing.Process(target=_generate_data, args=(
+        queue, n_tasks, Config.m_machines, Config.n_generated_samples, models))
         process.start()
         processes.append(process)
     counter = iter(tqdm(count()))
@@ -83,3 +84,7 @@ if __name__ == "__main__":
         process.join()
 
     conn.close()
+
+
+if __name__ == "__main__":
+    generate_data(Config.n_tasks)
