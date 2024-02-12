@@ -29,6 +29,7 @@ class Tree:
     def beam_search(self):
         buffer = [self.root]
         for tasks in range(self.n_tasks - 1, 0, -1):
+            print(tasks)
             temp_buffer = np.array(
                 tuple(
                     [*node, task]
@@ -36,6 +37,7 @@ class Tree:
                     for task in filterfalse(node.__contains__, range(self.n_tasks))
                 )
             )
+            del buffer
             if len(temp_buffer) > min(1, int(Config.beta[tasks])):
                 if tasks not in self.models:
                     break
@@ -46,13 +48,17 @@ class Tree:
                     for tasks in temp_buffer
                 )
                 states = self.working_time_matrix[remaining_tasks]
+                del remaining_tasks
                 states = np.append(headers, states, axis=1)
+                del headers
                 predictions = (
                     self.models[tasks](Tensor(states).to(self.device)).flatten().cpu()
                 )
+                del states
                 temp_buffer = temp_buffer[
                     torch.argsort(predictions)[: max(2, int(Config.beta[tasks]))]
                 ]
+                del predictions
             buffer = temp_buffer
         final_permutations = np.array(
             tuple(
@@ -67,6 +73,7 @@ class Tree:
                 )
             )
         )
+        del temp_buffer
         final_states = self._get_states(final_permutations)
         index = np.argmin(final_states[:, -1, -1])
         return (

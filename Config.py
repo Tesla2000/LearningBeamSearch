@@ -31,7 +31,7 @@ class Config:
         MultilayerPerceptron,
     )
 
-    n_tasks, m_machines = 100, 25
+    n_tasks, m_machines = 50, 25
     min_size = 4
     iterations = 10000
     minimal_counting_epoch_number = 500
