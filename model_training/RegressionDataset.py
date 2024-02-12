@@ -12,7 +12,7 @@ class RegressionDataset(Dataset):
     def __init__(self, n_tasks: int, m_machines: int):
         self.conn = sqlite3.connect(Config.DATA_PATH)
         self.cur = self.conn.cursor()
-        self.table = f"Samples_{n_tasks}_{m_machines}"
+        self.table = Config.table_name(n_tasks, m_machines)
         self.n_tasks = n_tasks
         self.m_machines = m_machines
 

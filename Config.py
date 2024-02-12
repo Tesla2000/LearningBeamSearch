@@ -13,6 +13,14 @@ class Config:
     MODEL_RESULTS.mkdir(exist_ok=True)
     DATA_PATH = ROOT / Path("data.db")
 
+    table_name = "Samples_{}_{}".format
+
+    patience = 2
+    min_model_size = 5
+    min_saving_size = 7
+    n_generated_samples = 50_000
+    num_processes = 4
+
     model_types = (
         # Perceptron,
         MultilayerPerceptron,
