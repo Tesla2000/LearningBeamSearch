@@ -27,8 +27,8 @@ class Config:
     num_processes = 4
 
     model_types = (
-        Perceptron,
         MultilayerPerceptron,
+        Perceptron,
     )
 
     n_tasks, m_machines = 10, 25
