@@ -13,7 +13,9 @@ from beam_search.Tree import Tree
 from regression_models.Perceptron import Perceptron
 
 
-def _generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[int, nn.Module] = None):
+def _generate_data(
+    output_queue, n_tasks, m_machines, iterations, models: dict[int, nn.Module] = None
+):
     for _ in range(iterations):
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         tree = Tree(working_time_matrix, models)
@@ -25,18 +27,30 @@ def _generate_data(output_queue, n_tasks, m_machines, iterations, models: dict[i
             header = state[-tasks - 1].reshape(1, -1)
             data = working_time_matrix[list(task_order[-tasks:])]
             data = np.append(header, data)
-            output_queue.put((tasks, list(map(int, data)) + [int(state[-1, -1].item())]))
+            output_queue.put(
+                (tasks, list(map(int, data)) + [int(state[-1, -1].item())])
+            )
 
 
 def generate_data(n_tasks: int):
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()
     model_type = Perceptron
-    models = dict((int(re.findall(r'\d+', model_path.name)[0]),
-                   (model := model_type(int(re.findall(r'\d+', model_path.name)[0]), Config.m_machines),
-                    model.load_state_dict(torch.load(model_path)), model.eval())[0]) for model_path in
-                  Config.OUTPUT_REGRESSION_MODELS.glob(
-                      f'{model_type.__name__}_*'))
+    models = dict(
+        (
+            int(re.findall(r"\d+", model_path.name)[0]),
+            (
+                model := model_type(
+                    int(re.findall(r"\d+", model_path.name)[0]), Config.m_machines
+                ),
+                model.load_state_dict(torch.load(model_path)),
+                model.eval(),
+            )[0],
+        )
+        for model_path in Config.OUTPUT_REGRESSION_MODELS.glob(
+            f"{model_type.__name__}_*"
+        )
+    )
     fill_strings = {}
     for tasks in range(Config.min_model_size, n_tasks + 1):
         table = Config.table_name(tasks, Config.m_machines)
@@ -45,11 +59,15 @@ def generate_data(n_tasks: int):
                                 {},{},value INTEGER UNSIGNED)""".format(
                 table,
                 ",".join(
-                    map("prev_state_{} INTEGER UNSIGNED".format, range(Config.m_machines))
+                    map(
+                        "prev_state_{} INTEGER UNSIGNED".format,
+                        range(Config.m_machines),
+                    )
                 ),
                 ",".join(
                     map(
-                        "worktime_{} TINYINT UNSIGNED".format, range(Config.m_machines * tasks)
+                        "worktime_{} TINYINT UNSIGNED".format,
+                        range(Config.m_machines * tasks),
                     )
                 ),
             )
@@ -58,8 +76,16 @@ def generate_data(n_tasks: int):
     queue = multiprocessing.Queue()
     processes = []
     for i in range(Config.num_processes):
-        process = multiprocessing.Process(target=_generate_data, args=(
-        queue, n_tasks, Config.m_machines, Config.n_generated_samples, models))
+        process = multiprocessing.Process(
+            target=_generate_data,
+            args=(
+                queue,
+                n_tasks,
+                Config.m_machines,
+                Config.n_generated_samples,
+                models,
+            ),
+        )
         process.start()
         processes.append(process)
     counter = iter(tqdm(count()))
@@ -74,7 +100,9 @@ def generate_data(n_tasks: int):
                     table,
                     ",".join(map("prev_state_{}".format, range(Config.m_machines)))
                     + ","
-                    + ",".join(map("worktime_{}".format, range(Config.m_machines * tasks))),
+                    + ",".join(
+                        map("worktime_{}".format, range(Config.m_machines * tasks))
+                    ),
                     ",".join((Config.m_machines * (tasks + 1) + 1) * "?"),
                 ),
             )

@@ -2,7 +2,7 @@ import sqlite3
 
 from Config import Config
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()
     for n_tasks in range(7, 10):

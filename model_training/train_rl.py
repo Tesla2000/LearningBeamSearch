@@ -32,7 +32,10 @@ def train_rl(
         (model, optim.Adam(model.parameters(), lr=model.learning_rate))
         for model in models.values()
     )
-    schedulers = dict((optimizer, ExponentialLR(optimizer, Config.gamma)) for optimizer in optimizers.values())
+    schedulers = dict(
+        (optimizer, ExponentialLR(optimizer, Config.gamma))
+        for optimizer in optimizers.values()
+    )
     start = time()
     for epoch in range(iterations):
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
@@ -64,6 +67,9 @@ def train_rl(
                 loss = criterion(outputs, target)
                 loss.backward()
                 optimizer.step()
+            schedulers[optimizer].step()
+            for key in Config.beta:
+                Config.beta[key] *= Config.beta_attrition
             schedulers[optimizer].step()
     save_models(models)
 

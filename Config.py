@@ -1,4 +1,3 @@
-from collections import defaultdict
 from pathlib import Path
 
 from regression_models import MultilayerPerceptron
@@ -6,11 +5,15 @@ from regression_models.Perceptron import Perceptron
 
 
 class Config:
+    train = True
+
     ROOT = Path(__file__).parent
     OUTPUT_REGRESSION_MODELS = ROOT / "output_regression_models"
     OUTPUT_REGRESSION_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_MODELS = ROOT / "output_rl_models"
     OUTPUT_RL_MODELS.mkdir(exist_ok=True)
+    OUTPUT_RL_RESULTS = ROOT / "output_rl_results"
+    OUTPUT_RL_RESULTS.mkdir(exist_ok=True)
     MODEL_RESULTS = ROOT / "model_train_log"
     MODEL_RESULTS.mkdir(exist_ok=True)
     DATA_PATH = ROOT / Path("data.db")
@@ -28,11 +31,13 @@ class Config:
         MultilayerPerceptron,
     )
 
-    n_tasks, m_machines = 20, 25
+    n_tasks, m_machines = 100, 25
     min_size = 4
-    iterations = 2000
+    iterations = 10000
     minimal_counting_epoch_number = 500
     results_average_size = 100
     training_buffer_size = 5000
-    beta = defaultdict(lambda: 50)
+    beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
+    beta_attrition = 0.999
     gamma = 0.999
+    eval_iterations = 500
