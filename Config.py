@@ -5,7 +5,7 @@ from regression_models.Perceptron import Perceptron
 
 
 class Config:
-    train = True
+    train = False
 
     ROOT = Path(__file__).parent
     OUTPUT_REGRESSION_MODELS = ROOT / "output_regression_models"

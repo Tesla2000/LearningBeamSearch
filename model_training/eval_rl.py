@@ -38,14 +38,14 @@ def eval_rl(
         for model_type in model_types
     )
     results = dict((model_type, []) for model_type in model_types)
-    for _ in range(iterations):
+    for i in range(iterations):
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         for model_type, models in models_by_type.items():
             tree = Tree(working_time_matrix, models)
             _, state = tree.beam_search()
             results[model_type].append(state[-1, -1])
         for model_type, result in results.items():
-            print(model_type.__name__, fmean(result))
+            print(i, model_type.__name__, fmean(result))
     for model_type, result in results.items():
         Config.OUTPUT_RL_RESULTS.joinpath(model_type.__name__).write_text(str(result))
 
