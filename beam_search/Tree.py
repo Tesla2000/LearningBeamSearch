@@ -44,10 +44,6 @@ class Tree:
                 states = np.append(headers, states, axis=1)
                 predictions = self.models[tasks](Tensor(states)).flatten()
                 temp_buffer = temp_buffer[torch.argsort(predictions)[:Config.beta[tasks]]]
-                predictions = self.models[tasks](states).flatten()
-                temp_buffer = temp_buffer[
-                    torch.argsort(predictions)[: self.beta[tasks]]
-                ]
             buffer = temp_buffer
         final_permutations = np.array(
             tuple(
