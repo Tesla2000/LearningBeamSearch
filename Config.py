@@ -42,7 +42,7 @@ class Config:
     training_buffer_size = 5000
     beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
     minimal_beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
-    beta_attrition = 0.999
+    beta_attrition = 0.998
     gamma = 0.999
     eval_iterations = 500
-    save_interval = 1000
+    save_interval = 10
