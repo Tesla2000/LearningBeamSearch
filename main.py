@@ -19,7 +19,6 @@ if __name__ == "__main__":
             )
             for model in models.values():
                 model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-            fill_strings = {}
             train_rl(
                 Config.n_tasks,
                 Config.m_machines,

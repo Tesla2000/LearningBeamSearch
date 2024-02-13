@@ -26,7 +26,7 @@ class Tree:
         if models is None:
             self.models = {}
 
-    def beam_search(self):
+    def beam_search(self, beta: dict[int, float]):
         buffer = [self.root]
         for tasks in range(self.n_tasks - 1, 0, -1):
             temp_buffer = np.array(
@@ -37,7 +37,7 @@ class Tree:
                 )
             )
             del buffer
-            if len(temp_buffer) > min(1, int(Config.beta[tasks])):
+            if len(temp_buffer) > max(Config.minimal_beta[tasks], int(beta[tasks])):
                 if tasks not in self.models:
                     break
                 states = self._get_states(temp_buffer)
@@ -55,7 +55,7 @@ class Tree:
                 )
                 del states
                 temp_buffer = temp_buffer[
-                    torch.argsort(predictions)[: max(2, int(Config.beta[tasks]))]
+                    torch.argsort(predictions)[: max(Config.minimal_beta[tasks], int(beta[tasks]))]
                 ]
                 del predictions
             buffer = temp_buffer

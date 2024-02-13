@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from Config import Config
 from beam_search.Tree import Tree
+from model_training.database_functions import create_tables, save_sample
 from regression_models.Perceptron import Perceptron
 
 
@@ -52,27 +53,7 @@ def generate_data(n_tasks: int):
         )
     )
     fill_strings = {}
-    for tasks in range(Config.min_model_size, n_tasks + 1):
-        table = Config.table_name(tasks, Config.m_machines)
-        cur.execute(
-            """CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                {},{},value INTEGER UNSIGNED)""".format(
-                table,
-                ",".join(
-                    map(
-                        "prev_state_{} INTEGER UNSIGNED".format,
-                        range(Config.m_machines),
-                    )
-                ),
-                ",".join(
-                    map(
-                        "worktime_{} TINYINT UNSIGNED".format,
-                        range(Config.m_machines * tasks),
-                    )
-                ),
-            )
-        )
-    conn.commit()
+    create_tables(conn, cur)
     queue = multiprocessing.Queue()
     processes = []
     for i in range(Config.num_processes):
@@ -93,21 +74,7 @@ def generate_data(n_tasks: int):
         while not queue.empty():
             next(counter)
             tasks, data = queue.get()
-            table = Config.table_name(tasks, Config.m_machines)
-            fill_strings[tasks] = fill_strings.get(
-                tasks,
-                "INSERT INTO {} ({}, value) VALUES ({})".format(
-                    table,
-                    ",".join(map("prev_state_{}".format, range(Config.m_machines)))
-                    + ","
-                    + ",".join(
-                        map("worktime_{}".format, range(Config.m_machines * tasks))
-                    ),
-                    ",".join((Config.m_machines * (tasks + 1) + 1) * "?"),
-                ),
-            )
-            cur.execute(fill_strings[tasks], data)
-            conn.commit()
+            save_sample(tasks, data, fill_strings, conn, cur)
     for process in processes:
         process.join()
 

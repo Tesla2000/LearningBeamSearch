@@ -1,3 +1,4 @@
+import sqlite3
 from collections import deque
 from itertools import count
 from statistics import fmean
@@ -13,6 +14,7 @@ from torch.utils.data import DataLoader
 from Config import Config
 from beam_search.Tree import Tree
 from model_training.RLDataset import RLDataset
+from model_training.database_functions import create_tables, save_sample
 
 
 def train_rl(
@@ -22,6 +24,10 @@ def train_rl(
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
 ):
+    fill_strings = {}
+    conn = sqlite3.connect(Config.RL_DATA_PATH)
+    cur = conn.cursor()
+    create_tables(conn, cur)
     training_buffers = dict((key, deque(maxlen=100)) for key in models)
     results = []
     buffered_results = deque(maxlen=Config.results_average_size)
@@ -38,11 +44,17 @@ def train_rl(
     )
     start = time()
     for epoch in count(1):
-        if start + Config.train_time > time():
+        if start + Config.train_time < time():
             break
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         tree = Tree(working_time_matrix, models)
-        task_order, state = tree.beam_search()
+        task_order, state = tree.beam_search(Config.beta)
+        for tasks in range(Config.min_saving_size, n_tasks):
+            header = state[-tasks - 1].reshape(1, -1)
+            data = working_time_matrix[list(task_order[-tasks:])]
+            data = np.append(header, data)
+            data = list(map(int, data)) + [int(state[-1, -1].item())]
+            save_sample(tasks, data, fill_strings, conn, cur)
         for tasks in range(min_size, n_tasks + 1):
             if tasks == n_tasks:
                 header = np.zeros((1, m_machines))
