@@ -28,13 +28,15 @@ class Config:
     n_generated_samples = 50_000
     num_processes = 4
 
-    model_types = (
+    model_types = [
         # WideMultilayerPerceptron,
         # MultilayerPerceptron,
         # Perceptron,
-    )
+    ]
+    universal_model_types = tuple()
 
     n_tasks, m_machines = 50, 25
+    max_tasks = 10
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_epoch_number = 500
@@ -46,3 +48,11 @@ class Config:
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10
+
+
+from regression_models.wrapped_efficientnet import wrapped_universal_efficientnet, wrapped_efficientnet
+
+Config.universal_model_types = (
+    wrapped_universal_efficientnet,
+)
+Config.model_types.append(wrapped_efficientnet)
