@@ -15,6 +15,9 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
 def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
+    if tuple(Config.OUTPUT_REGRESSION_MODELS.glob(f"{model}_{n_tasks}_{m_machines}*")):
+        return
+    results = []
     batch_size = 32
     test_percentage = 0.2
     learning_rate = model.learning_rate
@@ -52,12 +55,15 @@ def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
         outputs = model(inputs)
         prediction_time = (time() - start) / len(outputs)
         result = (target - outputs).abs().mean()
-        if result > best_result:
+        results.append(result)
+        best_result = min(results)
+        best_result_epoch = results.index(best_result)
+        if epoch >= best_result_epoch + Config.patience:
             torch.save(
                 state_dict,
                 f"{Config.OUTPUT_REGRESSION_MODELS}/{model}_{n_tasks}_{m_machines}_{prediction_time:.2e}_{best_result:.1f}.pth",
             )
             return
-        state_dict = deepcopy(model.state_dict())
-        best_result = result
+        if best_result_epoch == epoch:
+            state_dict = deepcopy(model.state_dict())
         print(epoch, result.item())

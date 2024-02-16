@@ -1,32 +1,37 @@
 import random
-from functools import partial
-from itertools import product
 
 import numpy as np
 import torch
 
-from model_training.train_regressor import train_regressor
-from regression_models import MultilayerPerceptron, ConvRegressor
-from regression_models.Perceptron import Perceptron
-from regression_models.WideConvRegressor import WideConvRegressor
-from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
+from Config import Config
+from model_training.eval_rl import eval_rl
+from model_training.train_rl import train_rl
 
 if __name__ == "__main__":
     torch.manual_seed(42)
     np.random.seed(42)
     random.seed(42)
-    m_machines = 25
-    for model_type, n_tasks in product(
-        (
-            ConvRegressor,
-            MultilayerPerceptron,
-            partial(MultilayerPerceptron, hidden_size=512),
-            # SumRegressor,
-            # Perceptron,
-            WideMultilayerPerceptron,
-            # WideConvRegressor,
-        ),
-        range(3, 7),
-    ):
-        model = model_type(n_tasks=n_tasks, m_machines=m_machines)
-        train_regressor(model, n_tasks, m_machines)
+    if Config.train:
+        for model_type in Config.model_types:
+            models = dict(
+                (tasks, model_type(tasks, Config.m_machines))
+                for tasks in range(Config.min_size, Config.n_tasks + 1)
+            )
+            for model in models.values():
+                model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+            train_rl(
+                Config.n_tasks,
+                Config.m_machines,
+                Config.min_size,
+                models,
+                Config.MODEL_RESULTS.joinpath(
+                    f"{model_type.__name__}_{Config.n_tasks}_{Config.m_machines}_{Config.min_size}"
+                ).open("w"),
+            )
+    else:
+        eval_rl(
+            Config.n_tasks,
+            Config.m_machines,
+            Config.eval_iterations,
+            Config.model_types,
+        )

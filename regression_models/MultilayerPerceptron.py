@@ -4,7 +4,9 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
 class MultilayerPerceptron(BaseRegressor):
-    def __init__(self, n_tasks: int, m_machines: int, hidden_size: int = 256, **_):
+    learning_rate = 1e-5
+
+    def __init__(self, n_tasks: int, m_machines: int, hidden_size: int = 64, **_):
         super(MultilayerPerceptron, self).__init__()
         self.hidden_size = hidden_size
         self.flatten = nn.Flatten()
