@@ -12,7 +12,7 @@ if __name__ == "__main__":
     np.random.seed(42)
     random.seed(42)
     if Config.train:
-        for model_type in (*Config.model_types, *Config.universal_model_types):
+        for model_type in (*Config.model_types, *Config.universal_model_types,):
             if model_type in Config.model_types:
                 models = dict(
                     (tasks, model_type(tasks, Config.m_machines))
@@ -35,10 +35,11 @@ if __name__ == "__main__":
                     f"{model_type.__name__}_{Config.n_tasks}_{Config.m_machines}_{Config.min_size}"
                 ).open("w"),
             )
+            Config.max_tasks = Config.n_tasks + 1
     else:
         eval_rl(
             Config.n_tasks,
             Config.m_machines,
             Config.eval_iterations,
-            Config.model_types,
+            (*Config.model_types, *Config.universal_model_types,),
         )

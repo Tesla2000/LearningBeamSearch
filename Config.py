@@ -1,6 +1,7 @@
+from functools import partial
 from pathlib import Path
 
-from regression_models import MultilayerPerceptron
+from regression_models import MultilayerPerceptron, ConvRegressor
 from regression_models.Perceptron import Perceptron
 from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 
@@ -32,11 +33,11 @@ class Config:
         # WideMultilayerPerceptron,
         # MultilayerPerceptron,
         # Perceptron,
+        ConvRegressor,
     ]
     universal_model_types = tuple()
 
     n_tasks, m_machines = 50, 25
-    max_tasks = 10
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_epoch_number = 500
@@ -48,11 +49,12 @@ class Config:
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10
+    max_status_length = 2000
 
 
-from regression_models.wrapped_efficientnet import wrapped_universal_efficientnet, wrapped_efficientnet
-
-Config.universal_model_types = (
-    wrapped_universal_efficientnet,
-)
-Config.model_types.append(wrapped_efficientnet)
+# from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
+#
+# Config.universal_model_types = (
+#     UniversalEfficientNetAnySize,
+#     UniversalEfficientNetMaxSize,
+# )

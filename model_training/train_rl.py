@@ -24,7 +24,7 @@ def train_rl(
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
 ):
-    fill_strings = {}
+    # fill_strings = {}
     conn = sqlite3.connect(Config.RL_DATA_PATH)
     cur = conn.cursor()
     create_tables(conn, cur)
@@ -74,8 +74,6 @@ def train_rl(
             dataset = RLDataset(training_buffers[tasks])
             train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
             for inputs, labels in train_loader:
-                if len(inputs) == 1:
-                    continue
                 inputs, labels = inputs.to(device), labels.to(device)
                 target = labels.float().unsqueeze(1)
                 optimizer.zero_grad()
@@ -93,7 +91,11 @@ def train_rl(
 
 
 def save_models(models: dict[int, nn.Module]):
+    saved = set()
     for tasks, model in models.items():
+        if id(model) in saved:
+            continue
+        saved.add(id(model))
         torch.save(
             model.state_dict(),
             f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
