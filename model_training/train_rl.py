@@ -1,3 +1,4 @@
+import random
 import sqlite3
 from collections import deque
 from itertools import count
@@ -15,6 +16,7 @@ from Config import Config
 from beam_search.Tree import Tree
 from model_training.RLDataset import RLDataset
 from model_training.database_functions import create_tables, save_sample
+from regression_models.RecurrentModel import RecurrentModel
 
 
 def train_rl(
@@ -42,11 +44,14 @@ def train_rl(
         (optimizer, ExponentialLR(optimizer, Config.gamma))
         for optimizer in optimizers.values()
     )
+    recurrent = any(isinstance(model, RecurrentModel) for model in models.values())
     start = time()
     for epoch in count(1):
         if start + Config.train_time < time():
             break
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
+        if recurrent:
+            random.choice(tuple(models.values())).fill_state(working_time_matrix)
         tree = Tree(working_time_matrix, models)
         task_order, state = tree.beam_search(Config.beta)
         # for tasks in range(Config.min_saving_size, n_tasks):

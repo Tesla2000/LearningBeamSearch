@@ -37,8 +37,9 @@ class Config:
         # Perceptron,
     )
     universal_model_types = tuple()
+    recurrent_model_types = tuple()
 
-    n_tasks, m_machines = 50, 25
+    n_tasks, m_machines = 10, 25
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_time = 1800
@@ -54,8 +55,10 @@ class Config:
 
 # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
 _encoder = EncodingNetwork(Config.n_tasks, Config.m_machines)
-Config.universal_model_types = (
-    # UniversalEfficientNetAnySize,
-    # UniversalEfficientNetMaxSize,
+# Config.universal_model_types = (
+#     # UniversalEfficientNetAnySize,
+#     # UniversalEfficientNetMaxSize,
+# )
+Config.recurrent_model_types = (
     lambda: RecurrentModel(_encoder),
 )
