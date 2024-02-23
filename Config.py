@@ -50,7 +50,7 @@ class Config:
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10
-    max_status_length = 1
+    max_status_length = 2000
 
 
 # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize

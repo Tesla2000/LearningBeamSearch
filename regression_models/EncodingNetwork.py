@@ -5,7 +5,7 @@ from torch import nn, Tensor
 class EncodingNetwork(nn.Module):
     learning_rate = 1e-4
 
-    def __init__(self, n_tasks: int, m_machines: int, fc_out_features: int = 128, hidden_size: int = 256, out_channels: int=64):
+    def __init__(self, n_tasks: int, m_machines: int, fc_out_features: int = 64, hidden_size: int = 256, out_channels: int=16):
         super().__init__()
         self.m_machines = m_machines
         self.n_tasks = n_tasks

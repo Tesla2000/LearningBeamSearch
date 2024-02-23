@@ -83,9 +83,10 @@ def train_rl(
                 target = labels.float().unsqueeze(1)
                 optimizer.zero_grad()
                 outputs = model(inputs.float())
-                loss = criterion(outputs, target)
-                loss.backward()
-                optimizer.step()
+                if outputs is not None:
+                    loss = criterion(outputs, target)
+                    loss.backward()
+                    optimizer.step()
             schedulers[optimizer].step()
             for key in Config.beta:
                 Config.beta[key] *= Config.beta_attrition

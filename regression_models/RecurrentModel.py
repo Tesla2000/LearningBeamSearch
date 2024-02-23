@@ -8,7 +8,7 @@ from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
 class RecurrentModel(BaseRegressor):
-    def __init__(self, encoder: EncodingNetwork, hidden_size: int = 2048):
+    def __init__(self, encoder: EncodingNetwork):
         super().__init__()
         self.encoder = encoder
         self.relu = nn.ReLU()
