@@ -40,7 +40,7 @@ class Config:
     n_tasks, m_machines = 50, 25
     min_size = 4
     train_time = 12 * 3600
-    minimal_counting_epoch_number = 500
+    minimal_counting_time = 1800
     results_average_size = 100
     training_buffer_size = 5000
     beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))

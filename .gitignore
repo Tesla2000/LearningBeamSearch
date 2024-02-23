@@ -10,3 +10,4 @@
 /model_train_log
 /output_rl_models/
 /rl_data.db
+/output_rl_results/
