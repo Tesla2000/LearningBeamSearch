@@ -24,7 +24,7 @@ def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=Config.gamma)
     best_result = float("inf")
     for epoch in count():
         dataset = RegressionDataset(n_tasks=n_tasks, m_machines=m_machines)

@@ -24,7 +24,7 @@ def train_rl(
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
 ):
-    fill_strings = {}
+    # fill_strings = {}
     conn = sqlite3.connect(Config.RL_DATA_PATH)
     cur = conn.cursor()
     create_tables(conn, cur)
@@ -35,7 +35,7 @@ def train_rl(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
     optimizers = dict(
-        (model, optim.Adam(model.parameters(), lr=model.learning_rate))
+        (model, optim.Adam(model.parameters(), lr=getattr(model, 'learning_rate', 1e-5)))
         for model in models.values()
     )
     schedulers = dict(
@@ -49,19 +49,19 @@ def train_rl(
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         tree = Tree(working_time_matrix, models)
         task_order, state = tree.beam_search(Config.beta)
-        for tasks in range(Config.min_saving_size, n_tasks):
-            header = state[-tasks - 1].reshape(1, -1)
-            data = working_time_matrix[list(task_order[-tasks:])]
-            data = np.append(header, data)
-            data = list(map(int, data)) + [int(state[-1, -1].item())]
-            save_sample(tasks, data, fill_strings, conn, cur)
+        # for tasks in range(Config.min_saving_size, n_tasks):
+        #     header = state[-tasks - 1].reshape(1, -1)
+            # data = working_time_matrix[list(task_order[-tasks:])]
+            # data = np.append(header, data)
+            # data = list(map(int, data)) + [int(state[-1, -1].item())]
+            # save_sample(tasks, data, fill_strings, conn, cur)
         for tasks in range(min_size, n_tasks + 1):
             if tasks == n_tasks:
                 header = np.zeros((1, m_machines))
             else:
                 header = state[-tasks - 1].reshape(1, -1)
             data = working_time_matrix[list(task_order[-tasks:])]
-            data = np.append(header, data)
+            data = np.append(header, data, axis=0)
             label = state[-1, -1]
             training_buffers[tasks].append((data, label))
         buffered_results.append(label.item())
@@ -77,7 +77,7 @@ def train_rl(
                 inputs, labels = inputs.to(device), labels.to(device)
                 target = labels.float().unsqueeze(1)
                 optimizer.zero_grad()
-                outputs = model(inputs)
+                outputs = model(inputs.float())
                 loss = criterion(outputs, target)
                 loss.backward()
                 optimizer.step()
@@ -91,8 +91,12 @@ def train_rl(
 
 
 def save_models(models: dict[int, nn.Module]):
+    saved = set()
     for tasks, model in models.items():
+        if id(model) in saved:
+            continue
+        saved.add(id(model))
         torch.save(
             model.state_dict(),
-            f"{Config.OUTPUT_RL_MODELS}/{model}_{tasks}_{Config.m_machines}.pth",
+            f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
         )
