@@ -11,7 +11,6 @@ class BaseRegressor(nn.Module, ABC):
         x = self.predict(x)
         return x
 
-    @abstractmethod
     def predict(self, x):
         pass
 

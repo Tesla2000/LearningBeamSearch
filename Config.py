@@ -1,8 +1,10 @@
 from functools import partial
 from pathlib import Path
 
-from regression_models import MultilayerPerceptron, ConvRegressor
+from regression_models import MultilayerPerceptron
+from regression_models.EncodingNetwork import EncodingNetwork
 from regression_models.Perceptron import Perceptron
+from regression_models.RecurrentModel import RecurrentModel
 from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 
 
@@ -29,12 +31,11 @@ class Config:
     n_generated_samples = 50_000
     num_processes = 4
 
-    model_types = [
+    model_types = (
         # WideMultilayerPerceptron,
         # MultilayerPerceptron,
         # Perceptron,
-        ConvRegressor,
-    ]
+    )
     universal_model_types = tuple()
 
     n_tasks, m_machines = 50, 25
@@ -42,19 +43,19 @@ class Config:
     train_time = 12 * 3600
     minimal_counting_time = 1800
     results_average_size = 100
-    training_buffer_size = 5000
     beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
     minimal_beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
     beta_attrition = 0.998
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10
-    max_status_length = 2000
+    max_status_length = 1
 
 
 # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
-#
-# Config.universal_model_types = (
-#     UniversalEfficientNetAnySize,
-#     UniversalEfficientNetMaxSize,
-# )
+_encoder = EncodingNetwork(Config.n_tasks, Config.m_machines)
+Config.universal_model_types = (
+    # UniversalEfficientNetAnySize,
+    # UniversalEfficientNetMaxSize,
+    lambda: RecurrentModel(_encoder),
+)
