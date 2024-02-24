@@ -8,7 +8,7 @@ from typing import IO
 
 import numpy as np
 import torch
-from torch import nn, optim
+from torch import nn, optim, Tensor
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 
@@ -23,6 +23,7 @@ def train_rl(
     n_tasks: int,
     m_machines: int,
     min_size: int,
+    recurrent: bool,
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
 ):
@@ -44,7 +45,6 @@ def train_rl(
         (optimizer, ExponentialLR(optimizer, Config.gamma))
         for optimizer in optimizers.values()
     )
-    recurrent = any(isinstance(model, RecurrentModel) for model in models.values())
     start = time()
     for epoch in count(1):
         if start + Config.train_time < time():
@@ -53,7 +53,7 @@ def train_rl(
         if recurrent:
             random.choice(tuple(models.values())).fill_state(working_time_matrix)
         tree = Tree(working_time_matrix, models)
-        task_order, state = tree.beam_search(Config.beta)
+        task_order, state = tree.beam_search(Config.beta, recurrent)
         # for tasks in range(Config.min_saving_size, n_tasks):
         #     header = state[-tasks - 1].reshape(1, -1)
             # data = working_time_matrix[list(task_order[-tasks:])]
@@ -73,24 +73,40 @@ def train_rl(
         results.append(fmean(buffered_results))
         output_file.write(f"{int(time() - start)},{results[-1]:.2f}\n")
         print(epoch, results[-1])
-        for tasks, model in models.items():
-            model.train()
-            optimizer = optimizers[model]
-            dataset = RLDataset(training_buffers[tasks])
-            train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-            for inputs, labels in train_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
-                target = labels.float().unsqueeze(1)
-                optimizer.zero_grad()
-                outputs = model(inputs.float())
-                if outputs is not None:
-                    loss = criterion(outputs, target)
+        if not recurrent:
+            for tasks, model in models.items():
+                model.train()
+                optimizer = optimizers[model]
+                dataset = RLDataset(training_buffers[tasks])
+                train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
+                for inputs, labels in train_loader:
+                    inputs, labels = inputs.to(device), labels.to(device)
+                    labels = labels.float().unsqueeze(1)
+                    optimizer.zero_grad()
+                    outputs = torch.concat(
+                        tuple(model(inputs.float()[i: i + Config.max_status_length]).flatten().cpu() for i in range(0, len(inputs), Config.max_status_length))
+                    ).unsqueeze(-1)
+                    loss = criterion(outputs, labels)
                     loss.backward()
                     optimizer.step()
-            schedulers[optimizer].step()
-            for key in Config.beta:
-                Config.beta[key] *= Config.beta_attrition
-            schedulers[optimizer].step()
+                schedulers[optimizer].step()
+                Config.beta[tasks] *= Config.beta_attrition
+        else:
+            for index, instance in enumerate(training_buffers[Config.n_tasks]):
+                model = tuple(models.values())[0]
+                optimizer = optimizers[model]
+                for i in range(Config.n_tasks, Config.min_size, -1):
+                    model.fill_state(instance[0][1:])
+                    inputs, labels = training_buffers[i - 1][index]
+                    inputs, labels = Tensor(inputs).to(device), Tensor([labels]).to(device)
+                    labels = labels.float().unsqueeze(1)
+                    optimizer.zero_grad()
+                    outputs = model(inputs.float().unsqueeze(0))
+                    loss = criterion(outputs, labels)
+                    loss.backward()
+                    optimizer.step()
+                schedulers[optimizer].step()
+                Config.beta[tasks] *= Config.beta_attrition
         if epoch % Config.save_interval == 0:
             save_models(models)
     save_models(models)

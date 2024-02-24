@@ -27,7 +27,8 @@ class Tree:
             self.models = {}
 
     @torch.no_grad()
-    def beam_search(self, beta: dict[int, float]):
+    def beam_search(self, beta: dict[int, float], recurrent: bool = False):
+        tuple(model.eval() for model in self.models.values())
         buffer = [self.root]
         for tasks in range(self.n_tasks - 1, 0, -1):
             temp_buffer = np.array(
@@ -58,6 +59,8 @@ class Tree:
                         self.models[tasks](state).flatten().cpu()
                     )
                     del state
+                if recurrent:
+                    tuple(self.models[tasks].states_by_size[i].clear() for i in range(Config.n_tasks-tasks-1, 0, -1))
                 del states
                 temp_buffer = temp_buffer[
                     torch.argsort(Tensor(predictions))[: max(Config.minimal_beta[tasks], int(beta[tasks]))]

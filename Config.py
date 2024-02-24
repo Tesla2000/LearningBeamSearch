@@ -4,7 +4,6 @@ from pathlib import Path
 from regression_models import MultilayerPerceptron
 from regression_models.EncodingNetwork import EncodingNetwork
 from regression_models.Perceptron import Perceptron
-from regression_models.RecurrentModel import RecurrentModel
 from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 
 
@@ -50,7 +49,7 @@ class Config:
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10
-    max_status_length = 2000
+    max_status_length = 1
 
 
 # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
@@ -59,6 +58,8 @@ _encoder = EncodingNetwork(Config.n_tasks, Config.m_machines)
 #     # UniversalEfficientNetAnySize,
 #     # UniversalEfficientNetMaxSize,
 # )
+from regression_models.RecurrentModel import RecurrentModel
+
 Config.recurrent_model_types = (
     lambda: RecurrentModel(_encoder),
 )

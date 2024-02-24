@@ -41,7 +41,8 @@ def eval_rl(
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         for model_type, models in models_by_type.items():
             tree = Tree(working_time_matrix, models)
-            _, state = tree.beam_search(Config.minimal_beta)
+            recurrent = model_type not in (*Config.universal_model_types, *Config.model_types)
+            _, state = tree.beam_search(Config.minimal_beta, recurrent)
             results[model_type].append(state[-1, -1])
         for model_type, result in results.items():
             print(i, model_type.__name__, fmean(result))
