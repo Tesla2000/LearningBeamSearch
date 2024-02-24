@@ -28,7 +28,7 @@ if __name__ == "__main__":
                 if model_type not in Config.universal_model_types:
                     recurrent = True
             for model in models.values():
-                model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+                model.to(Config.device)
             train_rl(
                 Config.n_tasks,
                 Config.m_machines,

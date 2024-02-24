@@ -1,6 +1,8 @@
 import torch
 from torch import nn, Tensor
 
+from Config import Config
+
 
 class EncodingNetwork(nn.Module):
     learning_rate = 1e-4
@@ -23,8 +25,8 @@ class EncodingNetwork(nn.Module):
         return torch.concat(tuple(self.rnn(self.state_embedding_layer(x[0, :, i].unsqueeze(-1)))[-1] for i in range(self.m_machines)))
 
     def _part_two(self, p):
-        h = torch.empty((self.m_machines, self.fc_out_features))
-        number_of_machines_embedded = self.number_of_machines_embedding_layer(Tensor([[self.m_machines]]))
+        h = torch.empty((self.m_machines, self.fc_out_features)).to(Config.device)
+        number_of_machines_embedded = self.number_of_machines_embedding_layer(Tensor([[self.m_machines]]).to(Config.device))
         for i in range(self.m_machines):
             h[i] = self.fc(torch.concat((p[i].unsqueeze(0), number_of_machines_embedded), dim=1))
             h[i] = self.relu(h[i])
@@ -36,6 +38,7 @@ class EncodingNetwork(nn.Module):
         return self.relu(p)
 
     def forward(self, x):
+        x = x.to(Config.device)
         p = self._part_one(x)
         p = self._part_two(p)
         return self._part_three(p)

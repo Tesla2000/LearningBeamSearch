@@ -6,6 +6,7 @@ from typing import Optional
 import numpy as np
 import torch
 from torch import nn, Tensor
+from tqdm import tqdm
 
 from Config import Config
 
@@ -30,7 +31,7 @@ class Tree:
     def beam_search(self, beta: dict[int, float], recurrent: bool = False):
         tuple(model.eval() for model in self.models.values())
         buffer = [self.root]
-        for tasks in range(self.n_tasks - 1, 0, -1):
+        for tasks in tqdm(range(self.n_tasks - 1, 0, -1)):
             temp_buffer = np.array(
                 tuple(
                     [*node, task]

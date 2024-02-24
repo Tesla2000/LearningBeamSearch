@@ -35,7 +35,6 @@ def train_rl(
     results = []
     buffered_results = deque(maxlen=Config.results_average_size)
     batch_size = 32
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
     optimizers = dict(
         (model, optim.Adam(model.parameters(), lr=getattr(model, 'learning_rate', 1e-5)))
@@ -80,7 +79,7 @@ def train_rl(
                 dataset = RLDataset(training_buffers[tasks])
                 train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
                 for inputs, labels in train_loader:
-                    inputs, labels = inputs.to(device), labels.to(device)
+                    inputs, labels = inputs.to(Config.device), labels.to(Config.device)
                     labels = labels.float().unsqueeze(1)
                     optimizer.zero_grad()
                     outputs = torch.concat(

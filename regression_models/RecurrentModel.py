@@ -28,7 +28,7 @@ class RecurrentModel(BaseRegressor):
             self._working_times[index] = Tensor(row).unsqueeze(0)
 
     def forward(self, x):
-        preset_indexes = set(map(self._working_indexes.get, map(tuple, x.numpy()[0, 1:])))
+        preset_indexes = set(map(self._working_indexes.get, map(tuple, x.cpu().numpy()[0, 1:])))
         absent_indexes = set(range(len(self._working_indexes))) - preset_indexes
         if tuple(sorted(absent_indexes)) in self.states_by_size[len(absent_indexes)]:
             x = self.fc(self.states_by_size[len(absent_indexes)][tuple(sorted(absent_indexes))])
@@ -39,7 +39,7 @@ class RecurrentModel(BaseRegressor):
                 prev_state = self.states_by_size[len(indexes)][indexes]
                 row = self._working_times[index]
                 absent_indexes = tuple(sorted(absent_indexes))
-                _, self.states_by_size[len(absent_indexes)][absent_indexes] = self.gru(row, prev_state)
+                _, self.states_by_size[len(absent_indexes)][absent_indexes] = self.gru(row.to(Config.device), prev_state)
                 x = self.fc(self.states_by_size[len(absent_indexes)][absent_indexes])
                 x = self.relu(x)
                 return x
@@ -49,7 +49,7 @@ class RecurrentModel(BaseRegressor):
             for index in absent_indexes:
                 row = self._working_times[index]
                 combination = tuple(sorted(set(combination).union({index})))
-                _, self.states_by_size[len(combination)][combination] = self.gru(row, prev_state)
+                _, self.states_by_size[len(combination)][combination] = self.gru(row.to(Config.device), prev_state)
                 prev_state = self.states_by_size[len(combination)][combination]
             x = self.fc(prev_state)
             x = self.relu(x)
