@@ -1,4 +1,3 @@
-from functools import partial
 from pathlib import Path
 
 import torch
@@ -39,7 +38,7 @@ class Config:
     universal_model_types = tuple()
     recurrent_model_types = tuple()
 
-    n_tasks, m_machines = 50, 25
+    n_tasks, m_machines = 10, 25
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_time = 1800
@@ -50,20 +49,21 @@ class Config:
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10
-    max_status_length = 1
+    max_status_length = 2000
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
-from regression_models.EncodingNetwork import EncodingNetwork
-_encoder = EncodingNetwork(Config.n_tasks, Config.m_machines).to(Config.device)
-# Config.universal_model_types = (
-#     # UniversalEfficientNetAnySize,
-#     # UniversalEfficientNetMaxSize,
-# )
-from regression_models.RecurrentModel import RecurrentModel
+from regression_models.EncodingPerceptron import EncodingPerceptron
 
-Config.recurrent_model_types = (
-    lambda: RecurrentModel(_encoder),
+Config.universal_model_types = (
+    # UniversalEfficientNetAnySize,
+    # UniversalEfficientNetMaxSize,
+    EncodingPerceptron,
 )
+# from regression_models.RecurrentModel import RecurrentModel
+#
+# Config.recurrent_model_types = (
+#     lambda: RecurrentModel(_encoder),
+# )
