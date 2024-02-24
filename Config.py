@@ -19,6 +19,8 @@ class Config:
     OUTPUT_RL_RESULTS.mkdir(exist_ok=True)
     MODEL_RESULTS = ROOT / "model_train_log"
     MODEL_RESULTS.mkdir(exist_ok=True)
+    PLOTS = ROOT / "plots"
+    PLOTS.mkdir(exist_ok=True)
     DATA_PATH = ROOT / Path("data.db")
     RL_DATA_PATH = ROOT / Path("rl_data.db")
 
