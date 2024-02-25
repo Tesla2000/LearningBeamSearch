@@ -15,4 +15,6 @@ class WideMultilayerPerceptron(MultilayerPerceptron):
         x = self.flatten(x)
         out = self.dense1(x)
         x = torch.concat((x, out), dim=1)
-        return self.dense2(x)
+        x = self.relu(x)
+        x = self.dense2(x)
+        return self.relu(x)

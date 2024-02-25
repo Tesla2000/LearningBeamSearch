@@ -8,7 +8,9 @@ class Perceptron(BaseRegressor):
         super(Perceptron, self).__init__()
         self.flatten = nn.Flatten()
         self.fc = nn.Linear((n_tasks + 1) * m_machines, 1)
+        self.relu = nn.ReLU()
 
     def predict(self, x):
         x = self.flatten(x)
-        return self.fc(x)
+        x = self.fc(x)
+        return self.relu(x)

@@ -1,7 +1,8 @@
-from functools import partial
 from pathlib import Path
 
-from regression_models import MultilayerPerceptron, ConvRegressor
+import torch
+
+from regression_models import MultilayerPerceptron
 from regression_models.Perceptron import Perceptron
 from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 
@@ -18,6 +19,8 @@ class Config:
     OUTPUT_RL_RESULTS.mkdir(exist_ok=True)
     MODEL_RESULTS = ROOT / "model_train_log"
     MODEL_RESULTS.mkdir(exist_ok=True)
+    PLOTS = ROOT / "plots"
+    PLOTS.mkdir(exist_ok=True)
     DATA_PATH = ROOT / Path("data.db")
     RL_DATA_PATH = ROOT / Path("rl_data.db")
 
@@ -29,20 +32,19 @@ class Config:
     n_generated_samples = 50_000
     num_processes = 4
 
-    model_types = [
+    model_types = (
         # WideMultilayerPerceptron,
         # MultilayerPerceptron,
         # Perceptron,
-        ConvRegressor,
-    ]
+    )
     universal_model_types = tuple()
+    recurrent_model_types = tuple()
 
-    n_tasks, m_machines = 50, 25
+    n_tasks, m_machines = 10, 25
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_time = 1800
     results_average_size = 100
-    training_buffer_size = 5000
     beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
     minimal_beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
     beta_attrition = 0.998
@@ -51,10 +53,19 @@ class Config:
     save_interval = 10
     max_status_length = 2000
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
+from regression_models.EncodingPerceptron import EncodingPerceptron
+
+Config.universal_model_types = (
+    # UniversalEfficientNetAnySize,
+    # UniversalEfficientNetMaxSize,
+    EncodingPerceptron,
+)
+# from regression_models.RecurrentModel import RecurrentModel
 #
-# Config.universal_model_types = (
-#     UniversalEfficientNetAnySize,
-#     UniversalEfficientNetMaxSize,
+# Config.recurrent_model_types = (
+#     lambda: RecurrentModel(_encoder),
 # )
