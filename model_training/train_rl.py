@@ -84,7 +84,7 @@ def train_rl(
                     optimizer.zero_grad()
                     outputs = torch.concat(
                         tuple(model(inputs.float()[i: i + Config.max_status_length]).flatten().cpu() for i in range(0, len(inputs), Config.max_status_length))
-                    ).unsqueeze(-1)
+                    ).unsqueeze(-1).to(Config.device)
                     loss = criterion(outputs, labels)
                     loss.backward()
                     optimizer.step()
@@ -97,7 +97,7 @@ def train_rl(
                 for i in range(Config.n_tasks, Config.min_size, -1):
                     model.fill_state(instance[0][1:])
                     inputs, labels = training_buffers[i - 1][index]
-                    inputs, labels = Tensor(inputs).to(device), Tensor([labels]).to(device)
+                    inputs, labels = Tensor(inputs).to(Config.device), Tensor([labels]).to(Config.device)
                     labels = labels.float().unsqueeze(1)
                     optimizer.zero_grad()
                     outputs = model(inputs.float().unsqueeze(0))

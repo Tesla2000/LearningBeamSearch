@@ -7,7 +7,7 @@ from Config import Config
 class EncodingNetwork(nn.Module):
     learning_rate = 1e-4
 
-    def __init__(self, n_tasks: int, m_machines: int, fc_out_features: int = 64, hidden_size: int = 256,
+    def __init__(self, n_tasks: int, m_machines: int, fc_out_features: int = 64, hidden_size: int = 64,
                  out_channels: int = 16):
         super().__init__()
         self.m_machines = m_machines
@@ -29,7 +29,7 @@ class EncodingNetwork(nn.Module):
     def _part_two(self, p):
         # h = torch.empty((self.m_machines, self.fc_out_features)).to(Config.device)
         number_of_machines_embedded = torch.full((p.shape[0], p.shape[1], 1), self.number_of_machines_embedding_layer(
-            Tensor([self.m_machines])).item())
+            Tensor([self.m_machines]).to(Config.device)).item()).to(Config.device)
         p = torch.concat((p, number_of_machines_embedded), dim=2)
         p = self.fc(p)
         return self.relu(p)

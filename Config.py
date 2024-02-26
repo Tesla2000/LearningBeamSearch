@@ -40,18 +40,18 @@ class Config:
     universal_model_types = tuple()
     recurrent_model_types = tuple()
 
-    n_tasks, m_machines = 10, 25
+    n_tasks, m_machines = 50, 25
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_time = 1800
     results_average_size = 100
     beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
     minimal_beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
-    beta_attrition = 0.998
+    beta_attrition = 0.99
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10
-    max_status_length = 2000
+    max_status_length = 10000
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
