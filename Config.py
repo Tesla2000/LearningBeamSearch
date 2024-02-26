@@ -45,6 +45,7 @@ class Config:
     train_time = 12 * 3600
     minimal_counting_time = 1800
     results_average_size = 100
+    train_buffer_size = 100
     beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
     minimal_beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
     beta_attrition = 0.99
@@ -52,6 +53,7 @@ class Config:
     eval_iterations = 500
     save_interval = 10
     max_status_length = 10000
+    gen_train_epochs = 3
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

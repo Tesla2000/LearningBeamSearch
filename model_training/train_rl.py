@@ -16,6 +16,7 @@ from Config import Config
 from beam_search.Tree import Tree
 from model_training.RLDataset import RLDataset
 from model_training.database_functions import create_tables, save_sample
+from regression_models.GeneticRegressor import GeneticRegressor
 from regression_models.RecurrentModel import RecurrentModel
 
 
@@ -31,7 +32,7 @@ def train_rl(
     conn = sqlite3.connect(Config.RL_DATA_PATH)
     cur = conn.cursor()
     create_tables(conn, cur)
-    training_buffers = dict((key, deque(maxlen=100)) for key in models)
+    training_buffers = dict((key, deque(maxlen=Config.train_buffer_size)) for key in models)
     results = []
     buffered_results = deque(maxlen=Config.results_average_size)
     batch_size = 32
@@ -77,18 +78,19 @@ def train_rl(
                 model.train()
                 optimizer = optimizers[model]
                 dataset = RLDataset(training_buffers[tasks])
-                train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
-                for inputs, labels in train_loader:
-                    inputs, labels = inputs.to(Config.device), labels.to(Config.device)
-                    labels = labels.float().unsqueeze(1)
-                    optimizer.zero_grad()
-                    outputs = torch.concat(
-                        tuple(model(inputs.float()[i: i + Config.max_status_length]).flatten().cpu() for i in range(0, len(inputs), Config.max_status_length))
-                    ).unsqueeze(-1).to(Config.device)
-                    loss = criterion(outputs, labels)
-                    loss.backward()
-                    optimizer.step()
-                schedulers[optimizer].step()
+                if isinstance(model, GeneticRegressor):
+                    model.train_generic(dataset, optimizer, criterion, batch_size)
+                else:
+                    train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
+                    for inputs, labels in train_loader:
+                        inputs, labels = inputs.to(Config.device), labels.to(Config.device)
+                        labels = labels.float().unsqueeze(1)
+                        optimizer.zero_grad()
+                        outputs = model(inputs.float()).unsqueeze(-1)
+                        loss = criterion(outputs, labels)
+                        loss.backward()
+                        optimizer.step()
+                    schedulers[optimizer].step()
                 Config.beta[tasks] *= Config.beta_attrition
         else:
             for index, instance in enumerate(training_buffers[Config.n_tasks]):
