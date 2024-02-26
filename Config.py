@@ -57,12 +57,14 @@ class Config:
 
 
 # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
-from regression_models.EncodingPerceptron import EncodingPerceptron
+# from regression_models.EncodingPerceptron import EncodingPerceptron
+from regression_models.ZeroPaddedPerceptron import ZeroPaddedPerceptron
 
 Config.universal_model_types = (
     # UniversalEfficientNetAnySize,
     # UniversalEfficientNetMaxSize,
-    EncodingPerceptron,
+    # EncodingPerceptron,
+    ZeroPaddedPerceptron,
 )
 # from regression_models.RecurrentModel import RecurrentModel
 #
