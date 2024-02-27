@@ -7,7 +7,14 @@ from regression_models.Perceptron import Perceptron
 from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 
 
-class Config:
+class GeneticConfig:
+    gen_train_epochs = 3
+    n_genetic_samples = 10
+    n_genetic_models = 20
+    retrain_rate = .2
+
+
+class Config(GeneticConfig):
     train = True
 
     ROOT = Path(__file__).parent
@@ -53,7 +60,6 @@ class Config:
     eval_iterations = 500
     save_interval = 10
     max_status_length = 10000
-    gen_train_epochs = 3
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

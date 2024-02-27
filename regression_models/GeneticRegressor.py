@@ -1,7 +1,6 @@
 import random
 from collections import deque
 from itertools import pairwise, starmap
-from typing import Self
 
 import numpy as np
 from torch import nn
@@ -19,15 +18,15 @@ class _GeneticModel(BaseRegressor):
         'DELETE_LAYER',
     ]
 
-    def __init__(self, n_tasks: int, m_machines: int, hidden_sizes: list[int] = None):
+    def __init__(self, n_tasks: int, m_machines: int, hidden_sizes: tuple[int, ...] = None):
         super().__init__()
         self.m_machines = m_machines
         self.n_tasks = n_tasks
         if not hidden_sizes:
-            self.hidden_sizes = [(n_tasks + 1) * m_machines, 1]
+            self.hidden_sizes = ((n_tasks + 1) * m_machines, 1)
         else:
             self.hidden_sizes = hidden_sizes
-        self.layers = list(starmap(nn.Linear, pairwise(self.hidden_sizes)))
+        self.layers = tuple(starmap(nn.Linear, pairwise(self.hidden_sizes)))
 
     def predict(self, x):
         for layer in self.layers:
@@ -35,12 +34,12 @@ class _GeneticModel(BaseRegressor):
             x = self.relu(x)
         return x
 
-    def mutate(self, mutation: str = None) -> Self:
+    def mutate(self, mutation: str = None) -> tuple[int, ...]:
         if mutation not in self.mutations:
             raise ValueError
         if mutation is None:
             mutation = random.choice(self.mutations)
-        hidden_sizes = self.hidden_sizes.copy()
+        hidden_sizes = list(self.hidden_sizes)
         if mutation == 'INCREASE_HIDDEN_SIZE':
             if len(hidden_sizes) == 2:
                 hidden_sizes.insert(1, 5)
@@ -57,17 +56,18 @@ class _GeneticModel(BaseRegressor):
         elif mutation == 'DELETE_LAYER':
             if len(hidden_sizes) > 2:
                 hidden_sizes.pop(-2)
-        return _GeneticModel(self.n_tasks, self.m_machines, hidden_sizes)
+        return tuple(hidden_sizes)
 
 
 class GeneticRegressor:
-    def __init__(self, n_tasks: int, m_machines: int, n_models: int, **_):
+    def __init__(self, n_tasks: int, m_machines: int, **_):
         self.n_tasks = n_tasks
         self.m_machines = m_machines
         self.population = deque(
-            (_GeneticModel(n_tasks, m_machines, self._get_random_architecture()) for _ in range(n_models)),
-            maxlen=n_models)
-        self.best_model = random.choice(self.population)
+            (self._get_random_architecture() for _ in range(Config.n_genetic_models)),
+            maxlen=Config.n_genetic_models)
+        self.best_model = _GeneticModel(n_tasks, m_machines, random.choice(self.population))
+        self._results = {}
 
     def __call__(self, x):
         return self.best_model(x)
@@ -77,8 +77,11 @@ class GeneticRegressor:
         train_loader = DataLoader(train_dataset, batch_size=min(Config.max_status_length, batch_size))
         val_loader = DataLoader(val_dataset, batch_size=len(val_dataset))
         losses = []
-        for model in self.population:
-            model.train()
+        for hidden_sizes in random.sample(self.population, Config.n_genetic_samples):
+            if hidden_sizes in self._results and random.random() > Config.retrain_rate:
+                losses.append(self._results[hidden_sizes])
+                continue
+            model = _GeneticModel(self.n_tasks, self.m_machines, hidden_sizes)
             for _ in range(Config.gen_train_epochs):
                 for inputs, labels in train_loader:
                     optimizer.zero_grad()
@@ -90,15 +93,16 @@ class GeneticRegressor:
             inputs, labels = next(iter(val_loader))
             outputs = model(inputs.float()).unsqueeze(-1)
             losses.append(criterion(outputs, labels))
+            self._results[hidden_sizes] = losses[-1]
         self.best_model = self.population[np.argmin(losses)]
         self.population.append(self._mutate(self.best_model))
 
-    def _mutate(self, model: _GeneticModel) -> _GeneticModel:
+    def _mutate(self, model: _GeneticModel) -> tuple[int, ...]:
         mutation = random.choice(model.mutations)
         return model.mutate(mutation)
 
     def _get_random_architecture(self):
-        return [(self.n_tasks + 1) * self.m_machines, *(random.randint(1, 50) for _ in range(random.randint(0, 2))), 1]
+        return ((self.n_tasks + 1) * self.m_machines, *(random.randint(1, 50) for _ in range(random.randint(0, 2))), 1)
 
     def train(self):
         pass
