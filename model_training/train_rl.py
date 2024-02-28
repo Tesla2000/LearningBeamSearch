@@ -2,6 +2,7 @@ import random
 import sqlite3
 from collections import deque
 from itertools import count
+from pathlib import Path
 from statistics import fmean
 from time import time
 from typing import IO
@@ -39,7 +40,7 @@ def train_rl(
     criterion = nn.MSELoss()
     optimizers = dict(
         (model, optim.Adam(model.parameters(), lr=getattr(model, 'learning_rate', 1e-5)))
-        for model in models.values()
+        for model in models.values() if not isinstance(model, GeneticRegressor)
     )
     schedulers = dict(
         (optimizer, ExponentialLR(optimizer, Config.gamma))
@@ -76,11 +77,11 @@ def train_rl(
         if not recurrent:
             for tasks, model in models.items():
                 model.train()
-                optimizer = optimizers[model]
                 dataset = RLDataset(training_buffers[tasks])
                 if isinstance(model, GeneticRegressor):
-                    model.train_generic(dataset, optimizer, criterion, batch_size)
+                    model.train_generic(dataset, criterion, batch_size)
                 else:
+                    optimizer = optimizers[model]
                     train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
                     for inputs, labels in train_loader:
                         inputs, labels = inputs.to(Config.device), labels.to(Config.device)
@@ -120,6 +121,6 @@ def save_models(models: dict[int, nn.Module]):
             continue
         saved.add(id(model))
         torch.save(
-            model.state_dict(),
+            model.best_model.state_dict() if isinstance(model, GeneticRegressor) else model.state_dict(),
             f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
         )

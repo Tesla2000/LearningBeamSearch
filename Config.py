@@ -39,15 +39,10 @@ class Config(GeneticConfig):
     n_generated_samples = 50_000
     num_processes = 4
 
-    model_types = (
-        # WideMultilayerPerceptron,
-        # MultilayerPerceptron,
-        # Perceptron,
-    )
     universal_model_types = tuple()
     recurrent_model_types = tuple()
 
-    n_tasks, m_machines = 50, 25
+    n_tasks, m_machines = 10, 25
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_time = 1800
@@ -67,12 +62,19 @@ class Config(GeneticConfig):
 # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
 # from regression_models.EncodingPerceptron import EncodingPerceptron
 from regression_models.ZeroPaddedPerceptron import ZeroPaddedPerceptron
+from regression_models.GeneticRegressor import GeneticRegressor
 
+Config.model_types = (
+    # WideMultilayerPerceptron,
+    # MultilayerPerceptron,
+    # Perceptron,
+    GeneticRegressor,
+)
 Config.universal_model_types = (
     # UniversalEfficientNetAnySize,
     # UniversalEfficientNetMaxSize,
     # EncodingPerceptron,
-    ZeroPaddedPerceptron,
+    # ZeroPaddedPerceptron,
 )
 # from regression_models.RecurrentModel import RecurrentModel
 #
