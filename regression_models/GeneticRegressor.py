@@ -105,7 +105,7 @@ class GeneticRegressor:
             model.eval()
             inputs, labels = next(iter(val_loader))
             outputs = model(inputs.float())
-            losses.append(criterion(outputs, labels.unsqueeze(-1)).item())
+            losses.append(criterion(outputs, labels.unsqueeze(-1)).item() + Config.size_penalty * sum(p.numel() for p in model.parameters()))
             if losses[-1] == min(losses):
                 self.best_model = model
             self._results[hidden_sizes] = losses[-1]

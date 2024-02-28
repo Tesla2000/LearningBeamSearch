@@ -12,6 +12,7 @@ class GeneticConfig:
     n_genetic_samples = 10
     n_genetic_models = 20
     retrain_rate = .2
+    size_penalty = 100
 
 
 class Config(GeneticConfig):
