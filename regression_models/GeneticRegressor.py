@@ -97,6 +97,7 @@ class GeneticRegressor:
             model.to(self.device)
             for _ in range(Config.gen_train_epochs):
                 for inputs, labels in train_loader:
+                    inputs, labels = inputs.to(self.device), labels.to(self.device)
                     optimizer.zero_grad()
                     outputs = model(inputs.float())
                     loss = criterion(outputs, labels.unsqueeze(-1).float())
@@ -104,6 +105,7 @@ class GeneticRegressor:
                     optimizer.step()
             model.eval()
             inputs, labels = next(iter(val_loader))
+            inputs, labels = inputs.to(self.device), labels.to(self.device)
             outputs = model(inputs.float())
             losses.append(criterion(outputs, labels.unsqueeze(-1)).item() + Config.size_penalty * sum(p.numel() for p in model.parameters()))
             if losses[-1] == min(losses):
