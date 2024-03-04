@@ -1,3 +1,4 @@
+import os
 import random
 import sqlite3
 from collections import deque
@@ -37,7 +38,6 @@ def train_rl(
     results = []
     buffered_results = deque(maxlen=Config.results_average_size)
     batch_size = 32
-    criterion = nn.MSELoss()
     optimizers = dict(
         (model, optim.Adam(model.parameters(), lr=getattr(model, 'learning_rate', 1e-5)))
         for model in models.values() if not isinstance(model, GeneticRegressor)
@@ -79,7 +79,8 @@ def train_rl(
                 model.train()
                 dataset = RLDataset(training_buffers[tasks])
                 if isinstance(model, GeneticRegressor):
-                    model.train_generic(dataset, criterion, batch_size)
+                    GeneticRegressor.batch_size = batch_size
+                    model.train_generic(dataset, Config.criterion)
                 else:
                     optimizer = optimizers[model]
                     train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
@@ -88,7 +89,7 @@ def train_rl(
                         labels = labels.float().unsqueeze(1)
                         optimizer.zero_grad()
                         outputs = model(inputs.float()).unsqueeze(-1)
-                        loss = criterion(outputs, labels)
+                        loss = Config.criterion(outputs, labels)
                         loss.backward()
                         optimizer.step()
                     schedulers[optimizer].step()
@@ -104,23 +105,30 @@ def train_rl(
                     labels = labels.float().unsqueeze(1)
                     optimizer.zero_grad()
                     outputs = model(inputs.float().unsqueeze(0))
-                    loss = criterion(outputs, labels)
+                    loss = Config.criterion(outputs, labels)
                     loss.backward()
                     optimizer.step()
                 schedulers[optimizer].step()
                 Config.beta[tasks] *= Config.beta_attrition
         if epoch % Config.save_interval == 0:
-            save_models(models)
-    save_models(models)
+            save_models(models, training_buffers)
+    save_models(models, training_buffers)
 
 
-def save_models(models: dict[int, nn.Module]):
-    saved = set()
+def save_models(models: dict[int, nn.Module], training_buffers):
     for tasks, model in models.items():
-        if id(model) in saved:
-            continue
-        saved.add(id(model))
-        torch.save(
-            model.best_model.state_dict() if isinstance(model, GeneticRegressor) else model.state_dict(),
-            f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
-        )
+        if not isinstance(model, GeneticRegressor):
+            torch.save(
+                model.state_dict(),
+                f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
+            )
+            return
+        for hidden_state, (n_weights, loss) in model.pareto.items():
+            for file in Config.OUTPUT_RL_MODELS.glob(f"{type(model).__name__}_{tasks}_{Config.m_machines}*"):
+                os.remove(file)
+            dataset = RLDataset(training_buffers[tasks])
+            torch.save(
+                model.retrain_hidden_sizes(hidden_state, Config.criterion, dataset, evaluate=False).state_dict(),
+                f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}_{n_weights}_{int(loss)}.pth",
+            )
+

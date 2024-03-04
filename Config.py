@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import torch
+from torch import nn
 
 from regression_models import MultilayerPerceptron
 from regression_models.Perceptron import Perceptron
@@ -60,6 +61,7 @@ class Config(GeneticConfig):
     save_interval = 10
     max_status_length = 10000
 
+    criterion = nn.MSELoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

@@ -64,12 +64,14 @@ class _GeneticModel(BaseRegressor):
 
 
 class GeneticRegressor:
+    batch_size: int
+
     def __init__(self, n_tasks: int, m_machines: int, **_):
         self.n_tasks = n_tasks
         self.m_machines = m_machines
         self.device = Config.device
         self.population = list(self._get_random_architecture() for _ in range(Config.n_genetic_models))
-        self._pareto: dict[tuple[int], tuple] = {}
+        self.pareto: dict[tuple[int], tuple] = {}
         self.best_model = _GeneticModel(n_tasks, m_machines, random.choice(self.population))
         self.best_model.to(self.device)
 
@@ -79,21 +81,20 @@ class GeneticRegressor:
     def __call__(self, x):
         return self.best_model(x)
 
-    def train_generic(self, dataset, criterion, batch_size):
-        train_dataset, val_dataset = random_split(dataset, [.8, .2])
-        train_loader = DataLoader(train_dataset, batch_size=min(Config.max_status_length, batch_size))
-        if not len(val_dataset):
+    def train_generic(self, dataset, criterion):
+        if len(dataset) < 5:
             return
-        val_loader = DataLoader(val_dataset, batch_size=len(val_dataset))
-        for hidden_sizes in tuple(self._pareto.keys()):
+        for hidden_sizes in tuple(self.pareto.keys()):
             if random.random() > Config.pareto_retrain_rate:
                 continue
-            del self._pareto[hidden_sizes]
-            self._retrain_hidden_sizes(hidden_sizes, train_loader, criterion, val_loader)
+            del self.pareto[hidden_sizes]
+            self.retrain_hidden_sizes(hidden_sizes, criterion, dataset)
         self.population = list(map(self._mutate, self.population))
-        for hidden_sizes in (*random.sample(tuple(self._pareto.keys()), k=min(len(self._pareto.keys()), Config.n_pareto_samples)), *random.sample(self.population, k=Config.n_population_samples)):
-            self._retrain_hidden_sizes(hidden_sizes, train_loader, criterion, val_loader)
-        self.best_model = _GeneticModel(self.n_tasks, self.m_machines, random.choice(tuple(self._pareto.keys())))
+        for hidden_sizes in (
+            *random.sample(tuple(self.pareto.keys()), k=min(len(self.pareto.keys()), Config.n_pareto_samples)),
+            *random.sample(self.population, k=Config.n_population_samples)):
+            self.retrain_hidden_sizes(hidden_sizes, criterion, dataset)
+        self.best_model = self.retrain_hidden_sizes(random.choice(tuple(self.pareto.keys())), criterion, dataset)
         self.best_model.to(self.device)
 
     def _mutate(self, specimen: tuple[int, ...]) -> tuple[int, ...]:
@@ -109,7 +110,10 @@ class GeneticRegressor:
     def eval(self):
         pass
 
-    def _retrain_hidden_sizes(self, hidden_sizes, train_loader, criterion, val_loader):
+    def retrain_hidden_sizes(self, hidden_sizes, criterion, dataset, evaluate: bool = True) -> _GeneticModel:
+        train_dataset, val_dataset = random_split(dataset, [.8, .2])
+        train_loader = DataLoader(train_dataset, batch_size=min(Config.max_status_length, self.batch_size))
+        val_loader = DataLoader(val_dataset, batch_size=len(val_dataset))
         model = _GeneticModel(self.n_tasks, self.m_machines, hidden_sizes)
         optimizer = optim.Adam(model.parameters(), lr=getattr(model, 'learning_rate', 1e-5))
         model.to(self.device)
@@ -121,19 +125,23 @@ class GeneticRegressor:
                 loss = criterion(outputs, labels.unsqueeze(-1).float())
                 loss.backward()
                 optimizer.step()
-        model.eval()
-        inputs, labels = next(iter(val_loader))
-        inputs, labels = inputs.to(self.device), labels.to(self.device)
-        outputs = model(inputs.float())
-        number_of_weights = sum(p.numel() for p in model.parameters())
-        loss = criterion(outputs, labels.unsqueeze(-1)).item()
-        self._add_to_pareto(hidden_sizes, number_of_weights, loss)
+        if val_loader is None:
+            return model
+        if evaluate:
+            model.eval()
+            inputs, labels = next(iter(val_loader))
+            inputs, labels = inputs.to(self.device), labels.to(self.device)
+            outputs = model(inputs.float())
+            number_of_weights = sum(p.numel() for p in model.parameters())
+            loss = criterion(outputs, labels.unsqueeze(-1)).item()
+            self._add_to_pareto(hidden_sizes, number_of_weights, loss)
+        return model
 
     def _add_to_pareto(self, hidden_sizes, number_of_weights, loss):
-        for key, (pareto_n_weights, pareto_loss) in tuple(self._pareto.items()):
+        for key, (pareto_n_weights, pareto_loss) in tuple(self.pareto.items()):
             if number_of_weights <= pareto_n_weights and loss <= pareto_loss:
-                del self._pareto[key]
+                del self.pareto[key]
             elif number_of_weights >= pareto_n_weights and loss >= pareto_loss:
                 break
         else:
-            self._pareto[hidden_sizes] = (number_of_weights, loss)
+            self.pareto[hidden_sizes] = (number_of_weights, loss)
