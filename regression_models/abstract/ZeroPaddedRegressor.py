@@ -12,8 +12,10 @@ class ZeroPaddedRegressor(nn.Module, ABC):
 
     def forward(self, x):
         x = x.float()
-        zeros = torch.zeros((x.shape[0], self.max_n_task + 1, x.shape[2])).to(Config.device)
-        zeros[:, :x.shape[1], :] = x
+        zeros = torch.zeros((x.shape[0], self.max_n_task + 1, x.shape[2])).to(
+            Config.device
+        )
+        zeros[:, : x.shape[1], :] = x
         x = zeros
         x = self.predict(x)
         return x

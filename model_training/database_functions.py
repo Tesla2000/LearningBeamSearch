@@ -3,7 +3,9 @@ from sqlite3 import Connection, Cursor
 from Config import Config
 
 
-def save_sample(tasks: int, data, fill_strings: dict[int, str], conn: Connection, cur: Cursor):
+def save_sample(
+    tasks: int, data, fill_strings: dict[int, str], conn: Connection, cur: Cursor
+):
     table = Config.table_name(tasks, Config.m_machines)
     fill_strings[tasks] = fill_strings.get(
         tasks,
@@ -11,9 +13,7 @@ def save_sample(tasks: int, data, fill_strings: dict[int, str], conn: Connection
             table,
             ",".join(map("prev_state_{}".format, range(Config.m_machines)))
             + ","
-            + ",".join(
-                map("worktime_{}".format, range(Config.m_machines * tasks))
-            ),
+            + ",".join(map("worktime_{}".format, range(Config.m_machines * tasks))),
             ",".join((Config.m_machines * (tasks + 1) + 1) * "?"),
         ),
     )

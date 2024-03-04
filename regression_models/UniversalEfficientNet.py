@@ -36,7 +36,9 @@ class UniversalEfficientNetAnySize:
 
     def __init__(self, *args, **kwargs):
         model = wrapped_efficientnet()
-        model.accumulator = nn.Linear(1 if self.max_tasks is None else self.max_tasks, 1)
+        model.accumulator = nn.Linear(
+            1 if self.max_tasks is None else self.max_tasks, 1
+        )
         model.forward = _forward_universal_wrapper(model, model.forward)
         type(model).__name__ = type(self).__name__
         self.__dict__ = model.__dict__
@@ -51,16 +53,16 @@ class UniversalEfficientNetMaxSize(UniversalEfficientNetAnySize):
 def wrapped_efficientnet(*args, **kwargs):
     model = efficientnet_b0()
     first_layer = model.features[0]
-    first_layer._modules['0'] = nn.Conv2d(
+    first_layer._modules["0"] = nn.Conv2d(
         1,
-        first_layer._modules['0'].out_channels,
-        first_layer._modules['0'].kernel_size,
-        first_layer._modules['0'].stride,
-        first_layer._modules['0'].padding,
-        first_layer._modules['0'].dilation,
-        first_layer._modules['0'].groups,
-        first_layer._modules['0'].bias,
-        first_layer._modules['0'].padding_mode,
+        first_layer._modules["0"].out_channels,
+        first_layer._modules["0"].kernel_size,
+        first_layer._modules["0"].stride,
+        first_layer._modules["0"].padding,
+        first_layer._modules["0"].dilation,
+        first_layer._modules["0"].groups,
+        first_layer._modules["0"].bias,
+        first_layer._modules["0"].padding_mode,
     )
     model.features[0] = first_layer
     model.classifier[-1] = nn.Linear(

@@ -15,9 +15,9 @@ class Tree:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def __init__(
-            self,
-            working_time_matrix: np.array,
-            models: dict[int, nn.Module] = None,
+        self,
+        working_time_matrix: np.array,
+        models: dict[int, nn.Module] = None,
     ) -> None:
         """The greater beta is the more results are accepted which leads to better results and longer calculations"""
         self.n_tasks, self.m_machines = working_time_matrix.shape
@@ -55,16 +55,21 @@ class Tree:
                 del headers
                 predictions = []
                 for i in range(0, len(states), Config.max_status_length):
-                    state = Tensor(states[i: i + Config.max_status_length]).to(self.device)
-                    predictions.extend(
-                        self.models[tasks](state).flatten().cpu()
+                    state = Tensor(states[i : i + Config.max_status_length]).to(
+                        self.device
                     )
+                    predictions.extend(self.models[tasks](state).flatten().cpu())
                     del state
                 if recurrent:
-                    tuple(self.models[tasks].states_by_size[i].clear() for i in range(Config.n_tasks-tasks-1, 0, -1))
+                    tuple(
+                        self.models[tasks].states_by_size[i].clear()
+                        for i in range(Config.n_tasks - tasks - 1, 0, -1)
+                    )
                 del states
                 temp_buffer = temp_buffer[
-                    torch.argsort(Tensor(predictions))[: max(Config.minimal_beta[tasks], int(beta[tasks]))]
+                    torch.argsort(Tensor(predictions))[
+                        : max(Config.minimal_beta[tasks], int(beta[tasks]))
+                    ]
                 ]
                 del predictions
             buffer = temp_buffer
@@ -90,7 +95,7 @@ class Tree:
         )
 
     def fast_branch_and_bound(
-            self, seed: int = 3, tasks: Optional[np.array] = None, ub=float("inf")
+        self, seed: int = 3, tasks: Optional[np.array] = None, ub=float("inf")
     ):
         if tasks is None:
             perms = np.array(tuple(permutations(range(self.n_tasks), seed)))
@@ -143,7 +148,7 @@ class Tree:
         states = np.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1))
         states[:, 1:, 1:] = self.working_time_matrix[perms]
         for row, column in product(
-                range(1, len(perms[0]) + 1), range(1, self.m_machines + 1)
+            range(1, len(perms[0]) + 1), range(1, self.m_machines + 1)
         ):
             states[:, row, column] += np.maximum(
                 states[:, row - 1, column], states[:, row, column - 1]
@@ -152,7 +157,7 @@ class Tree:
 
     def _get_lbs(self, states: np.array, perms: np.array):
         return (
-                states[:, -1, -1]
-                + np.sum(self.working_time_matrix[:, -1])
-                - np.sum(self.working_time_matrix[perms][:, :, -1], axis=1)
+            states[:, -1, -1]
+            + np.sum(self.working_time_matrix[:, -1])
+            - np.sum(self.working_time_matrix[perms][:, :, -1], axis=1)
         )

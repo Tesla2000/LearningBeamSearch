@@ -12,7 +12,11 @@ if __name__ == "__main__":
     np.random.seed(42)
     random.seed(42)
     if Config.train:
-        for model_type in (*Config.model_types, *Config.universal_model_types, *Config.recurrent_model_types):
+        for model_type in (
+            *Config.model_types,
+            *Config.universal_model_types,
+            *Config.recurrent_model_types,
+        ):
             recurrent = False
             if model_type in Config.model_types:
                 models = dict(
@@ -45,5 +49,8 @@ if __name__ == "__main__":
             Config.n_tasks,
             Config.m_machines,
             Config.eval_iterations,
-            (*Config.model_types, *Config.universal_model_types,),
+            (
+                *Config.model_types,
+                *Config.universal_model_types,
+            ),
         )
