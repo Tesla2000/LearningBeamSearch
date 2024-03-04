@@ -9,10 +9,12 @@ from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 
 class GeneticConfig:
     gen_train_epochs = 3
-    n_genetic_samples = 10
+    n_population_samples = 10
     n_genetic_models = 20
-    retrain_rate = .2
+    pop_retrain_rate = .2
+    pareto_retrain_rate = .05
     size_penalty = 100
+    n_pareto_samples = 10
 
 
 class Config(GeneticConfig):
@@ -44,7 +46,7 @@ class Config(GeneticConfig):
     recurrent_model_types = tuple()
     model_types = tuple()
 
-    n_tasks, m_machines = 50, 25
+    n_tasks, m_machines = 10, 25
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_time = 1800

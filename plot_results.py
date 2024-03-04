@@ -4,6 +4,7 @@ from statistics import fmean
 import numpy as np
 from matplotlib import pyplot as plt
 from numpy import std
+from scipy.stats import norm
 
 from Config import Config
 
@@ -32,15 +33,21 @@ if __name__ == "__main__":
     # plt.subplots_adjust(bottom=.5)
     # plt.savefig(Config.PLOTS / 'training.png')
     # plt.clf()
+    # plt.show()
     colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'white']
     for color_index, results_file in enumerate(Config.OUTPUT_RL_RESULTS.iterdir()):
         results = eval(results_file.read_text())
         mean = fmean(results)
-        plt.hist(results, label=labels_translator[results_file.name], color=colors[color_index])
-        plt.axvline(x=mean, linestyle='-', color=colors[color_index])
-    plt.ylabel("Liczba wyników")
+        std = np.std(results)
+        x_values = np.linspace(mean - 3 * std, mean + 3 * std, 120)
+        y_values = norm.pdf(x_values, mean, std)
+        # plt.hist(results, label=labels_translator[results_file.name], color=colors[color_index])
+        plt.plot(x_values, y_values, label=labels_translator[results_file.name], color=colors[color_index])
+        # plt.axvline(x=mean, linestyle='-', color=colors[color_index])
+    plt.ylabel("Część wyników")
     plt.xlabel("Wyniki")
     plt.legend(bbox_to_anchor=(0, -.2), loc='upper left')
     plt.subplots_adjust(bottom=.5)
     plt.savefig(Config.PLOTS / 'evaluation.png')
     plt.clf()
+    # plt.show()
