@@ -1,8 +1,6 @@
 import random
-from collections import deque
 from itertools import pairwise, starmap
 
-import numpy as np
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split
 
@@ -72,8 +70,9 @@ class GeneticRegressor:
         self.device = Config.device
         self.population = list(self._get_random_architecture() for _ in range(Config.n_genetic_models))
         self.pareto: dict[tuple[int], tuple] = {}
-        self.best_model = _GeneticModel(n_tasks, m_machines, random.choice(self.population))
+        self.best_model = _GeneticModel(n_tasks, m_machines, ((self.n_tasks + 1) * self.m_machines, 1))
         self.best_model.to(self.device)
+        self.produce_data = True
 
     def to(self, device):
         self.device = device

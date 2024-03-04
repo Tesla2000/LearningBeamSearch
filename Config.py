@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from regression_models import MultilayerPerceptron
-from regression_models.Perceptron import Perceptron
+from regression_models.Perceptron import Perceptron, GenPerceptron
 from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 
 
@@ -49,7 +49,7 @@ class Config(GeneticConfig):
 
     n_tasks, m_machines = 10, 25
     min_size = 4
-    train_time = 12 * 3600
+    train_time = 3 * 3600
     minimal_counting_time = 1800
     results_average_size = 100
     train_buffer_size = 100
@@ -73,8 +73,8 @@ from regression_models.GeneticRegressor import GeneticRegressor
 Config.model_types = (
     # WideMultilayerPerceptron,
     # MultilayerPerceptron,
-    # Perceptron,
-    GeneticRegressor,
+    GenPerceptron,
+    # GeneticRegressor,
 )
 Config.universal_model_types = (
     # UniversalEfficientNetAnySize,

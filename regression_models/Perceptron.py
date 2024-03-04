@@ -14,3 +14,7 @@ class Perceptron(BaseRegressor):
         x = self.flatten(x)
         x = self.fc(x)
         return self.relu(x)
+
+
+class GenPerceptron(Perceptron):
+    pass

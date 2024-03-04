@@ -39,8 +39,8 @@ def train_rl(
     buffered_results = deque(maxlen=Config.results_average_size)
     batch_size = 32
     optimizers = dict(
-        (model, optim.Adam(model.parameters(), lr=getattr(model, 'learning_rate', 1e-5)))
-        for model in models.values() if not isinstance(model, GeneticRegressor)
+        (model, optim.Adam((model.best_model if isinstance(model, GeneticRegressor) else model).parameters(), lr=getattr(model, 'learning_rate', 1e-5)))
+        for model in models.values()
     )
     schedulers = dict(
         (optimizer, ExponentialLR(optimizer, Config.gamma))
@@ -78,21 +78,17 @@ def train_rl(
             for tasks, model in models.items():
                 model.train()
                 dataset = RLDataset(training_buffers[tasks])
-                if isinstance(model, GeneticRegressor):
-                    GeneticRegressor.batch_size = batch_size
-                    model.train_generic(dataset, Config.criterion)
-                else:
-                    optimizer = optimizers[model]
-                    train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
-                    for inputs, labels in train_loader:
-                        inputs, labels = inputs.to(Config.device), labels.to(Config.device)
-                        labels = labels.float().unsqueeze(1)
-                        optimizer.zero_grad()
-                        outputs = model(inputs.float()).unsqueeze(-1)
-                        loss = Config.criterion(outputs, labels)
-                        loss.backward()
-                        optimizer.step()
-                    schedulers[optimizer].step()
+                optimizer = optimizers[model]
+                train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
+                for inputs, labels in train_loader:
+                    inputs, labels = inputs.to(Config.device), labels.to(Config.device)
+                    labels = labels.float().unsqueeze(1)
+                    optimizer.zero_grad()
+                    outputs = model(inputs.float())
+                    loss = Config.criterion(outputs, labels)
+                    loss.backward()
+                    optimizer.step()
+                schedulers[optimizer].step()
                 Config.beta[tasks] *= Config.beta_attrition
         else:
             for index, instance in enumerate(training_buffers[Config.n_tasks]):
