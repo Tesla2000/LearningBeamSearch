@@ -55,7 +55,7 @@ class Config(GeneticConfig):
     train_buffer_size = 100
     beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
     minimal_beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
-    beta_attrition = 0.99
+    beta_attrition = 0.95
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10

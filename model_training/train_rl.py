@@ -31,9 +31,9 @@ def train_rl(
     output_file: IO = None,
 ):
     # fill_strings = {}
-    conn = sqlite3.connect(Config.RL_DATA_PATH)
-    cur = conn.cursor()
-    create_tables(conn, cur)
+    # conn = sqlite3.connect(Config.RL_DATA_PATH)
+    # cur = conn.cursor()
+    # create_tables(conn, cur)
     training_buffers = dict(
         (key, deque(maxlen=Config.train_buffer_size)) for key in models
     )
@@ -127,21 +127,19 @@ def train_rl(
 
 def save_models(models: dict[int, nn.Module], training_buffers):
     for tasks, model in models.items():
-        if not isinstance(model, GeneticRegressor):
-            torch.save(
-                model.state_dict(),
-                f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
-            )
-            return
-        for hidden_state, (n_weights, loss) in model.pareto.items():
-            for file in Config.OUTPUT_RL_MODELS.glob(
-                f"{type(model).__name__}_{tasks}_{Config.m_machines}*"
-            ):
-                os.remove(file)
-            dataset = RLDataset(training_buffers[tasks])
-            torch.save(
-                model.retrain_hidden_sizes(
-                    hidden_state, Config.criterion, dataset, evaluate=False
-                ).state_dict(),
-                f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}_{n_weights}_{int(loss)}.pth",
-            )
+        torch.save(
+            model.state_dict(),
+            f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
+        )
+        # for hidden_state, (n_weights, loss) in model.pareto.items():
+        #     for file in Config.OUTPUT_RL_MODELS.glob(
+        #         f"{type(model).__name__}_{tasks}_{Config.m_machines}*"
+        #     ):
+        #         os.remove(file)
+        #     dataset = RLDataset(training_buffers[tasks])
+        #     torch.save(
+        #         model.retrain_hidden_sizes(
+        #             hidden_state, Config.criterion, dataset, evaluate=False
+        #         ).state_dict(),
+        #         f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}_{n_weights}_{int(loss)}.pth",
+        #     )

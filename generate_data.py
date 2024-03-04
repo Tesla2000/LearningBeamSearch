@@ -21,7 +21,7 @@ def _generate_data(
     if not models:
         task_order, state = tree.fast_brute_force()
     else:
-        task_order, state = tree.beam_search()
+        task_order, state = tree.beam_search(Config.minimal_beta)
     for tasks in range(Config.min_saving_size, n_tasks):
         header = state[-tasks - 1].reshape(1, -1)
         data = working_time_matrix[list(task_order[-tasks:])]
@@ -29,7 +29,7 @@ def _generate_data(
         yield tasks, list(map(int, data)) + [int(state[-1, -1].item())]
 
 
-def generate_data(n_tasks: int):
+def generate_data():
     conn = sqlite3.connect(Config.DATA_PATH)
     cur = conn.cursor()
     model_type = GenPerceptron
@@ -51,11 +51,11 @@ def generate_data(n_tasks: int):
     fill_strings = {}
     create_tables(conn, cur)
     for _ in tqdm(count()):
-        for tasks, data in _generate_data(n_tasks, Config.m_machines, models):
+        for tasks, data in _generate_data(Config.n_tasks, Config.m_machines, models):
             save_sample(tasks, data, fill_strings, conn, cur)
 
     conn.close()
 
 
 if __name__ == "__main__":
-    generate_data(Config.n_tasks)
+    generate_data()
