@@ -12,7 +12,7 @@ class ConvRegressor(BaseRegressor):
         self.conv2 = nn.Conv2d(
             in_channels=3, out_channels=9, kernel_size=3, padding="same"
         )
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.fc = nn.Linear(in_features=9, out_features=1)
 
     def predict(self, x):
