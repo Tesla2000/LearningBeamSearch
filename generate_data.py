@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from torch import nn
 from tqdm import tqdm
+from time import time
 
 from Config import Config
 from beam_search.Tree import Tree
@@ -17,7 +18,7 @@ def _generate_data(
     n_tasks, m_machines, models: dict[int, nn.Module] = None
 ):
     working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
-    tree = Tree(working_time_matrix, models)
+    tree = Tree(working_time_matrix, models, verbose=False)
     if not models:
         task_order, state = tree.fast_brute_force()
     else:
@@ -41,6 +42,7 @@ def generate_data():
                     int(re.findall(r"\d+", model_path.name)[0]), Config.m_machines
                 ),
                 model.load_state_dict(torch.load(model_path)),
+                model.to(Config.device),
                 model.eval(),
             )[0],
         )
@@ -50,7 +52,10 @@ def generate_data():
     )
     fill_strings = {}
     create_tables(conn, cur)
+    start = time()
     for _ in tqdm(count()):
+        if start + Config.data_generation_time < time():
+            break
         for tasks, data in _generate_data(Config.n_tasks, Config.m_machines, models):
             save_sample(tasks, data, fill_strings, conn, cur)
 

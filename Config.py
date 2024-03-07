@@ -17,6 +17,7 @@ class GeneticConfig:
     size_penalty = 100
     n_pareto_samples = 10
 
+    data_generation_time = 4 * 3600
 
 class Config(GeneticConfig):
     train = True

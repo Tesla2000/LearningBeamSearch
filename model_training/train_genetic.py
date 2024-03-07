@@ -14,9 +14,7 @@ from model_training.RegressionDataset import (
 from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
-def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
-    if tuple(Config.OUTPUT_REGRESSION_MODELS.glob(f"{model}_{n_tasks}_{m_machines}*")):
-        return
+def train_genetic(models: GeneticModel, n_tasks: int, m_machines: int):
     results = []
     batch_size = 32
     test_percentage = 0.2
@@ -25,7 +23,6 @@ def train_regressor(model: BaseRegressor, n_tasks: int, m_machines: int):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=Config.gamma)
-    best_result = float("inf")
     for epoch in count():
         dataset = RegressionDataset(n_tasks=n_tasks, m_machines=m_machines)
         train_set, val_set = torch.utils.data.random_split(

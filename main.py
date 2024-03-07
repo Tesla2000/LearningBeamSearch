@@ -5,7 +5,7 @@ import torch
 
 from Config import Config
 from model_training.eval_rl import eval_rl
-from model_training.train_rl import train_rl
+from model_training.train_genetic import train_genetic
 
 if __name__ == "__main__":
     torch.manual_seed(42)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
                     recurrent = True
             for model in models.values():
                 model.to(Config.device)
-            train_rl(
+            train_genetic(
                 Config.n_tasks,
                 Config.m_machines,
                 Config.min_size,
