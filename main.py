@@ -5,7 +5,7 @@ import torch
 
 from Config import Config
 from model_training.eval_rl import eval_rl
-from model_training.train_genetic import train_genetic
+from train_genetic import train_genetic
 
 if __name__ == "__main__":
     torch.manual_seed(42)

@@ -64,7 +64,7 @@ class _GeneticModel(BaseRegressor):
 
 
 class GeneticRegressor:
-    batch_size: int
+    batch_size: int = 32
 
     def __init__(self, n_tasks: int, m_machines: int, **_):
         self.n_tasks = n_tasks
@@ -87,8 +87,6 @@ class GeneticRegressor:
         return self.best_model(x)
 
     def train_generic(self, dataset, criterion):
-        if len(dataset) < 5:
-            return
         for hidden_sizes in tuple(self.pareto.keys()):
             if random.random() > Config.pareto_retrain_rate:
                 continue
@@ -118,12 +116,6 @@ class GeneticRegressor:
             *(random.randint(1, 50) for _ in range(random.randint(0, 2))),
             1,
         )
-
-    def train(self):
-        pass
-
-    def eval(self):
-        pass
 
     def retrain_hidden_sizes(
         self, hidden_sizes, criterion, dataset, evaluate: bool = True
