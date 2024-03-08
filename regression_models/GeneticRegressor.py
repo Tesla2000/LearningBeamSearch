@@ -100,7 +100,7 @@ class GeneticRegressor:
         self.population = list(map(self._mutate, self.population))
         for hidden_sizes in (
             *random.sample(
-                tuple(self.pareto.keys()),
+                tuple(map(self._mutate, self.pareto.keys())),
                 k=min(len(self.pareto.keys()), Config.n_pareto_samples),
             ),
             *random.sample(self.population, k=Config.n_population_samples),

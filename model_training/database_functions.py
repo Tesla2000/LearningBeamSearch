@@ -22,7 +22,7 @@ def save_sample(
 
 
 def create_tables(conn: Connection, cur: Cursor):
-    for tasks in range(Config.min_model_size, Config.n_tasks + 1):
+    for tasks in range(Config.min_size, Config.n_tasks + 1):
         table = Config.table_name(tasks, Config.m_machines)
         cur.execute(
             """CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY AUTOINCREMENT,

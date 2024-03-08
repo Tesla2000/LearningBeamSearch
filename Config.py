@@ -13,7 +13,7 @@ class GeneticConfig:
     n_population_samples = 10
     n_genetic_models = 20
     pop_retrain_rate = 0.2
-    pareto_retrain_rate = 0.05
+    pareto_retrain_rate = 0
     size_penalty = 100
     n_pareto_samples = 10
 
@@ -39,7 +39,6 @@ class Config(GeneticConfig):
     table_name = "Samples_{}_{}".format
 
     patience = 2
-    min_model_size = 5
     n_generated_samples = 50_000
     num_processes = 4
 
