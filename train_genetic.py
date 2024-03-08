@@ -22,8 +22,8 @@ def train_genetic(n_tasks: int, m_machines: int):
     )
     # batch_size = 32
     # test_percentage = 0.2
-    for model in models.values():
-        dataset = RegressionDataset(n_tasks=n_tasks, m_machines=m_machines)
+    for tasks, model in models.items():
+        dataset = RegressionDataset(n_tasks=tasks, m_machines=m_machines)
         criterion = nn.MSELoss()
         model.train_generic(dataset, criterion)
         # learning_rate = model.learning_rate

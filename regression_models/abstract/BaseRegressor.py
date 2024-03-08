@@ -8,7 +8,7 @@ class BaseRegressor(nn.Module, ABC):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
 
     def forward(self, x):
         x = x.float()

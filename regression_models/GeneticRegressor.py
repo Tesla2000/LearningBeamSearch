@@ -1,5 +1,6 @@
 import random
-from itertools import pairwise, starmap
+from itertools import pairwise, starmap, count
+from sqlite3 import OperationalError
 
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split
@@ -26,8 +27,7 @@ class _GeneticModel(BaseRegressor):
             self.hidden_sizes = ((n_tasks + 1) * m_machines, 1)
         else:
             self.hidden_sizes = hidden_sizes
-        self.layers = tuple(starmap(nn.Linear, pairwise(self.hidden_sizes)))
-        tuple(setattr(self, f"l{i}", layer) for i, layer in enumerate(self.layers))
+        self.layers = nn.ModuleList(starmap(nn.Linear, pairwise(self.hidden_sizes)))
         self.flatten = nn.Flatten()
 
     def predict(self, x):
@@ -87,11 +87,16 @@ class GeneticRegressor:
         return self.best_model(x)
 
     def train_generic(self, dataset, criterion):
+        try:
+            if len(dataset) < 5:
+                return
+        except OperationalError:
+            return
         for hidden_sizes in tuple(self.pareto.keys()):
             if random.random() > Config.pareto_retrain_rate:
                 continue
             del self.pareto[hidden_sizes]
-            self.retrain_hidden_sizes(hidden_sizes, criterion, dataset)
+            self._retrain_hidden_sizes(hidden_sizes, criterion, dataset)
         self.population = list(map(self._mutate, self.population))
         for hidden_sizes in (
             *random.sample(
@@ -100,8 +105,8 @@ class GeneticRegressor:
             ),
             *random.sample(self.population, k=Config.n_population_samples),
         ):
-            self.retrain_hidden_sizes(hidden_sizes, criterion, dataset)
-        self.best_model = self.retrain_hidden_sizes(
+            self._retrain_hidden_sizes(hidden_sizes, criterion, dataset)
+        self.best_model = self._retrain_hidden_sizes(
             random.choice(tuple(self.pareto.keys())), criterion, dataset
         )
         self.best_model.to(self.device)
@@ -113,12 +118,12 @@ class GeneticRegressor:
     def _get_random_architecture(self):
         return (
             (self.n_tasks + 1) * self.m_machines,
-            *(random.randint(1, 50) for _ in range(random.randint(0, 2))),
+            *(random.randint(1, 50) for _ in range(random.randint(0, 1))),
             1,
         )
 
-    def retrain_hidden_sizes(
-        self, hidden_sizes, criterion, dataset, evaluate: bool = True
+    def _retrain_hidden_sizes(
+        self, hidden_sizes, criterion, dataset
     ) -> _GeneticModel:
         train_dataset, val_dataset = random_split(dataset, [0.8, 0.2])
         train_loader = DataLoader(
@@ -127,10 +132,12 @@ class GeneticRegressor:
         val_loader = DataLoader(val_dataset, batch_size=len(val_dataset))
         model = _GeneticModel(self.n_tasks, self.m_machines, hidden_sizes)
         optimizer = optim.Adam(
-            model.parameters(), lr=getattr(model, "learning_rate", 1e-5)
+            model.parameters(), lr=model.learning_rate
         )
         model.to(self.device)
-        for _ in range(Config.gen_train_epochs):
+        prev_loss = float('inf')
+        for epoch in count():
+            model.train()
             for inputs, labels in train_loader:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 optimizer.zero_grad()
@@ -138,16 +145,16 @@ class GeneticRegressor:
                 loss = criterion(outputs, labels.unsqueeze(-1).float())
                 loss.backward()
                 optimizer.step()
-        if val_loader is None:
-            return model
-        if evaluate:
             model.eval()
             inputs, labels = next(iter(val_loader))
             inputs, labels = inputs.to(self.device), labels.to(self.device)
             outputs = model(inputs.float())
             number_of_weights = sum(p.numel() for p in model.parameters())
             loss = criterion(outputs, labels.unsqueeze(-1)).item()
-            self._add_to_pareto(hidden_sizes, number_of_weights, loss)
+            if loss > prev_loss:
+                break
+            prev_loss = loss
+        self._add_to_pareto(hidden_sizes, number_of_weights, loss)
         return model
 
     def _add_to_pareto(self, hidden_sizes, number_of_weights, loss):

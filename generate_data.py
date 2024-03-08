@@ -23,7 +23,7 @@ def _generate_data(
         task_order, state = tree.fast_brute_force()
     else:
         task_order, state = tree.beam_search(Config.minimal_beta)
-    for tasks in range(Config.min_saving_size, n_tasks):
+    for tasks in range(Config.min_size, n_tasks):
         header = state[-tasks - 1].reshape(1, -1)
         data = working_time_matrix[list(task_order[-tasks:])]
         data = np.append(header, data)

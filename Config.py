@@ -40,7 +40,6 @@ class Config(GeneticConfig):
 
     patience = 2
     min_model_size = 5
-    min_saving_size = 7
     n_generated_samples = 50_000
     num_processes = 4
 
@@ -48,7 +47,7 @@ class Config(GeneticConfig):
     recurrent_model_types = tuple()
     model_types = tuple()
 
-    n_tasks, m_machines = 10, 25
+    n_tasks, m_machines = 50, 25
     min_size = 4
     train_time = 3 * 3600
     minimal_counting_time = 1800
