@@ -10,7 +10,7 @@ class RecurrentModel(BaseRegressor):
     def __init__(self, encoder: EncodingNetwork):
         super().__init__()
         self.encoder = encoder
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
         self.gru = nn.GRU(
             input_size=self.encoder.m_machines,
             hidden_size=self.encoder.fc_out_features * self.encoder.out_channels,
