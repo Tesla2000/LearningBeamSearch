@@ -43,7 +43,7 @@ def eval_rl(
             tree = Tree(working_time_matrix, models)
             recurrent = model_type not in (
                 *Config.universal_model_types,
-                *Config.model_types,
+                *Config.series_models,
             )
             _, state = tree.beam_search(Config.minimal_beta, recurrent)
             results[model_type].append(state[-1, -1])

@@ -18,6 +18,7 @@ from Config import Config
 from beam_search.Tree import Tree
 from model_training.RLDataset import RLDataset
 from model_training.database_functions import create_tables, save_sample
+from model_training.save_models import save_models
 from regression_models.GeneticRegressor import GeneticRegressor
 from regression_models.RecurrentModel import RecurrentModel
 
@@ -121,25 +122,5 @@ def train_rl(
                 schedulers[optimizer].step()
                 Config.beta[tasks] *= Config.beta_attrition
         if epoch % Config.save_interval == 0:
-            save_models(models, training_buffers)
-    save_models(models, training_buffers)
-
-
-def save_models(models: dict[int, nn.Module], training_buffers):
-    for tasks, model in models.items():
-        torch.save(
-            model.state_dict(),
-            f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
-        )
-        # for hidden_state, (n_weights, loss) in model.pareto.items():
-        #     for file in Config.OUTPUT_RL_MODELS.glob(
-        #         f"{type(model).__name__}_{tasks}_{Config.m_machines}*"
-        #     ):
-        #         os.remove(file)
-        #     dataset = RLDataset(training_buffers[tasks])
-        #     torch.save(
-        #         model.retrain_hidden_sizes(
-        #             hidden_state, Config.criterion, dataset, evaluate=False
-        #         ).state_dict(),
-        #         f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}_{n_weights}_{int(loss)}.pth",
-        #     )
+            save_models(models)
+    save_models(models)

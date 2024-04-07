@@ -4,21 +4,23 @@ import numpy as np
 import torch
 
 from Config import Config
+from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.eval_rl import eval_rl
-from model_training.train_rl import train_rl
 
 if __name__ == "__main__":
-    torch.manual_seed(42)
-    np.random.seed(42)
-    random.seed(42)
+    experiment = getattr(getattr(__import__(f'experiments.{Config.experiment}'), Config.experiment), Config.experiment)
     if Config.train:
         for model_type in (
-            *Config.model_types,
+            *Config.series_models,
             *Config.universal_model_types,
             *Config.recurrent_model_types,
         ):
+            torch.manual_seed(Config.seed)
+            np.random.seed(Config.seed)
+            random.seed(Config.seed)
+            generator = RandomNumberGenerator(Config.seed)
             recurrent = False
-            if model_type in Config.model_types:
+            if model_type in Config.series_models:
                 models = dict(
                     (tasks, model_type(tasks, Config.m_machines))
                     for tasks in range(Config.min_size, Config.n_tasks + 1)
@@ -33,13 +35,14 @@ if __name__ == "__main__":
                     recurrent = True
             for model in models.values():
                 model.to(Config.device)
-            train_rl(
-                Config.n_tasks,
-                Config.m_machines,
-                Config.min_size,
-                recurrent,
-                models,
-                Config.MODEL_RESULTS.joinpath(
+            experiment(
+                n_tasks=Config.n_tasks,
+                m_machines=Config.m_machines,
+                min_size=Config.min_size,
+                recurrent=recurrent,
+                models=models,
+                generator=generator,
+                output_file=Config.MODEL_RESULTS.joinpath(
                     f"{model_type.__name__}_{Config.n_tasks}_{Config.m_machines}_{Config.min_size}"
                 ).open("w"),
             )
@@ -50,7 +53,7 @@ if __name__ == "__main__":
             Config.m_machines,
             Config.eval_iterations,
             (
-                *Config.model_types,
+                *Config.series_models,
                 *Config.universal_model_types,
             ),
         )
