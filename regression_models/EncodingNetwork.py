@@ -33,7 +33,7 @@ class EncodingNetwork(nn.Module):
             kernel_size=3,
             padding="same",
         )
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
 
     def _part_one(self, x):
         return torch.concat(

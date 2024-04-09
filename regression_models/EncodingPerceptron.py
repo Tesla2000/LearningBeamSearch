@@ -9,7 +9,7 @@ class EncodingPerceptron(EncodingRegressor):
         super().__init__()
         self.flatten = nn.Flatten()
         self.fc = nn.Linear(encoder.fc_out_features * encoder.out_channels, 1)
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
 
     def predict(self, x):
         x = self.flatten(x)

@@ -34,7 +34,7 @@ class _GeneticModel(BaseRegressor):
         x = self.flatten(x)
         for layer in self.layers:
             x = layer(x)
-            x = self.relu(x)
+            x = self.leaky_relu(x)
         return x
 
     @classmethod
