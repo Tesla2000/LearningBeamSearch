@@ -1,4 +1,6 @@
+import operator
 from collections import deque
+from functools import reduce
 from itertools import count
 from statistics import fmean
 from time import time
@@ -57,12 +59,14 @@ def recurrent_model(
             label = label.float().unsqueeze(1)
             task_order = task_order.flatten()
             hn = Tensor(working_time_matrix).flatten().unsqueeze(0).to(Config.device).float()
+            losses = []
             for task in task_order:
                 optimizer.zero_grad()
                 outputs, hn = model(Tensor(working_time_matrix[task]).unsqueeze(0).to(Config.device), hn)
-                loss = Config.criterion(outputs, label)
-                loss.backward()
-                optimizer.step()
+                losses.append(Config.criterion(outputs, label))
+            loss = reduce(operator.add, losses)
+            loss.backward()
+            optimizer.step()
         scheduler.step()
         if epoch % Config.save_interval == 0:
             save_models(models)
