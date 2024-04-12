@@ -18,9 +18,9 @@ class WideConvRegressor(ConvRegressor):
         if len(x.shape) != 4:
             x = x.unsqueeze(1)
         x = self.conv1(x)
-        x = self.relu(x)
+        x = self.leaky_relu(x)
         x = self.conv2(x)
-        x = self.relu(x)
+        x = self.leaky_relu(x)
         x = self.flatten(x)
         out = self.dense1(x)
         x = torch.concat((x, out), dim=1)

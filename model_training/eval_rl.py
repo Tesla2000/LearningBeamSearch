@@ -12,10 +12,10 @@ from beam_search.Tree import Tree
 
 
 def eval_rl(
-        n_tasks: int,
-        m_machines: int,
-        iterations: int,
-        model_types: tuple[Type[nn.Module], ...],
+    n_tasks: int,
+    m_machines: int,
+    iterations: int,
+    model_types: tuple[Type[nn.Module], ...],
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     models_by_type = {}
@@ -41,7 +41,10 @@ def eval_rl(
         working_time_matrix = np.random.randint(1, 255, (n_tasks, m_machines))
         for model_type, models in models_by_type.items():
             tree = Tree(working_time_matrix, models)
-            recurrent = model_type not in (*Config.universal_model_types, *Config.model_types)
+            recurrent = model_type not in (
+                *Config.universal_model_types,
+                *Config.series_models,
+            )
             _, state = tree.beam_search(Config.minimal_beta, recurrent)
             results[model_type].append(state[-1, -1])
         for model_type, result in results.items():

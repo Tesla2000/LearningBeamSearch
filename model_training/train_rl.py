@@ -1,7 +1,9 @@
+import os
 import random
 import sqlite3
 from collections import deque
 from itertools import count
+from pathlib import Path
 from statistics import fmean
 from time import time
 from typing import IO
@@ -16,6 +18,8 @@ from Config import Config
 from beam_search.Tree import Tree
 from model_training.RLDataset import RLDataset
 from model_training.database_functions import create_tables, save_sample
+from model_training.save_models import save_models
+from regression_models.GeneticRegressor import GeneticRegressor
 from regression_models.RecurrentModel import RecurrentModel
 
 
@@ -28,16 +32,25 @@ def train_rl(
     output_file: IO = None,
 ):
     # fill_strings = {}
-    conn = sqlite3.connect(Config.RL_DATA_PATH)
-    cur = conn.cursor()
-    create_tables(conn, cur)
-    training_buffers = dict((key, deque(maxlen=100)) for key in models)
+    # conn = sqlite3.connect(Config.RL_DATA_PATH)
+    # cur = conn.cursor()
+    # create_tables(conn, cur)
+    training_buffers = dict(
+        (key, deque(maxlen=Config.train_buffer_size)) for key in models
+    )
     results = []
     buffered_results = deque(maxlen=Config.results_average_size)
     batch_size = 32
-    criterion = nn.MSELoss()
     optimizers = dict(
-        (model, optim.Adam(model.parameters(), lr=getattr(model, 'learning_rate', 1e-5)))
+        (
+            model,
+            optim.Adam(
+                (
+                    model.best_model if isinstance(model, GeneticRegressor) else model
+                ).parameters(),
+                lr=getattr(model, "learning_rate", 1e-5),
+            ),
+        )
         for model in models.values()
     )
     schedulers = dict(
@@ -55,10 +68,10 @@ def train_rl(
         task_order, state = tree.beam_search(Config.beta, recurrent)
         # for tasks in range(Config.min_saving_size, n_tasks):
         #     header = state[-tasks - 1].reshape(1, -1)
-            # data = working_time_matrix[list(task_order[-tasks:])]
-            # data = np.append(header, data)
-            # data = list(map(int, data)) + [int(state[-1, -1].item())]
-            # save_sample(tasks, data, fill_strings, conn, cur)
+        # data = working_time_matrix[list(task_order[-tasks:])]
+        # data = np.append(header, data)
+        # data = list(map(int, data)) + [int(state[-1, -1].item())]
+        # save_sample(tasks, data, fill_strings, conn, cur)
         for tasks in range(min_size, n_tasks + 1):
             if tasks == n_tasks:
                 header = np.zeros((1, m_machines))
@@ -75,17 +88,17 @@ def train_rl(
         if not recurrent:
             for tasks, model in models.items():
                 model.train()
-                optimizer = optimizers[model]
                 dataset = RLDataset(training_buffers[tasks])
-                train_loader = DataLoader(dataset, batch_size=min(Config.max_status_length, batch_size))
+                optimizer = optimizers[model]
+                train_loader = DataLoader(
+                    dataset, batch_size=min(Config.max_status_length, batch_size)
+                )
                 for inputs, labels in train_loader:
                     inputs, labels = inputs.to(Config.device), labels.to(Config.device)
                     labels = labels.float().unsqueeze(1)
                     optimizer.zero_grad()
-                    outputs = torch.concat(
-                        tuple(model(inputs.float()[i: i + Config.max_status_length]).flatten().cpu() for i in range(0, len(inputs), Config.max_status_length))
-                    ).unsqueeze(-1)
-                    loss = criterion(outputs, labels)
+                    outputs = model(inputs.float())
+                    loss = Config.criterion(outputs, labels)
                     loss.backward()
                     optimizer.step()
                 schedulers[optimizer].step()
@@ -97,11 +110,13 @@ def train_rl(
                 for i in range(Config.n_tasks, Config.min_size, -1):
                     model.fill_state(instance[0][1:])
                     inputs, labels = training_buffers[i - 1][index]
-                    inputs, labels = Tensor(inputs).to(device), Tensor([labels]).to(device)
+                    inputs, labels = Tensor(inputs).to(Config.device), Tensor(
+                        [labels]
+                    ).to(Config.device)
                     labels = labels.float().unsqueeze(1)
                     optimizer.zero_grad()
                     outputs = model(inputs.float().unsqueeze(0))
-                    loss = criterion(outputs, labels)
+                    loss = Config.criterion(outputs, labels)
                     loss.backward()
                     optimizer.step()
                 schedulers[optimizer].step()
@@ -109,15 +124,3 @@ def train_rl(
         if epoch % Config.save_interval == 0:
             save_models(models)
     save_models(models)
-
-
-def save_models(models: dict[int, nn.Module]):
-    saved = set()
-    for tasks, model in models.items():
-        if id(model) in saved:
-            continue
-        saved.add(id(model))
-        torch.save(
-            model.state_dict(),
-            f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
-        )

@@ -10,7 +10,7 @@ class MultilayerPerceptron(BaseRegressor):
         super(MultilayerPerceptron, self).__init__()
         self.hidden_size = hidden_size
         self.flatten = nn.Flatten()
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
         self.dense1 = nn.Linear(
             in_features=(n_tasks + 1) * m_machines, out_features=hidden_size
         )
@@ -25,3 +25,18 @@ class MultilayerPerceptron(BaseRegressor):
 
     def __str__(self):
         return type(self).__name__ + str(self.hidden_size)
+
+
+if __name__ == '__main__':
+    import os
+
+    import torch
+    from torchviz import make_dot
+
+    model = MultilayerPerceptron(50, 10)
+    x = torch.randn(1, 51, 10)
+    y = model(x)
+    make_dot(y, params=dict(list(model.named_parameters()))).render(MultilayerPerceptron.__name__, format="png")
+    os.system(f"dot -Tpng {MultilayerPerceptron.__name__} -o network_images/{MultilayerPerceptron.__name__}.png")
+    os.remove(MultilayerPerceptron.__name__)
+    os.remove(MultilayerPerceptron.__name__ + ".png")

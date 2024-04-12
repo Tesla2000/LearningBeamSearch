@@ -18,12 +18,14 @@ class Tree:
             self,
             working_time_matrix: np.array,
             models: dict[int, nn.Module] = None,
+            verbose: bool = True,
     ) -> None:
         """The greater beta is the more results are accepted which leads to better results and longer calculations"""
         self.n_tasks, self.m_machines = working_time_matrix.shape
         self.working_time_matrix = working_time_matrix
         self.root = list()
         self.models = models
+        self.verbose = verbose
         if models is None:
             self.models = {}
 
@@ -31,7 +33,7 @@ class Tree:
     def beam_search(self, beta: dict[int, float], recurrent: bool = False):
         tuple(model.eval() for model in self.models.values())
         buffer = [self.root]
-        for tasks in tqdm(range(self.n_tasks - 1, 0, -1)):
+        for tasks in (tqdm(range(self.n_tasks - 1, 0, -1)) if self.verbose else range(self.n_tasks - 1, 0, -1)):
             temp_buffer = np.array(
                 tuple(
                     [*node, task]
@@ -55,16 +57,21 @@ class Tree:
                 del headers
                 predictions = []
                 for i in range(0, len(states), Config.max_status_length):
-                    state = Tensor(states[i: i + Config.max_status_length]).to(self.device)
-                    predictions.extend(
-                        self.models[tasks](state).flatten().cpu()
+                    state = Tensor(states[i: i + Config.max_status_length]).to(
+                        self.device
                     )
+                    predictions.extend(self.models[tasks](state).flatten().cpu())
                     del state
                 if recurrent:
-                    tuple(self.models[tasks].states_by_size[i].clear() for i in range(Config.n_tasks-tasks-1, 0, -1))
+                    tuple(
+                        self.models[tasks].states_by_size[i].clear()
+                        for i in range(Config.n_tasks - tasks - 1, 0, -1)
+                    )
                 del states
                 temp_buffer = temp_buffer[
-                    torch.argsort(Tensor(predictions))[: max(Config.minimal_beta[tasks], int(beta[tasks]))]
+                    torch.argsort(Tensor(predictions))[
+                    : max(Config.minimal_beta[tasks], int(beta[tasks]))
+                    ]
                 ]
                 del predictions
             buffer = temp_buffer

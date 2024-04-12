@@ -1,13 +1,29 @@
+import random
 from pathlib import Path
 
+import numpy as np
 import torch
+from torch import nn
 
-from regression_models import MultilayerPerceptron
-from regression_models.Perceptron import Perceptron
+from regression_models import MultilayerPerceptron, ConvRegressor
+from regression_models.Perceptron import Perceptron, GenPerceptron
 from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
 
 
-class Config:
+class _GeneticConfig:
+    gen_train_epochs = 3
+    n_population_samples = 10
+    n_genetic_models = 20
+    pop_retrain_rate = 0.2
+    pareto_retrain_rate = 0
+    size_penalty = 100
+    n_pareto_samples = 10
+
+    data_generation_time = 4 * 3600
+
+
+class _ConfigWithoutModels(_GeneticConfig):
+    experiment = 'series_of_models'
     train = True
 
     ROOT = Path(__file__).parent
@@ -27,45 +43,54 @@ class Config:
     table_name = "Samples_{}_{}".format
 
     patience = 2
-    min_model_size = 5
-    min_saving_size = 7
     n_generated_samples = 50_000
     num_processes = 4
 
-    model_types = (
-        # WideMultilayerPerceptron,
-        # MultilayerPerceptron,
-        # Perceptron,
-    )
     universal_model_types = tuple()
     recurrent_model_types = tuple()
+    series_models = tuple()
 
-    n_tasks, m_machines = 10, 25
+    n_tasks, m_machines = 50, 10
     min_size = 4
     train_time = 12 * 3600
     minimal_counting_time = 1800
     results_average_size = 100
-    beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
-    minimal_beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
-    beta_attrition = 0.998
+    train_buffer_size = 100
+    beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
+    minimal_beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
+    beta_attrition = 1.0
     gamma = 0.999
     eval_iterations = 500
     save_interval = 10
-    max_status_length = 2000
+    max_status_length = 10000
 
+    criterion = nn.MSELoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-# from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
-from regression_models.EncodingPerceptron import EncodingPerceptron
+class Config(_ConfigWithoutModels):
+    # from regression_models.RecurrentModel import RecurrentModel
+    # from regression_models.UniversalEfficientNet import UniversalEfficientNetAnySize, UniversalEfficientNetMaxSize
+    # from regression_models.EncodingPerceptron import EncodingPerceptron
+    # from regression_models.ZeroPaddedPerceptron import ZeroPaddedPerceptron
+    # from regression_models.GeneticRegressor import GeneticRegressor
 
-Config.universal_model_types = (
-    # UniversalEfficientNetAnySize,
-    # UniversalEfficientNetMaxSize,
-    EncodingPerceptron,
-)
-# from regression_models.RecurrentModel import RecurrentModel
-#
-# Config.recurrent_model_types = (
-#     lambda: RecurrentModel(_encoder),
-# )
+    seed = 42
+    series_models = (
+        Perceptron,
+        # ConvRegressor,
+        # WideMultilayerPerceptron,
+        # MultilayerPerceptron,
+        # GenPerceptron,
+        # GeneticRegressor,
+    )
+    universal_model_types = (
+        # UniversalEfficientNetAnySize,
+        # UniversalEfficientNetMaxSize,
+        # EncodingPerceptron,
+        # ZeroPaddedPerceptron,
+    )
+
+    recurrent_model_types = (
+        # lambda: RecurrentModel(_encoder),
+    )

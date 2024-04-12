@@ -6,6 +6,10 @@ from torch import nn
 class BaseRegressor(nn.Module, ABC):
     learning_rate = 5e-5
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.leaky_relu = nn.LeakyReLU()
+
     def forward(self, x):
         x = x.float()
         x = self.predict(x)
