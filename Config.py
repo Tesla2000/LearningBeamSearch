@@ -1,13 +1,10 @@
-import random
 from pathlib import Path
 
-import numpy as np
 import torch
 from torch import nn
 
-from regression_models import MultilayerPerceptron, ConvRegressor
-from regression_models.Perceptron import Perceptron, GenPerceptron
-from regression_models.WideMultilayerPerceptron import WideMultilayerPerceptron
+from regression_models import ConvRegressor, MultilayerPerceptron
+from regression_models.RecurrentModel import RecurrentModel
 
 
 class _GeneticConfig:
@@ -23,8 +20,10 @@ class _GeneticConfig:
 
 
 class _ConfigWithoutModels(_GeneticConfig):
-    experiment = 'series_of_models'
+    series_model_experiment = 'series_of_models'
+    recurrent_model_experiment = 'recurrent_model'
     train = True
+    # train = False
 
     ROOT = Path(__file__).parent
     OUTPUT_REGRESSION_MODELS = ROOT / "output_regression_models"
@@ -56,10 +55,10 @@ class _ConfigWithoutModels(_GeneticConfig):
     minimal_counting_time = 1800
     results_average_size = 100
     train_buffer_size = 100
-    beta = dict((tasks, 50) for tasks in range(n_tasks + 1))
-    minimal_beta = dict((tasks, 1000) for tasks in range(n_tasks + 1))
+    beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
+    minimal_beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
     beta_attrition = 1.0
-    gamma = 0.999
+    gamma = 0.995
     eval_iterations = 500
     save_interval = 10
     max_status_length = 10000
@@ -75,9 +74,10 @@ class Config(_ConfigWithoutModels):
     # from regression_models.ZeroPaddedPerceptron import ZeroPaddedPerceptron
     # from regression_models.GeneticRegressor import GeneticRegressor
 
+    hidden_size = 32
     seed = 42
     series_models = (
-        Perceptron,
+        # Perceptron,
         # ConvRegressor,
         # WideMultilayerPerceptron,
         # MultilayerPerceptron,
@@ -92,5 +92,5 @@ class Config(_ConfigWithoutModels):
     )
 
     recurrent_model_types = (
-        # lambda: RecurrentModel(_encoder),
+        RecurrentModel,
     )
