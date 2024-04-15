@@ -3,8 +3,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from regression_models import ConvRegressor, MultilayerPerceptron
-from regression_models.RecurrentModel import RecurrentModel
+from regression_models.GeneticRegressor import GeneticRegressor
 
 
 class _GeneticConfig:
@@ -16,16 +15,17 @@ class _GeneticConfig:
     size_penalty = 100
     n_pareto_samples = 10
 
-    data_generation_time = 4 * 3600
-
 
 class _ConfigWithoutModels(_GeneticConfig):
     series_model_experiment = 'series_of_models'
     recurrent_model_experiment = 'recurrent_model'
+    genetic_model_experiment = 'genetic_model'
     train = True
     # train = False
 
     ROOT = Path(__file__).parent
+    OUTPUT_GENETIC_MODELS = ROOT / "output_genetic_models"
+    OUTPUT_GENETIC_MODELS.mkdir(exist_ok=True)
     OUTPUT_REGRESSION_MODELS = ROOT / "output_regression_models"
     OUTPUT_REGRESSION_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_MODELS = ROOT / "output_rl_models"
@@ -45,13 +45,14 @@ class _ConfigWithoutModels(_GeneticConfig):
     n_generated_samples = 50_000
     num_processes = 4
 
-    universal_model_types = tuple()
-    recurrent_model_types = tuple()
+    universal_models = tuple()
+    recurrent_models = tuple()
     series_models = tuple()
 
     n_tasks, m_machines = 50, 10
     min_size = 4
     train_time = 12 * 3600
+    # train_time = 30
     minimal_counting_time = 1800
     results_average_size = 100
     train_buffer_size = 100
@@ -84,13 +85,17 @@ class Config(_ConfigWithoutModels):
         # GenPerceptron,
         # GeneticRegressor,
     )
-    universal_model_types = (
-        # UniversalEfficientNetAnySize,
+    universal_models = (
+        # ConvRegressorAnySize,
+        # ConvRegressorAnySizeOneHot,
         # UniversalEfficientNetMaxSize,
         # EncodingPerceptron,
         # ZeroPaddedPerceptron,
     )
+    recurrent_models = (
+        # RecurrentModel,
+    )
 
-    recurrent_model_types = (
-        RecurrentModel,
+    genetic_models = (
+        GeneticRegressor,
     )

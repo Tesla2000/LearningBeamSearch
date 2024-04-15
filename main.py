@@ -13,28 +13,31 @@ if __name__ == "__main__":
     if Config.train:
         for model_type in (
             *Config.series_models,
-            *Config.universal_model_types,
-            *Config.recurrent_model_types,
+            *Config.universal_models,
+            *Config.recurrent_models,
+            *Config.genetic_models,
         ):
-            if model_type in Config.series_models:
-                experiment = getattr(getattr(__import__(f'experiments.{Config.series_model_experiment}'), Config.series_model_experiment),
-                                     Config.series_model_experiment)
-            elif model_type in Config.recurrent_model_types:
+            if model_type in Config.recurrent_models:
                 experiment = getattr(getattr(__import__(f'experiments.{Config.recurrent_model_experiment}'), Config.recurrent_model_experiment),
                                      Config.recurrent_model_experiment)
+            elif model_type in Config.genetic_models:
+                experiment = getattr(getattr(__import__(f'experiments.{Config.genetic_model_experiment}'), Config.genetic_model_experiment),
+                                     Config.genetic_model_experiment)
             else:
-                raise ValueError
+                experiment = getattr(getattr(__import__(f'experiments.{Config.series_model_experiment}'), Config.series_model_experiment),
+                                     Config.series_model_experiment)
             torch.manual_seed(Config.seed)
             torch.cuda.manual_seed(Config.seed)
             np.random.seed(Config.seed)
             random.seed(Config.seed)
             generator = RandomNumberGenerator(Config.seed)
+            models = {}
             if model_type in Config.series_models:
                 models = dict(
                     (tasks, model_type(tasks, Config.m_machines))
                     for tasks in range(Config.min_size, Config.n_tasks + 1)
                 )
-            else:
+            elif model_type in (*Config.recurrent_models, *Config.universal_models):
                 model = model_type()
                 models = dict(
                     (tasks, model)
@@ -59,6 +62,6 @@ if __name__ == "__main__":
             Config.eval_iterations,
             (
                 *Config.series_models,
-                *Config.universal_model_types,
+                *Config.universal_models,
             ),
         )
