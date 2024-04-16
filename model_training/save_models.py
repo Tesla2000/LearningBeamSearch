@@ -1,14 +1,16 @@
+from pathlib import Path
+
 import torch
 from torch import nn
 
 from Config import Config
 
 
-def save_models(models: dict[int, nn.Module]):
+def save_models(models: dict[int, nn.Module], output_model_path: Path = Config.OUTPUT_RL_MODELS):
     for tasks, model in models.items():
         torch.save(
             model.state_dict(),
-            f"{Config.OUTPUT_RL_MODELS}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
+            f"{output_model_path}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
         )
 
         # for hidden_state, (n_weights, loss) in model.pareto.items():

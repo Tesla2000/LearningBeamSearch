@@ -25,6 +25,8 @@ def series_of_models(
     generator: RandomNumberGenerator,
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
+    train_time: int = Config.train_time,
+    output_model_path = Config.OUTPUT_RL_MODELS,
     **_,
 ):
     training_buffers = dict(
@@ -51,7 +53,7 @@ def series_of_models(
     )
     start = time()
     for epoch in count(1):
-        if start + Config.train_time < time():
+        if start + train_time < time():
             break
         working_time_matrix = generate_taillard(generator)
         tree = Tree(working_time_matrix, models)
@@ -87,5 +89,5 @@ def series_of_models(
             schedulers[optimizer].step()
             Config.beta[tasks] *= Config.beta_attrition
         if epoch % Config.save_interval == 0:
-            save_models(models)
-    save_models(models)
+            save_models(models, output_model_path)
+    save_models(models, output_model_path)

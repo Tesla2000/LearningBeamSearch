@@ -2,8 +2,6 @@ import torch
 from torch import nn, Tensor
 from torchvision.models import efficientnet_b0
 
-from Config import Config
-
 
 def _forward_universal_wrapper(model, forward_function):
     def inner(x):
@@ -47,6 +45,7 @@ class UniversalEfficientNetAnySize:
 
 
 class UniversalEfficientNetMaxSize(UniversalEfficientNetAnySize):
+    from Config import Config
     max_tasks = Config.n_tasks + 1
 
 

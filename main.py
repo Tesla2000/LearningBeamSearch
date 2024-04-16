@@ -5,41 +5,50 @@ import torch
 
 from Config import Config
 from model_training.RandomNumberGenerator import RandomNumberGenerator
-from model_training.eval_rl import eval_rl
 
 if __name__ == "__main__":
-    experiment = getattr(getattr(__import__(f'experiments.{Config.experiment}'), Config.experiment), Config.experiment)
+    evaluation = getattr(
+        getattr(__import__(f'experiments.{Config.series_model_experiment}_eval'), Config.series_model_experiment + '_eval'),
+        Config.series_model_experiment + '_eval')
     if Config.train:
         for model_type in (
             *Config.series_models,
-            *Config.universal_model_types,
-            *Config.recurrent_model_types,
+            *Config.universal_models,
+            *Config.recurrent_models,
+            *Config.genetic_models,
         ):
+            if model_type in Config.recurrent_models:
+                experiment = getattr(getattr(__import__(f'experiments.{Config.recurrent_model_experiment}'), Config.recurrent_model_experiment),
+                                     Config.recurrent_model_experiment)
+            elif model_type in Config.genetic_models:
+                experiment = getattr(getattr(__import__(f'experiments.{Config.genetic_model_experiment}'), Config.genetic_model_experiment),
+                                     Config.genetic_model_experiment)
+            else:
+                experiment = getattr(getattr(__import__(f'experiments.{Config.series_model_experiment}'), Config.series_model_experiment),
+                                     Config.series_model_experiment)
             torch.manual_seed(Config.seed)
+            torch.cuda.manual_seed(Config.seed)
             np.random.seed(Config.seed)
             random.seed(Config.seed)
             generator = RandomNumberGenerator(Config.seed)
-            recurrent = False
+            models = {}
             if model_type in Config.series_models:
                 models = dict(
                     (tasks, model_type(tasks, Config.m_machines))
                     for tasks in range(Config.min_size, Config.n_tasks + 1)
                 )
-            else:
+            elif model_type in (*Config.recurrent_models, *Config.universal_models):
                 model = model_type()
                 models = dict(
                     (tasks, model)
                     for tasks in range(Config.min_size, Config.n_tasks + 1)
                 )
-                if model_type not in Config.universal_model_types:
-                    recurrent = True
             for model in models.values():
                 model.to(Config.device)
             experiment(
                 n_tasks=Config.n_tasks,
                 m_machines=Config.m_machines,
                 min_size=Config.min_size,
-                recurrent=recurrent,
                 models=models,
                 generator=generator,
                 output_file=Config.MODEL_RESULTS.joinpath(
@@ -48,12 +57,11 @@ if __name__ == "__main__":
             )
             Config.max_tasks = Config.n_tasks + 1
     else:
-        eval_rl(
-            Config.n_tasks,
+        evaluation(
             Config.m_machines,
             Config.eval_iterations,
             (
                 *Config.series_models,
-                *Config.universal_model_types,
+                *Config.universal_models,
             ),
         )

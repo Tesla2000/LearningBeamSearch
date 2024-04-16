@@ -21,7 +21,7 @@ def eval_rl(
     models_by_type = {}
     for model_type in model_types:
         models_by_type[model_type] = {}
-        if model_type in Config.universal_model_types:
+        if model_type in Config.universal_models:
             for model_path in Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}*"):
                 model = model_type()
                 model.load_state_dict(torch.load(model_path))
@@ -42,7 +42,7 @@ def eval_rl(
         for model_type, models in models_by_type.items():
             tree = Tree(working_time_matrix, models)
             recurrent = model_type not in (
-                *Config.universal_model_types,
+                *Config.universal_models,
                 *Config.series_models,
             )
             _, state = tree.beam_search(Config.minimal_beta, recurrent)

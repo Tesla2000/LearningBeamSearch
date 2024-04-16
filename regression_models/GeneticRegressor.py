@@ -2,10 +2,11 @@ import random
 from itertools import pairwise, starmap, count
 from sqlite3 import OperationalError
 
+import numpy as np
+import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split
 
-from Config import Config
 from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
@@ -67,6 +68,7 @@ class GeneticRegressor:
     batch_size: int = 32
 
     def __init__(self, n_tasks: int, m_machines: int, **_):
+        from Config import Config
         self.n_tasks = n_tasks
         self.m_machines = m_machines
         self.device = Config.device
@@ -79,6 +81,7 @@ class GeneticRegressor:
         )
         self.best_model.to(self.device)
         self.produce_data = True
+        self.examined_sizes = set()
 
     def to(self, device):
         self.device = device
@@ -87,6 +90,7 @@ class GeneticRegressor:
         return self.best_model(x)
 
     def train_generic(self, dataset, criterion):
+        from Config import Config
         try:
             if len(dataset) < 5:
                 return
@@ -98,18 +102,18 @@ class GeneticRegressor:
             del self.pareto[hidden_sizes]
             self._retrain_hidden_sizes(hidden_sizes, criterion, dataset)
         self.population = list(map(self._mutate, self.population))
-        for hidden_sizes in (
-            *random.sample(
+        for hidden_sizes in {*random.sample(
                 tuple(map(self._mutate, self.pareto.keys())),
                 k=min(len(self.pareto.keys()), Config.n_pareto_samples),
-            ),
-            *random.sample(self.population, k=Config.n_population_samples),
-        ):
+        ), *random.sample(self.population, k=Config.n_population_samples)}:
+            if hidden_sizes is self.examined_sizes:
+                continue
             self._retrain_hidden_sizes(hidden_sizes, criterion, dataset)
-        self.best_model = self._retrain_hidden_sizes(
-            random.choice(tuple(self.pareto.keys())), criterion, dataset
-        )
-        self.best_model.to(self.device)
+            self.examined_sizes.add(hidden_sizes)
+        # self.best_model = self._retrain_hidden_sizes(
+        #     random.choice(tuple(self.pareto.keys())), criterion, dataset
+        # )
+        # self.best_model.to(self.device)
 
     def _mutate(self, specimen: tuple[int, ...]) -> tuple[int, ...]:
         mutation = random.choice(_GeneticModel.mutations)
@@ -125,6 +129,7 @@ class GeneticRegressor:
     def _retrain_hidden_sizes(
         self, hidden_sizes, criterion, dataset
     ) -> _GeneticModel:
+        from Config import Config
         train_dataset, val_dataset = random_split(dataset, [0.8, 0.2])
         train_loader = DataLoader(
             train_dataset, batch_size=min(Config.max_status_length, self.batch_size)
@@ -139,17 +144,18 @@ class GeneticRegressor:
         for epoch in count():
             model.train()
             for inputs, labels in train_loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                inputs, labels = torch.Tensor(np.array(inputs)).transpose(2, 0).transpose(2, 1).to(self.device), labels.to(self.device)
                 optimizer.zero_grad()
                 outputs = model(inputs.float())
                 loss = criterion(outputs, labels.unsqueeze(-1).float())
                 loss.backward()
                 optimizer.step()
             model.eval()
-            inputs, labels = next(iter(val_loader))
-            inputs, labels = inputs.to(self.device), labels.to(self.device)
-            outputs = model(inputs.float())
-            number_of_weights = sum(p.numel() for p in model.parameters())
+            with torch.no_grad():
+                inputs, labels = next(iter(val_loader))
+                inputs, labels = torch.Tensor(np.array(inputs)).transpose(2, 0).transpose(2, 1).to(self.device), labels.to(self.device)
+                outputs = model(inputs.float())
+                number_of_weights = sum(p.numel() for p in model.parameters())
             loss = criterion(outputs, labels.unsqueeze(-1)).item()
             if loss > prev_loss:
                 break
