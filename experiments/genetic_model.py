@@ -24,38 +24,39 @@ def genetic_model(
         train_time: int = Config.train_time,
         **_,
 ):
-    models = dict(
-        (tasks, Perceptron(tasks, Config.m_machines))
-        for tasks in range(Config.min_size, Config.n_tasks + 1)
-    )
-    series_of_models(
-        n_tasks=n_tasks,
-        m_machines=m_machines,
-        min_size=min_size,
-        generator=generator,
-        models=models,
-        output_file=output_file,
-        train_time=train_time // 3,
-        output_model_path=Config.OUTPUT_GENETIC_MODELS
-    )
-    start = time()
-    training_buffers = dict(
-        (key, list()) for key in models
-    )
-    while start + train_time // 3 > time():
-        working_time_matrix = generate_taillard(generator)
-        tree = Tree(working_time_matrix, models)
-        task_order, state = tree.beam_search(Config.beta)
-        for tasks in range(min_size, n_tasks + 1):
-            if tasks == n_tasks:
-                header = np.zeros((1, m_machines))
-            else:
-                header = state[-tasks - 1].reshape(1, -1)
-            data = working_time_matrix[list(task_order[-tasks:])]
-            data = np.append(header, data, axis=0)
-            label = state[-1, -1]
-            training_buffers[tasks].append((tuple(map(tuple, data)), label))
-    Config.OUTPUT_GENETIC_MODELS.joinpath("train_buffer.json").write_text(json.dumps(training_buffers))
+    # models = dict(
+    #     (tasks, Perceptron(tasks, Config.m_machines))
+    #     for tasks in range(Config.min_size, Config.n_tasks + 1)
+    # )
+    # series_of_models(
+    #     n_tasks=n_tasks,
+    #     m_machines=m_machines,
+    #     min_size=min_size,
+    #     generator=generator,
+    #     models=models,
+    #     output_file=output_file,
+    #     train_time=train_time // 3,
+    #     output_model_path=Config.OUTPUT_GENETIC_MODELS
+    # )
+    # start = time()
+    # training_buffers = dict(
+    #     (key, list()) for key in models
+    # )
+    # while start + train_time // 3 > time():
+    #     working_time_matrix = generate_taillard(generator)
+    #     tree = Tree(working_time_matrix, models)
+    #     task_order, state = tree.beam_search(Config.beta)
+    #     for tasks in range(min_size, n_tasks + 1):
+    #         if tasks == n_tasks:
+    #             header = np.zeros((1, m_machines))
+    #         else:
+    #             header = state[-tasks - 1].reshape(1, -1)
+    #         data = working_time_matrix[list(task_order[-tasks:])]
+    #         data = np.append(header, data, axis=0)
+    #         label = state[-1, -1]
+    #         training_buffers[tasks].append((tuple(map(tuple, data)), label))
+    # Config.OUTPUT_GENETIC_MODELS.joinpath("train_buffer.json").write_text(json.dumps(training_buffers))
+    training_buffers = json.loads(Config.OUTPUT_GENETIC_MODELS.joinpath("train_buffer.json").read_text())
     models = dict(
         (tasks, GeneticRegressor(tasks, Config.m_machines))
         for tasks in range(Config.min_size, Config.n_tasks + 1)
@@ -64,5 +65,7 @@ def genetic_model(
     criterion = nn.MSELoss()
     while start + train_time // 3 > time():
         for tasks, model in models.items():
-            dataset = RLDataset(training_buffers[tasks])
+            dataset = RLDataset(training_buffers[str(tasks)])
             model.train_generic(dataset, criterion)
+    for tasks, model in models.items():
+        print(tasks, model.pareto)

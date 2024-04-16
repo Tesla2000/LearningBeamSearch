@@ -2,6 +2,7 @@ import random
 from itertools import pairwise, starmap, count
 from sqlite3 import OperationalError
 
+import numpy as np
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split
@@ -80,6 +81,7 @@ class GeneticRegressor:
         )
         self.best_model.to(self.device)
         self.produce_data = True
+        self.examined_sizes = set()
 
     def to(self, device):
         self.device = device
@@ -100,14 +102,14 @@ class GeneticRegressor:
             del self.pareto[hidden_sizes]
             self._retrain_hidden_sizes(hidden_sizes, criterion, dataset)
         self.population = list(map(self._mutate, self.population))
-        for hidden_sizes in set(
-            *random.sample(
+        for hidden_sizes in {*random.sample(
                 tuple(map(self._mutate, self.pareto.keys())),
                 k=min(len(self.pareto.keys()), Config.n_pareto_samples),
-            ),
-            *random.sample(self.population, k=Config.n_population_samples),
-        ):
+        ), *random.sample(self.population, k=Config.n_population_samples)}:
+            if hidden_sizes is self.examined_sizes:
+                continue
             self._retrain_hidden_sizes(hidden_sizes, criterion, dataset)
+            self.examined_sizes.add(hidden_sizes)
         # self.best_model = self._retrain_hidden_sizes(
         #     random.choice(tuple(self.pareto.keys())), criterion, dataset
         # )
@@ -142,7 +144,7 @@ class GeneticRegressor:
         for epoch in count():
             model.train()
             for inputs, labels in train_loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                inputs, labels = torch.Tensor(np.array(inputs)).transpose(2, 0).transpose(2, 1).to(self.device), labels.to(self.device)
                 optimizer.zero_grad()
                 outputs = model(inputs.float())
                 loss = criterion(outputs, labels.unsqueeze(-1).float())
@@ -151,7 +153,7 @@ class GeneticRegressor:
             model.eval()
             with torch.no_grad():
                 inputs, labels = next(iter(val_loader))
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                inputs, labels = torch.Tensor(np.array(inputs)).transpose(2, 0).transpose(2, 1).to(self.device), labels.to(self.device)
                 outputs = model(inputs.float())
                 number_of_weights = sum(p.numel() for p in model.parameters())
             loss = criterion(outputs, labels.unsqueeze(-1)).item()
