@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from regression_models.GeneticRegressor import GeneticRegressor
+from regression_models.GeneticRegressorCreator import GeneticRegressorCreator
 
 
 class _GeneticConfig:
@@ -75,6 +75,7 @@ class Config(_ConfigWithoutModels):
     # from regression_models.ZeroPaddedPerceptron import ZeroPaddedPerceptron
     # from regression_models.GeneticRegressor import GeneticRegressor
 
+    maximal_consecutive_lacks_of_improvement = 3
     hidden_size = 32
     seed = 42
     series_models = (
@@ -97,5 +98,5 @@ class Config(_ConfigWithoutModels):
     )
 
     genetic_models = (
-        GeneticRegressor,
+        GeneticRegressorCreator,
     )
