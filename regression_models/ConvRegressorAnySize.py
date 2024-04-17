@@ -1,6 +1,7 @@
-from torch import nn, Tensor
 import torch.nn.functional as F
+from torch import nn
 import torch
+
 from regression_models.abstract.BaseRegressor import BaseRegressor
 
 
@@ -17,6 +18,7 @@ class ConvRegressorAnySize(BaseRegressor):
         self.fc = nn.Linear(in_features=10, out_features=1)
 
     def predict(self, x):
+        from Config import Config
         n_tasks = x.shape[-2]
         if len(x.shape) < 4:
             x = x.unsqueeze(1)
@@ -27,7 +29,7 @@ class ConvRegressorAnySize(BaseRegressor):
         x = F.adaptive_avg_pool2d(x, (1, 1))
         x = x.squeeze(-1)
         x = x.squeeze(-1)
-        x = torch.concat((x, torch.full((x.shape[0], 1), n_tasks)), dim=1)
+        x = torch.concat((x, torch.full((x.shape[0], 1), n_tasks).to(Config.device)), dim=1)
         return self.fc(x)
 
     def __str__(self):

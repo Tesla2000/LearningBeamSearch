@@ -28,7 +28,7 @@ def genetic_model(
     **_,
 ):
     models = dict(
-        (tasks, Perceptron(tasks, Config.m_machines))
+        (tasks, Perceptron(tasks, Config.m_machines).to(Config.device))
         for tasks in range(Config.min_size, Config.n_tasks + 1)
     )
     series_of_models(
@@ -57,7 +57,7 @@ def genetic_model(
             data = working_time_matrix[list(task_order[-tasks:])]
             data = np.append(header, data, axis=0)
             label = state[-1, -1]
-            training_buffers[tasks].append((tuple(map(tuple, data)), label))
+            training_buffers[tasks].append((data, label))
     models = dict(
         (tasks, GeneticRegressorCreator(tasks, Config.m_machines))
         for tasks in range(Config.min_size, Config.n_tasks + 1)
@@ -70,7 +70,7 @@ def genetic_model(
             model.train_generic(dataset, criterion)
     for tasks, model in models.items():
         pareto = model.pareto
-        Config.OUTPUT_GENETIC_MODELS.joinpath(f"{tasks}.json").write_text(json.dumps(pareto))
+        Config.OUTPUT_GENETIC_MODELS.joinpath(f"{tasks}.txt").write_text(str(pareto))
     for tasks, model in models.items():
         pareto = model.pareto
         dataset = RLDataset(training_buffers[tasks])

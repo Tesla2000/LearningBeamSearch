@@ -1,7 +1,7 @@
 import random
-import re
+from collections import defaultdict
 from statistics import fmean
-from typing import Type
+from time import time
 
 import numpy as np
 import torch
@@ -14,35 +14,57 @@ from model_training.generate_taillard import generate_taillard
 
 
 def series_of_models_eval(
-    m_machines: int,
     iterations: int,
-    model_types: tuple[Type[nn.Module], ...],
+    models: dict[int, nn.Module],
+    time_constraints: list[int],
 ):
-    torch.manual_seed(Config.seed)
-    torch.cuda.manual_seed(Config.seed)
-    np.random.seed(Config.seed)
-    random.seed(Config.seed)
-    generator = RandomNumberGenerator(Config.seed)
-    models_by_type = {}
-    for model_type in model_types:
-        models_by_type[model_type] = {}
-        for model_path in Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}*"):
-            tasks = int(re.findall(r"_(\d+)", model_path.name)[0])
-            model = model_type(tasks, m_machines)
-            model.load_state_dict(torch.load(model_path))
-            model.eval()
-            model.to(Config.device)
-            models_by_type[model_type][tasks] = model
-    results = dict((model_type, []) for model_type in model_types)
-    for i in range(iterations):
-        working_time_matrix = generate_taillard(generator)
-        for model_type, models in models_by_type.items():
+    model_type = type(next(iter(models.values())))
+    results = []
+    for time_constraint in time_constraints:
+        beta = _calc_beta(models, time_constraint)
+        beta_dict = defaultdict(lambda: beta)
+        torch.manual_seed(Config.evaluation_seed)
+        torch.cuda.manual_seed(Config.evaluation_seed)
+        np.random.seed(Config.evaluation_seed)
+        random.seed(Config.evaluation_seed)
+        generator = RandomNumberGenerator(Config.evaluation_seed)
+        for i in range(iterations):
+            working_time_matrix = generate_taillard(generator)
             tree = Tree(working_time_matrix, models)
-            _, state = tree.beam_search(Config.minimal_beta)
-            results[model_type].append(state[-1, -1])
-        for model_type, result in results.items():
-            print(i, model_type.__name__, fmean(result))
-    for model_type, result in results.items():
-        Config.OUTPUT_RL_RESULTS.joinpath(model_type.__name__).write_text(str(result))
-
+            _, state = tree.beam_search(beta_dict)
+            results.append(state[-1, -1])
+            print(i, model_type.__name__, fmean(results))
+    Config.OUTPUT_RL_RESULTS.joinpath(model_type.__name__).write_text(str(results))
     return results
+
+
+def _calc_beta(models: dict, time_constraint: int) -> int:
+    init_beta = 100
+    completion_times = {}
+    while True:
+        completion_time = _get_completion_time(init_beta, models)
+        completion_times[init_beta] = completion_time
+        if completion_time > time_constraint:
+            break
+        init_beta *= 2
+    step = init_beta // 2
+    init_beta -= step
+    while step > 0:
+        step //= 2
+        completion_time = _get_completion_time(init_beta, models)
+        completion_times[init_beta] = completion_time
+        if completion_time > time_constraint:
+            init_beta -= step
+        else:
+            init_beta += step
+
+    return min(completion_times, key=lambda beta: (time_constraint - completion_times[beta]) ** 2)
+
+
+def _get_completion_time(init_beta: int, models: dict) -> float:
+    beta = defaultdict(lambda: init_beta)
+    working_time_matrix = np.random.randint(low=1, high=100, size=(Config.n_tasks, Config.m_machines))
+    tree = Tree(working_time_matrix, models)
+    start = time()
+    tree.beam_search(beta)
+    return time() - start
