@@ -14,8 +14,8 @@ from model_training.RLDataset import RLDataset
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.generate_taillard import generate_taillard
 from model_training.save_models import save_models
-from regression_models.GeneticRegressorCreator import GeneticRegressorCreator
-from regression_models.Perceptron import Perceptron
+from models.GeneticRegressorCreator import GeneticRegressorCreator
+from models.Perceptron import Perceptron
 
 
 def genetic_model(

@@ -49,7 +49,7 @@ if __name__ == "__main__":
                 min_size=Config.min_size,
                 models=models,
                 generator=generator,
-                output_file=Config.MODEL_RESULTS.joinpath(
+                output_file=Config.MODEL_TRAIN_LOG.joinpath(
                     f"{model_type.__name__}_{Config.n_tasks}_{Config.m_machines}_{Config.min_size}"
                 ).open("w"),
             )
@@ -72,7 +72,7 @@ if __name__ == "__main__":
                     for tasks in range(Config.min_size, Config.n_tasks + 1)
                 )
             else:
-                for model_path in Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}*"):
+                for model_path in Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}_*"):
                     tasks = int(re.findall(r"_(\d+)", model_path.name)[0])
                     model = model_type(tasks, Config.m_machines)
                     model.load_state_dict(torch.load(model_path))

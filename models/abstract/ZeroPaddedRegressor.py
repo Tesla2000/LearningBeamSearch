@@ -3,14 +3,14 @@ from abc import abstractmethod, ABC
 import torch
 from torch import nn
 
-from Config import Config
-
 
 class ZeroPaddedRegressor(nn.Module, ABC):
-    max_n_task: int = Config.n_tasks
     learning_rate = 5e-5
+    max_n_task: int
 
     def forward(self, x):
+        from Config import Config
+
         x = x.float()
         zeros = torch.zeros((x.shape[0], self.max_n_task + 1, x.shape[2])).to(
             Config.device

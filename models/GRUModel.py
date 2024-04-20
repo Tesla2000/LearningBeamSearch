@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from regression_models.abstract.BaseRegressor import BaseRegressor
+from models.abstract.BaseRegressor import BaseRegressor
 
 
 class GRURegressor(BaseRegressor):

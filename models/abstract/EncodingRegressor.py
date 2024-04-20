@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 
-from regression_models.EncodingNetwork import encoder
-from regression_models.abstract.BaseRegressor import BaseRegressor
+from models.EncodingNetwork import encoder
+from models.abstract.BaseRegressor import BaseRegressor
 
 
 class EncodingRegressor(BaseRegressor, ABC):

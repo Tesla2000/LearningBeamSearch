@@ -1,7 +1,7 @@
 from torch import nn
 
-from regression_models.EncodingNetwork import EncodingNetwork, encoder
-from regression_models.abstract.EncodingRegressor import EncodingRegressor
+from models.EncodingNetwork import EncodingNetwork, encoder
+from models.abstract.EncodingRegressor import EncodingRegressor
 
 
 class EncodingPerceptron(EncodingRegressor):

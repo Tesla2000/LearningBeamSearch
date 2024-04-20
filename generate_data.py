@@ -11,7 +11,7 @@ from time import time
 from Config import Config
 from beam_search.Tree import Tree
 from model_training.database_functions import create_tables, save_sample
-from regression_models.Perceptron import GenPerceptron
+from models.Perceptron import GenPerceptron
 
 
 def _generate_data(

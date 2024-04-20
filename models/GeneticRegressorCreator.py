@@ -6,7 +6,7 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split
 
-from regression_models.abstract.BaseRegressor import BaseRegressor
+from models.abstract.BaseRegressor import BaseRegressor
 
 
 class GeneticRegressor(BaseRegressor):
