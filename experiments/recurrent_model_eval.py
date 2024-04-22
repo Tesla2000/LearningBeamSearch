@@ -4,24 +4,26 @@ from statistics import fmean
 
 import numpy as np
 import torch
-from torch import nn
 
 from Config import Config
-from beam_search.Tree import Tree
+from beam_search.RecurrentTree import RecurrentTree
 from experiments._calc_beta import _calc_beta
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.generate_taillard import generate_taillard
+from models.RecurrentModel import RecurrentModel
 
 
-def series_of_models_eval(
+def recurrent_model_eval(
     iterations: int,
-    models: dict[int, nn.Module],
+    models: dict[int, RecurrentModel],
     time_constraints: list[int],
+    **_,
 ):
-    model_type = type(next(iter(models.values())))
+    _, model = models.popitem()
+    del models
     for time_constraint in time_constraints:
         results = []
-        beta = _calc_beta(models, time_constraint)
+        beta = _calc_beta({"": model}, time_constraint, recurrent=True)
         beta_dict = defaultdict(lambda: beta)
         torch.manual_seed(Config.evaluation_seed)
         torch.cuda.manual_seed(Config.evaluation_seed)
@@ -30,11 +32,8 @@ def series_of_models_eval(
         generator = RandomNumberGenerator(Config.evaluation_seed)
         for i in range(iterations):
             working_time_matrix = generate_taillard(generator)
-            tree = Tree(working_time_matrix, models)
-            _, state = tree.beam_search(beta_dict)
+            tree = RecurrentTree(working_time_matrix)
+            _, state = tree.beam_search(model, beta_dict)
             results.append(state[-1, -1])
-            print(i, model_type.__name__, fmean(results))
-        Config.OUTPUT_RL_RESULTS.joinpath(model_type.__name__ + "_" + str(time_constraint)).write_text(str(results))
-
-
-
+            print(i, type(model).__name__, fmean(results))
+        Config.OUTPUT_RL_RESULTS.joinpath(type(model).__name__ + "_" + str(time_constraint)).write_text(str(results))

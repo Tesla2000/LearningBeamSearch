@@ -3,7 +3,10 @@ from pathlib import Path
 import torch
 from torch import nn
 
+from models.ZeroPaddedConvRegressor import ZeroPaddedConvRegressor
+from models.ZeroPaddedMultilayerPerceptron import ZeroPaddedMultilayerPerceptron
 from models.ZeroPaddedPerceptron import ZeroPaddedPerceptron
+from models.ZeroPaddedWideMultilayerPerceptron import ZeroPaddedWideMultilayerPerceptron
 
 
 class _GeneticConfig:
@@ -93,7 +96,10 @@ class Config(_ConfigWithoutModels):
     universal_models = (
         # ConvRegressorAnySize,
         # ConvRegressorAnySizeOneHot,
-        ZeroPaddedPerceptron,
+        # ZeroPaddedMultilayerPerceptron,
+        # ZeroPaddedWideMultilayerPerceptron,
+        # ZeroPaddedPerceptron,
+        ZeroPaddedConvRegressor,
     )
     recurrent_models = (
         # RecurrentModel,

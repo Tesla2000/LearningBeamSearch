@@ -8,6 +8,11 @@ class ZeroPaddedRegressor(nn.Module, ABC):
     learning_rate = 5e-5
     max_n_task: int
 
+    def __init__(self, *args, **kwargs):
+        from Config import Config
+        super().__init__(*args, **kwargs)
+        self.max_n_task = Config.n_tasks
+
     def forward(self, x):
         from Config import Config
 
