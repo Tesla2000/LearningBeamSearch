@@ -91,47 +91,69 @@ class Tree:
             self._get_states([final_permutations[index]])[0],
         )
 
-    def fast_branch_and_bound(
-            self, seed: int = 3, tasks: Optional[np.array] = None, ub=float("inf")
-    ):
-        if tasks is None:
-            perms = np.array(tuple(permutations(range(self.n_tasks), seed)))
-        else:
-            perms = np.append(
-                np.array(
-                    reduce(
-                        operator.mul,
-                        (max(1, self.n_tasks - len(tasks) - i) for i in range(seed)),
+    @torch.no_grad()
+    def beam_search_eval(self, max_beta: int):
+        tuple(model.eval() for model in self.models.values())
+        buffer = dict((beta, [self.root]) for beta in range(1, max_beta))
+        for tasks in (tqdm(range(self.n_tasks - 1, 0, -1)) if self.verbose else range(self.n_tasks - 1, 0, -1)):
+            temp_buffer = dict((beta, np.array(
+                tuple(
+                    [*node, task]
+                    for node in b
+                    for task in filterfalse(node.__contains__, range(self.n_tasks))
+                )
+            )) for beta, b in buffer.items())
+            del buffer
+            for beta, buffer in temp_buffer.items():
+                if len(buffer) > beta:
+                    if tasks < Config.min_size:
+                        break
+                    states = self._get_states(buffer)
+                    headers = states[:, [-1]]
+                    remaining_tasks = list(
+                        list(filterfalse(tasks.__contains__, range(self.n_tasks)))
+                        for tasks in buffer
                     )
-                    * [tasks]
-                ),
-                np.array(
-                    tuple(
-                        permutations(
-                            filterfalse(tasks.__contains__, range(self.n_tasks)),
-                            min(self.n_tasks - len(tasks), seed),
+                    states = self.working_time_matrix[remaining_tasks]
+                    states = np.append(headers, states, axis=1)
+                    del headers
+                    predictions = []
+                    for i in range(0, len(states), Config.max_status_length):
+                        state = Tensor(states[i: i + Config.max_status_length]).to(
+                            self.device
                         )
+                        predictions.extend(self.models[tasks](state).flatten().cpu())
+                        del state
+                    del states
+                    buffer = buffer[
+                        torch.argsort(Tensor(predictions))[:beta]
+                    ]
+                    if len(buffer.shape) == 1:
+                        buffer = np.array([buffer])
+                    temp_buffer[beta] = buffer
+                    del predictions
+            buffer = temp_buffer
+        final_permutations = dict((beta, np.array(
+            tuple(
+                chain.from_iterable(
+                    map(
+                        lambda remainder: np.append(state, remainder),
+                        permutations(
+                            filterfalse(state.__contains__, range(self.n_tasks))
+                        ),
                     )
-                ),
-                axis=1,
+                    for state in buffer
+                )
             )
-        best_order = None
-        if len(perms[0]) != self.n_tasks:
-            states = self._get_states(perms)
-            if ub != float("inf"):
-                lbs = self._get_lbs(states, perms)
-                states = states[np.where(lbs < ub)]
-            for state_index in np.argsort(states[:, -1, -1]):
-                tasks = perms[state_index]
-                order, value = self.fast_branch_and_bound(seed, tasks, ub)
-                if value < ub:
-                    ub = value
-                    best_order = order
-            return best_order, ub
-        else:
-            states = self._get_states(perms)
-            index = np.argmin(states[:, -1, -1])
-            return perms[index], states[index, -1, -1]
+        )) for beta, buffer in temp_buffer.items())
+        del temp_buffer
+        final_states = dict((beta, self._get_states(final_permutation)) for beta, final_permutation in final_permutations.items())
+        indexes = dict((beta, np.argmin(final_state[:, -1, -1])) for beta, final_state in final_states.items())
+        return dict((beta, (
+            final_permutations[beta][index],
+            self._get_states([final_permutations[beta][index]])[0][-1, -1],
+        )) for beta, index in indexes.items())
+
 
     def fast_brute_force(self):
         perms = list(
@@ -151,10 +173,3 @@ class Tree:
                 states[:, row - 1, column], states[:, row, column - 1]
             )
         return states[:, 1:, 1:]
-
-    def _get_lbs(self, states: np.array, perms: np.array):
-        return (
-                states[:, -1, -1]
-                + np.sum(self.working_time_matrix[:, -1])
-                - np.sum(self.working_time_matrix[perms][:, :, -1], axis=1)
-        )
