@@ -66,7 +66,7 @@ class _ConfigWithoutModels(_GeneticConfig):
     save_interval = 10
     max_status_length = 10000
 
-    time_constraints = [25, 50, 100]
+    time_constraint = 120
     eval_iterations = 50
 
     criterion = nn.MSELoss()
@@ -99,7 +99,7 @@ class Config(_ConfigWithoutModels):
         # ZeroPaddedMultilayerPerceptron,
         # ZeroPaddedWideMultilayerPerceptron,
         # ZeroPaddedPerceptron,
-        ZeroPaddedConvRegressor,
+        # ZeroPaddedConvRegressor,
     )
     recurrent_models = (
         # RecurrentModel,

@@ -35,8 +35,8 @@ if __name__ == "__main__":
 
     colors = ["blue", "green", "red", "cyan", "magenta", "yellow", "black", "white"]
     for color_index, model_type in enumerate(labels_translator.keys()):
-        x_values = Config.time_constraints
-        y_values = tuple(fmean(eval(Config.OUTPUT_RL_RESULTS.joinpath(f"{model_type}_{constraint}").read_text())) for constraint in Config.time_constraints)
+        x_values = Config.time_constraint
+        y_values = tuple(fmean(eval(Config.OUTPUT_RL_RESULTS.joinpath(f"{model_type}_{constraint}").read_text())) for constraint in Config.time_constraint)
         plt.plot(
             x_values,
             y_values,
