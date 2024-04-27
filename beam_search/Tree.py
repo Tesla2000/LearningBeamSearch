@@ -13,7 +13,7 @@ class Tree:
 
     def __init__(
         self,
-        working_time_matrix: np.array,
+        working_time_matrix: np.ndarray,
         models: dict[int, nn.Module] = None,
         verbose: bool = True,
     ) -> None:
@@ -97,7 +97,7 @@ class Tree:
         index = np.argmin(states[:, -1, -1])
         return perms[index], self._get_states([perms[index]])[0]
 
-    def _get_states(self, perms: np.array):
+    def _get_states(self, perms: np.ndarray):
         states = np.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1))
         states[:, 1:, 1:] = self.working_time_matrix[perms]
         for row, column in product(

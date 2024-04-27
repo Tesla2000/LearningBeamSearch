@@ -66,7 +66,7 @@ class _ConfigWithoutModels(_GeneticConfig):
     save_interval = 10
     max_status_length = 10000
 
-    time_constraint = 120
+    time_constraints = [1, 2, 3, 4, 5, 25, 50, 100]
     eval_iterations = 50
 
     criterion = nn.MSELoss()

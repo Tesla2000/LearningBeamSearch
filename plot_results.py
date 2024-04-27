@@ -4,18 +4,26 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from Config import Config
+from table2latex import table2latex
 
 if __name__ == "__main__":
     labels_translator = {
-        "MultilayerPerceptron": "dwuwarstwory perceptron",
-        "ConvRegressor": "model konwolucyjny",
-        "ConvRegressorAnySizeOneHot": "model konwolucyjny stosowany na każdy etapie drzewa\nz enkodowaniem jedynkowym",
-        "ConvRegressorAnySize": "model konwolucyjny stosowany na każdy etapie drzewa",
-        "Perceptron": "perceptron",
-        "WideMultilayerPerceptron": "perceptron z gęstym blokiem",
-        "RecurrentModel": "model rekurencyjny",
-        # "ZeroPaddedPerceptron": "Perceptron wypełniany zerami",
-        # "EncodingPerceptron": "Perceptron na enkodowanych danych",
+        "MultilayerPerceptron": "Wielowarstwowy Perceptron",
+        "ConvRegressor": "CNN",
+        "ConvRegressorAnySizeOneHot": "CNN enkodowany jedynkowo",
+        "ConvRegressorAnySize": "CNN z globalnym poolingiem",
+        "Perceptron": "Perceptron",
+        "WideMultilayerPerceptron": "Perceptron z blokiem gęstym",
+        # "RecurrentModel": "RNN",
+        "ZeroPaddedPerceptron": "Perceptron z wypełniamiem zerami",
+        # "EncodingPerceptron": "EP",
+        # "MultilayerPerceptron": "trójwarstwory perceptron",
+        # "ConvRegressor": "model konwolucyjny",
+        # "ConvRegressorAnySizeOneHot": "model konwolucyjny stosowany na każdy etapie drzewa\nz enkodowaniem jedynkowym",
+        # "ConvRegressorAnySize": "model konwolucyjny stosowany na każdy etapie drzewa",
+        # "Perceptron": "perceptron",
+        # "WideMultilayerPerceptron": "perceptron z gęstym blokiem",
+        # "RecurrentModel": "model rekurencyjny",
     }
 
     # for log_file in Config.MODEL_TRAIN_LOG.iterdir():
@@ -33,20 +41,12 @@ if __name__ == "__main__":
     # plt.show()
     # plt.clf()
 
-    colors = ["blue", "green", "red", "cyan", "magenta", "yellow", "black", "white"]
-    for color_index, model_type in enumerate(labels_translator.keys()):
-        x_values = Config.time_constraint
-        y_values = tuple(fmean(eval(Config.OUTPUT_RL_RESULTS.joinpath(f"{model_type}_{constraint}").read_text())) for constraint in Config.time_constraint)
-        plt.plot(
-            x_values,
-            y_values,
-            label=labels_translator[model_type],
-            color=colors[color_index],
-        )
-    plt.ylabel("Średnia wyników")
-    plt.xlabel("Czas obliczeń [s]")
-    plt.legend(bbox_to_anchor=(0, -0.2), loc="upper left")
-    plt.subplots_adjust(bottom=0.5)
-    plt.savefig(Config.PLOTS / "evaluation.png")
-    plt.show()
-    plt.clf()
+    print(table2latex((["", ["beta", "", "", "", ""], ["czas [s]", "", ""]], [""] + Config.time_constraints, *tuple(
+        (labels_translator[model_type], *tuple(
+            round(fmean(
+                eval(
+                    Config.OUTPUT_RL_RESULTS.joinpath(f"{model_type}_{constraint}").read_text()
+                )
+            )) for constraint in Config.time_constraints
+        )) for model_type in labels_translator
+    )), caption="Wyniki sieci neuronowych w zależności od szerokości snopu i czasu", label="evaluation", placement="h"))

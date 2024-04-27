@@ -90,5 +90,5 @@ if __name__ == "__main__":
             evaluation(
                 Config.eval_iterations,
                 models,
-                Config.time_constraint,
+                Config.time_constraints,
             )
