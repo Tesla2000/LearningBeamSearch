@@ -91,4 +91,5 @@ if __name__ == "__main__":
                 Config.eval_iterations,
                 models,
                 Config.time_constraints,
+                Config.beta_constraints,
             )

@@ -1,17 +1,19 @@
 from abc import abstractmethod, ABC
 
-from models.EncodingNetwork import encoder
+
+from models.EncodingNetwork import EncodingNetwork
 from models.abstract.BaseRegressor import BaseRegressor
 
 
 class EncodingRegressor(BaseRegressor, ABC):
     def __init__(self):
+        from Config import Config
         super().__init__()
-        self._encoder = encoder
+        self.encoder = EncodingNetwork(Config.n_tasks, Config.m_machines).to(Config.device)
 
     def forward(self, x):
         x = x.float()
-        x = self._encoder(x)
+        x = self.encoder(x)
         x = self.predict(x)
         return x
 
