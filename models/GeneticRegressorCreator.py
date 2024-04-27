@@ -2,15 +2,14 @@ import random
 from itertools import pairwise, starmap, count
 from sqlite3 import OperationalError
 
-import numpy as np
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, random_split
 
-from regression_models.abstract.BaseRegressor import BaseRegressor
+from models.abstract.BaseRegressor import BaseRegressor
 
 
-class _GeneticModel(BaseRegressor):
+class GeneticRegressor(BaseRegressor):
     mutations = [
         "INCREASE_HIDDEN_SIZE",
         "DECREASE_HIDDEN_SIZE",
@@ -64,7 +63,7 @@ class _GeneticModel(BaseRegressor):
         return tuple(hidden_sizes)
 
 
-class GeneticRegressor:
+class GeneticRegressorCreator:
     batch_size: int = 32
 
     def __init__(self, n_tasks: int, m_machines: int, **_):
@@ -76,7 +75,7 @@ class GeneticRegressor:
             self._get_random_architecture() for _ in range(Config.n_genetic_models)
         )
         self.pareto: dict[tuple[int], tuple] = {}
-        self.best_model = _GeneticModel(
+        self.best_model = GeneticRegressor(
             n_tasks, m_machines, ((self.n_tasks + 1) * self.m_machines, 1)
         )
         self.best_model.to(self.device)
@@ -100,7 +99,7 @@ class GeneticRegressor:
             if random.random() > Config.pareto_retrain_rate:
                 continue
             del self.pareto[hidden_sizes]
-            self._retrain_hidden_sizes(hidden_sizes, criterion, dataset)
+            self.retrain_hidden_sizes(hidden_sizes, criterion, dataset)
         self.population = list(map(self._mutate, self.population))
         for hidden_sizes in {*random.sample(
                 tuple(map(self._mutate, self.pareto.keys())),
@@ -108,16 +107,12 @@ class GeneticRegressor:
         ), *random.sample(self.population, k=Config.n_population_samples)}:
             if hidden_sizes is self.examined_sizes:
                 continue
-            self._retrain_hidden_sizes(hidden_sizes, criterion, dataset)
+            self.retrain_hidden_sizes(hidden_sizes, criterion, dataset)
             self.examined_sizes.add(hidden_sizes)
-        # self.best_model = self._retrain_hidden_sizes(
-        #     random.choice(tuple(self.pareto.keys())), criterion, dataset
-        # )
-        # self.best_model.to(self.device)
 
     def _mutate(self, specimen: tuple[int, ...]) -> tuple[int, ...]:
-        mutation = random.choice(_GeneticModel.mutations)
-        return _GeneticModel.mutate(specimen, mutation)
+        mutation = random.choice(GeneticRegressor.mutations)
+        return GeneticRegressor.mutate(specimen, mutation)
 
     def _get_random_architecture(self):
         return (
@@ -126,25 +121,26 @@ class GeneticRegressor:
             1,
         )
 
-    def _retrain_hidden_sizes(
+    def retrain_hidden_sizes(
         self, hidden_sizes, criterion, dataset
-    ) -> _GeneticModel:
+    ) -> GeneticRegressor:
         from Config import Config
         train_dataset, val_dataset = random_split(dataset, [0.8, 0.2])
         train_loader = DataLoader(
             train_dataset, batch_size=min(Config.max_status_length, self.batch_size)
         )
         val_loader = DataLoader(val_dataset, batch_size=len(val_dataset))
-        model = _GeneticModel(self.n_tasks, self.m_machines, hidden_sizes)
+        model = GeneticRegressor(self.n_tasks, self.m_machines, hidden_sizes)
         optimizer = optim.Adam(
             model.parameters(), lr=model.learning_rate
         )
         model.to(self.device)
-        prev_loss = float('inf')
-        for epoch in count():
+        best_loss = float('inf')
+        consecutive_lacks_of_improvement = 0
+        for _ in count():
             model.train()
             for inputs, labels in train_loader:
-                inputs, labels = torch.Tensor(np.array(inputs)).transpose(2, 0).transpose(2, 1).to(self.device), labels.to(self.device)
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
                 optimizer.zero_grad()
                 outputs = model(inputs.float())
                 loss = criterion(outputs, labels.unsqueeze(-1).float())
@@ -153,14 +149,18 @@ class GeneticRegressor:
             model.eval()
             with torch.no_grad():
                 inputs, labels = next(iter(val_loader))
-                inputs, labels = torch.Tensor(np.array(inputs)).transpose(2, 0).transpose(2, 1).to(self.device), labels.to(self.device)
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
                 outputs = model(inputs.float())
                 number_of_weights = sum(p.numel() for p in model.parameters())
             loss = criterion(outputs, labels.unsqueeze(-1)).item()
-            if loss > prev_loss:
-                break
-            prev_loss = loss
-        self._add_to_pareto(hidden_sizes, number_of_weights, loss)
+            if loss > best_loss:
+                consecutive_lacks_of_improvement += 1
+                if consecutive_lacks_of_improvement == Config.maximal_consecutive_lacks_of_improvement:
+                    break
+            else:
+                consecutive_lacks_of_improvement = 0
+                best_loss = loss
+        self._add_to_pareto(hidden_sizes, number_of_weights, best_loss)
         return model
 
     def _add_to_pareto(self, hidden_sizes, number_of_weights, loss):

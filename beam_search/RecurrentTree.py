@@ -6,7 +6,7 @@ from torch import Tensor
 from tqdm import tqdm
 
 from Config import Config
-from regression_models.RecurrentModel import RecurrentModel
+from models.RecurrentModel import RecurrentModel
 
 
 class RecurrentTree:

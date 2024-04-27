@@ -19,8 +19,8 @@ from beam_search.Tree import Tree
 from model_training.RLDataset import RLDataset
 from model_training.database_functions import create_tables, save_sample
 from model_training.save_models import save_models
-from regression_models.GeneticRegressor import GeneticRegressor
-from regression_models.RecurrentModel import RecurrentModel
+from models.GeneticRegressorCreator import GeneticRegressorCreator
+from models.RecurrentModel import RecurrentModel
 
 
 def train_rl(
@@ -46,7 +46,7 @@ def train_rl(
             model,
             optim.Adam(
                 (
-                    model.best_model if isinstance(model, GeneticRegressor) else model
+                    model.best_model if isinstance(model, GeneticRegressorCreator) else model
                 ).parameters(),
                 lr=getattr(model, "learning_rate", 1e-5),
             ),

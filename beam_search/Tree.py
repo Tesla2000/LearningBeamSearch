@@ -42,7 +42,7 @@ class Tree:
                 )
             )
             del buffer
-            if len(temp_buffer) > max(Config.minimal_beta[tasks], int(beta[tasks])):
+            if len(temp_buffer) > int(beta[tasks]):
                 if tasks < Config.min_size:
                     break
                 states = self._get_states(temp_buffer)

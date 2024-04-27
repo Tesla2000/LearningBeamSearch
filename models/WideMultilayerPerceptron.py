@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from regression_models import MultilayerPerceptron
+from models import MultilayerPerceptron
 
 
 class WideMultilayerPerceptron(MultilayerPerceptron):

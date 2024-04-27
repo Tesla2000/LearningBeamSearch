@@ -1,12 +1,12 @@
-from torch import nn, Tensor
+from torch import nn
 import torch.nn.functional as F
-import torch
-from regression_models.abstract.BaseRegressor import BaseRegressor
+
+from models.abstract.BaseRegressor import BaseRegressor
 
 
-class ConvRegressorAnySize(BaseRegressor):
+class ConvRegressor(BaseRegressor):
     def __init__(self, *args):
-        super().__init__()
+        super(ConvRegressor, self).__init__()
         self.conv1 = nn.Conv2d(
             in_channels=1, out_channels=3, kernel_size=3, padding="same"
         )
@@ -14,10 +14,9 @@ class ConvRegressorAnySize(BaseRegressor):
             in_channels=3, out_channels=9, kernel_size=3, padding="same"
         )
         self.leaky_relu = nn.LeakyReLU()
-        self.fc = nn.Linear(in_features=10, out_features=1)
+        self.fc = nn.Linear(in_features=9, out_features=1)
 
     def predict(self, x):
-        n_tasks = x.shape[-2]
         if len(x.shape) < 4:
             x = x.unsqueeze(1)
         x = self.conv1(x)
@@ -27,7 +26,6 @@ class ConvRegressorAnySize(BaseRegressor):
         x = F.adaptive_avg_pool2d(x, (1, 1))
         x = x.squeeze(-1)
         x = x.squeeze(-1)
-        x = torch.concat((x, torch.full((x.shape[0], 1), n_tasks)), dim=1)
         return self.fc(x)
 
     def __str__(self):

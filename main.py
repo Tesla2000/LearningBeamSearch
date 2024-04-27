@@ -1,4 +1,5 @@
 import random
+import re
 
 import numpy as np
 import torch
@@ -7,9 +8,6 @@ from Config import Config
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 
 if __name__ == "__main__":
-    evaluation = getattr(
-        getattr(__import__(f'experiments.{Config.series_model_experiment}_eval'), Config.series_model_experiment + '_eval'),
-        Config.series_model_experiment + '_eval')
     if Config.train:
         for model_type in (
             *Config.series_models,
@@ -51,17 +49,47 @@ if __name__ == "__main__":
                 min_size=Config.min_size,
                 models=models,
                 generator=generator,
-                output_file=Config.MODEL_RESULTS.joinpath(
+                output_file=Config.MODEL_TRAIN_LOG.joinpath(
                     f"{model_type.__name__}_{Config.n_tasks}_{Config.m_machines}_{Config.min_size}"
                 ).open("w"),
             )
             Config.max_tasks = Config.n_tasks + 1
     else:
-        evaluation(
-            Config.m_machines,
-            Config.eval_iterations,
-            (
-                *Config.series_models,
-                *Config.universal_models,
-            ),
-        )
+        for model_type in (
+            *Config.series_models,
+            *Config.universal_models,
+            *Config.recurrent_models,
+        ):
+            models = {}
+            if model_type in (*Config.recurrent_models, *Config.universal_models):
+                model_path = next(Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}*"))
+                model = model_type()
+                model.load_state_dict(torch.load(model_path))
+                model.eval()
+                model.to(Config.device)
+                models = dict(
+                    (tasks, model)
+                    for tasks in range(Config.min_size, Config.n_tasks + 1)
+                )
+            else:
+                for model_path in Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}_*"):
+                    tasks = int(re.findall(r"_(\d+)", model_path.name)[0])
+                    model = model_type(tasks, Config.m_machines)
+                    model.load_state_dict(torch.load(model_path))
+                    model.eval()
+                    model.to(Config.device)
+                    models[tasks] = model
+            if model_type not in Config.recurrent_models:
+                evaluation = getattr(
+                    getattr(__import__(f'experiments.{Config.series_model_experiment}_eval'), Config.series_model_experiment + '_eval'),
+                    Config.series_model_experiment + '_eval')
+            else:
+                evaluation = getattr(
+                    getattr(__import__(f'experiments.{Config.recurrent_model_experiment}_eval'), Config.recurrent_model_experiment + '_eval'),
+                    Config.recurrent_model_experiment + '_eval')
+            evaluation(
+                Config.eval_iterations,
+                models,
+                Config.time_constraints,
+                Config.beta_constraints,
+            )
