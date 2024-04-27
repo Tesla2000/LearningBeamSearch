@@ -1,5 +1,6 @@
 import random
 from collections import defaultdict
+from itertools import chain
 from statistics import fmean
 
 import numpy as np
@@ -17,11 +18,11 @@ def series_of_models_eval(
     iterations: int,
     models: dict[int, nn.Module],
     time_constraints: list[int],
+    beta_constraints: list[int],
 ):
     model_type = type(next(iter(models.values())))
-    for time_constraint in time_constraints:
+    for beta in chain.from_iterable(((_calc_beta(models, time_constraint) for time_constraint in time_constraints), beta_constraints)):
         results = []
-        beta = _calc_beta(models, time_constraint)
         beta_dict = defaultdict(lambda: beta)
         torch.manual_seed(Config.evaluation_seed)
         torch.cuda.manual_seed(Config.evaluation_seed)
@@ -34,7 +35,7 @@ def series_of_models_eval(
             _, state = tree.beam_search(beta_dict)
             results.append(state[-1, -1])
             print(i, model_type.__name__, fmean(results))
-        Config.OUTPUT_RL_RESULTS.joinpath(model_type.__name__ + "_" + str(time_constraint)).write_text(str(results))
+        Config.OUTPUT_RL_RESULTS.joinpath(model_type.__name__ + "_" + str(beta)).write_text(str(results))
 
 
 
