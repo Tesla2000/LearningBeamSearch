@@ -60,14 +60,13 @@ class _ConfigWithoutModels(_GeneticConfig):
     results_average_size = 100
     train_buffer_size = 100
     beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
-    minimal_beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
     beta_attrition = 1.0
     gamma = 0.995
     save_interval = 10
     max_status_length = 10000
 
     time_constraints = [
-        1, 2, 3, 4, 5, 25, 50, 100
+        # 1, 2, 3, 4, 5, 25, 50, 100
     ]
     eval_iterations = 50
 
@@ -91,20 +90,20 @@ class Config(_ConfigWithoutModels):
     seed = 42
     evaluation_seed = 2137
     series_models = (
-        # Perceptron,
-        # ConvRegressor,
-        # WideMultilayerPerceptron,
-        # MultilayerPerceptron,
+        Perceptron,
+        ConvRegressor,
+        WideMultilayerPerceptron,
+        MultilayerPerceptron,
         # GeneticRegressor,
     )
     universal_models = (
-        # ConvRegressorAnySize,
-        # ConvRegressorAnySizeOneHot,
-        # ZeroPaddedMultilayerPerceptron,
-        # ZeroPaddedWideMultilayerPerceptron,
-        # ZeroPaddedPerceptron,
-        # ZeroPaddedConvRegressor,
-        EncodingPerceptron,
+        ConvRegressorAnySize,
+        ConvRegressorAnySizeOneHot,
+        ZeroPaddedMultilayerPerceptron,
+        ZeroPaddedWideMultilayerPerceptron,
+        ZeroPaddedPerceptron,
+        ZeroPaddedConvRegressor,
+        # EncodingPerceptron,
     )
     recurrent_models = (
         # RecurrentModel,

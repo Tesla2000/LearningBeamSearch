@@ -64,11 +64,11 @@ class Tree:
                     del state
                 del states
                 temp_buffer = temp_buffer[
-                    torch.argsort(Tensor(predictions))[
-                    : max(Config.minimal_beta[tasks], int(beta[tasks]))
-                    ]
+                    torch.argsort(Tensor(predictions))[:beta[tasks]]
                 ]
                 del predictions
+            if len(temp_buffer.shape) == 1:
+                temp_buffer = temp_buffer.reshape((1, -1))
             buffer = temp_buffer
         final_permutations = np.array(
             tuple(
