@@ -23,8 +23,8 @@ class _ConfigWithoutModels(_GeneticConfig):
     series_model_experiment = 'series_of_models'
     recurrent_model_experiment = 'recurrent_model'
     genetic_model_experiment = 'genetic_model'
-    # train = True
-    train = False
+    train = True
+    # train = False
 
     ROOT = Path(__file__).parent
     OUTPUT_GENETIC_MODELS = ROOT / "output_genetic_models"
@@ -52,21 +52,21 @@ class _ConfigWithoutModels(_GeneticConfig):
     recurrent_models = tuple()
     series_models = tuple()
 
-    n_tasks, m_machines = 50, 10
+    n_tasks, m_machines = 20, 10
     min_size = 4
-    train_time = 12 * 3600
+    train_time = 4 * 3600
     # train_time = 30
     minimal_counting_time = 000
     results_average_size = 100
     train_buffer_size = 100
     beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
-    beta_attrition = 1.0
+    beta_attrition = 1
     gamma = 0.995
     save_interval = 10
     max_status_length = 10000
 
     time_constraints = [
-        # 1, 2, 3, 4, 5, 25, 50, 100
+        1, 2, 3, 4, 5, 25, 50, 100
     ]
     eval_iterations = 50
 
@@ -106,7 +106,7 @@ class Config(_ConfigWithoutModels):
         # EncodingPerceptron,
     )
     recurrent_models = (
-        # RecurrentModel,
+        RecurrentModel,
     )
 
     genetic_models = (
