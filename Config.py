@@ -12,7 +12,7 @@ from models.ZeroPaddedWideMultilayerPerceptron import ZeroPaddedWideMultilayerPe
 class _GeneticConfig:
     gen_train_epochs = 3
     n_population_samples = 10
-    n_genetic_models = 20
+    n_genetic_models = 50
     pop_retrain_rate = 0.2
     pareto_retrain_rate = 0
     size_penalty = 100
@@ -83,7 +83,7 @@ class Config(_ConfigWithoutModels):
     from models import ConvRegressor, MultilayerPerceptron
     from models.ConvRegressorAnySize import ConvRegressorAnySize
     from models.ConvRegressorAnySizeOneHot import ConvRegressorAnySizeOneHot
-    from models.GeneticRegressorCreator import GeneticRegressor
+    from models.GeneticRegressor import GeneticRegressor
     from models.Perceptron import Perceptron
     from models.WideMultilayerPerceptron import WideMultilayerPerceptron
     from models.EncodingPerceptron import EncodingPerceptron
@@ -97,7 +97,6 @@ class Config(_ConfigWithoutModels):
         # ConvRegressor,
         # WideMultilayerPerceptron,
         # MultilayerPerceptron,
-        # GeneticRegressor,
     )
     universal_models = (
         # ConvRegressorAnySize,

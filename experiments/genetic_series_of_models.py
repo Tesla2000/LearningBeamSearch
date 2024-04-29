@@ -15,6 +15,7 @@ from model_training.RLDataset import RLDataset
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.generate_taillard import generate_taillard
 from model_training.save_models import save_models
+from models.GeneticRegressor import GeneticRegressor
 
 
 def genetic_model(
@@ -26,7 +27,6 @@ def genetic_model(
     train_time: int = Config.train_time,
     **_,
 ):
-    model_types = (*Config.series_models, *Config.universal_models)
     training_buffers = dict(
         (tasks, deque(maxlen=Config.train_buffer_size)) for tasks in range(Config.min_size, Config.n_tasks + 1)
     )
@@ -34,10 +34,9 @@ def genetic_model(
     buffered_results = deque(maxlen=Config.results_average_size)
     batch_size = 32
     models_lists = list(dict(
-        (tasks, model_type(tasks, Config.m_machines).to(Config.device))
+        (tasks, GeneticRegressor(tasks, Config.m_machines).to(Config.device))
         for tasks in range(Config.min_size, Config.n_tasks + 1)
-    ) for model_type in model_types)
-    model_type_results = dict((model_type.__name__, []) for model_type in model_types)
+    ) for _ in range(Config.n_genetic_models))
     optimizers = dict(
         (
             model,
