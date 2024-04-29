@@ -55,17 +55,17 @@ class Tree:
                 predictions = []
                 for i in range(0, len(states), Config.max_status_length):
                     state = Tensor(states[i: i + Config.max_status_length]).to(
-                        self.device
+                        Config.device
                     )
                     predictions.extend(self.models[tasks](state).flatten().cpu())
                     del state
                 del states
                 temp_buffer = temp_buffer[
-                    torch.argsort(Tensor(predictions))[
-                    : max(Config.minimal_beta[tasks], int(beta[tasks]))
-                    ]
+                    torch.argsort(Tensor(predictions))[:beta[tasks]]
                 ]
                 del predictions
+            if len(temp_buffer.shape) == 1:
+                temp_buffer = temp_buffer.reshape((1, -1))
             buffer = temp_buffer
         final_permutations = np.array(
             tuple(
@@ -145,7 +145,7 @@ class Tree:
                             absent_tasks.values())]
                         states = np.append(headers[list(absent_tasks.keys())], states, axis=1)
                         states = Tensor(states).to(
-                            self.device
+                            Config.device
                         )
                         model_predictions = self.models[tasks](states).flatten().cpu()
                         calculated.update(zip(absent_tasks.values(), model_predictions))
@@ -210,7 +210,7 @@ class Tree:
     #                 predictions = []
     #                 for i in range(0, len(states), Config.max_status_length):
     #                     state = Tensor(states[i: i + Config.max_status_length]).to(
-    #                         self.device
+    #                         Config.device
     #                     )
     #                     predictions.extend(self.models[tasks](state).flatten().cpu())
     #                     del state

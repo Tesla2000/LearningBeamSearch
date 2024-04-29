@@ -33,6 +33,8 @@ class _ConfigWithoutModels(_GeneticConfig):
     OUTPUT_REGRESSION_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_MODELS = ROOT / "output_rl_models"
     OUTPUT_RL_MODELS.mkdir(exist_ok=True)
+    OUTPUT_RL_MODELS = ROOT / "output_genetic_models"
+    OUTPUT_RL_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_RESULTS = ROOT / "output_rl_results"
     OUTPUT_RL_RESULTS.mkdir(exist_ok=True)
     MODEL_TRAIN_LOG = ROOT / "model_train_log"
@@ -60,8 +62,8 @@ class _ConfigWithoutModels(_GeneticConfig):
     results_average_size = 100
     train_buffer_size = 100
     beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
-    minimal_beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
-    beta_attrition = 1.0
+    genetic_beta = dict((tasks, 2) for tasks in range(n_tasks + 1))
+    beta_attrition = 1
     gamma = 0.995
     save_interval = 10
     max_status_length = 10000
