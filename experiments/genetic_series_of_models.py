@@ -1,3 +1,4 @@
+import random
 from collections import deque
 from itertools import count
 from statistics import fmean
@@ -28,7 +29,7 @@ def genetic_series_of_models(
     **_,
 ):
     training_buffers = dict(
-        (tasks, deque(maxlen=Config.train_buffer_size)) for tasks in range(Config.min_size, Config.n_tasks + 1)
+        (tasks, deque(maxlen=Config.genetic_train_buffer_length)) for tasks in range(Config.min_size, Config.n_tasks + 1)
     )
     results = []
     buffered_results = deque(maxlen=Config.results_average_size)
@@ -52,6 +53,8 @@ def genetic_series_of_models(
         for optimizer in optimizers.values()
     )
     start = time()
+    generation_counter = count(1)
+    generation = next(generation_counter)
     for epoch in count(1):
         if start + train_time < time():
             break
@@ -62,8 +65,6 @@ def genetic_series_of_models(
         for task_order, state in result:
             for tasks in range(min_size, n_tasks):
                 for model in models_lists[tasks]:
-                    # if model.predictions is None:
-                    #     continue
                     for model_prediction in model.predictions:
                         prediction_correct = np.array_equal(model_prediction, task_order[:len(model_prediction)])
                         model.correctness_of_predictions[-1] = model.correctness_of_predictions[-1] or prediction_correct
@@ -75,7 +76,7 @@ def genetic_series_of_models(
                 data = np.append(header, data, axis=0)
                 label = state[-1, -1]
                 training_buffers[tasks].append((data, label))
-        correct_model = tuple(min(filter(lambda model: model.correctness_of_predictions[-1], models_lists[tasks]), key=lambda model: sum(p.numel() for p in model.parameters()))for tasks in range(min_size, n_tasks))
+        correct_model = tuple(min(filter(lambda model: model.correctness_of_predictions[-1], models_lists[tasks]), key=lambda model: sum(p.numel() for p in model.parameters())) for tasks in range(min_size, n_tasks))
         tuple(model.correctness_of_predictions.__setitem__(-1, False) for models in models_lists.values() for model in models)
         tuple(model.correctness_of_predictions.__setitem__(-1, True) for model in correct_model)
         buffered_results.append(label.item())
@@ -100,6 +101,15 @@ def genetic_series_of_models(
                     optimizer.step()
                 schedulers[optimizer].step()
             if epoch % Config.save_interval == 0:
-                save_models(dict((tasks, model) for model in models), Config.OUTPUT_GENETIC_MODELS)
+                folder = Config.OUTPUT_GENETIC_MODELS.joinpath(str(generation))
+                folder.mkdir(exist_ok=True, parents=True)
+                save_models(dict((tasks, model) for model in models), folder)
+        if epoch % Config.genetic_iterations == 0:
+            generation = next(generation_counter)
+            for tasks in range(min_size, n_tasks):
+                chosen_models = random.choices(models_lists[tasks], tuple(fmean(model.correctness_of_predictions) for model in models_lists[tasks]), k=Config.n_genetic_models)
+                models_lists[tasks] = list(map(GeneticRegressor.mutate_randomly, chosen_models))
     for tasks, models in models_lists.items():
-        save_models(dict((tasks, model) for model in models), Config.OUTPUT_GENETIC_MODELS)
+        folder = Config.OUTPUT_GENETIC_MODELS.joinpath(str(next(generation_counter)))
+        folder.mkdir(exist_ok=True, parents=True)
+        save_models(dict((tasks, model) for model in models), folder)

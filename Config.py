@@ -10,13 +10,9 @@ from models.ZeroPaddedWideMultilayerPerceptron import ZeroPaddedWideMultilayerPe
 
 
 class _GeneticConfig:
-    gen_train_epochs = 3
-    n_population_samples = 10
     n_genetic_models = 50
-    pop_retrain_rate = 0.2
-    pareto_retrain_rate = 0
-    size_penalty = 100
-    n_pareto_samples = 10
+    genetic_iterations = 200
+    genetic_train_buffer_length = 300
 
 
 class _ConfigWithoutModels(_GeneticConfig):
@@ -78,6 +74,7 @@ class _ConfigWithoutModels(_GeneticConfig):
 
 
 class Config(_ConfigWithoutModels):
+    correctness_of_prediction_length = 100
     beta_constraints = range(1, 6)
     from models.RecurrentModel import RecurrentModel
     from models import ConvRegressor, MultilayerPerceptron

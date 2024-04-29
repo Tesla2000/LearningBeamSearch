@@ -1,8 +1,11 @@
 import random
+from collections import deque
 from itertools import pairwise, starmap
+from typing import Self
 
 import torch
 from torch import nn
+
 
 from models.abstract.BaseRegressor import BaseRegressor
 
@@ -16,8 +19,9 @@ class GeneticRegressor(BaseRegressor):
     ]
 
     def __init__(
-        self, n_tasks: int, m_machines: int, hidden_sizes: tuple[int, ...] = None
+        self, n_tasks: int = None, m_machines: int = None, hidden_sizes: tuple[int, ...] = None
     ):
+        from Config import Config
         super().__init__()
         self.m_machines = m_machines
         self.n_tasks = n_tasks
@@ -33,7 +37,7 @@ class GeneticRegressor(BaseRegressor):
         self.flatten = nn.Flatten()
         self.predictions = None
         self.name = type(self).__name__ + '_'.join(map(str, self.hidden_sizes))
-        self.correctness_of_predictions = []
+        self.correctness_of_predictions = deque(maxlen=Config.correctness_of_prediction_length)
 
     def predict(self, x: torch.Tensor, *args, **kwargs):
         x = self.flatten(x)
@@ -66,6 +70,10 @@ class GeneticRegressor(BaseRegressor):
             if len(hidden_sizes) > 2:
                 hidden_sizes.pop(-2)
         return tuple(hidden_sizes)
+
+    @classmethod
+    def mutate_randomly(cls, specimen: Self) -> Self:
+        return cls(hidden_sizes=cls.mutate(specimen.hidden_sizes, random.choice(cls.mutations)))
 
     def __hash__(self):
         return self.hidden_sizes.__hash__()
