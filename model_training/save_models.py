@@ -10,5 +10,5 @@ def save_models(models: dict[int, nn.Module], output_model_path: Path = Config.O
     for tasks, model in models.items():
         torch.save(
             model.state_dict(),
-            f"{output_model_path}/{type(model).__name__}_{tasks}_{Config.m_machines}.pth",
+            f"{output_model_path}/{model.name}_{tasks}_{Config.m_machines}.pth",
         )

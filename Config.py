@@ -22,9 +22,9 @@ class _GeneticConfig:
 class _ConfigWithoutModels(_GeneticConfig):
     series_model_experiment = 'series_of_models'
     recurrent_model_experiment = 'recurrent_model'
-    genetic_model_experiment = 'genetic_model'
-    # train = True
-    train = False
+    genetic_model_experiment = 'genetic_series_of_models'
+    train = True
+    # train = False
 
     ROOT = Path(__file__).parent
     OUTPUT_GENETIC_MODELS = ROOT / "output_genetic_models"
@@ -105,12 +105,12 @@ class Config(_ConfigWithoutModels):
         # ZeroPaddedWideMultilayerPerceptron,
         # ZeroPaddedPerceptron,
         # ZeroPaddedConvRegressor,
-        EncodingPerceptron,
+        # EncodingPerceptron,
     )
     recurrent_models = (
         # RecurrentModel,
     )
 
     genetic_models = (
-        # GeneticRegressorCreator,
+        GeneticRegressor,
     )

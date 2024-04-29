@@ -31,7 +31,9 @@ class GeneticRegressor(BaseRegressor):
             self.hidden_sizes = hidden_sizes
         self.layers = nn.ModuleList(starmap(nn.Linear, pairwise(self.hidden_sizes)))
         self.flatten = nn.Flatten()
-        self.model_results = []
+        self.predictions = None
+        self.name = type(self).__name__ + '_'.join(map(str, self.hidden_sizes))
+        self.correctness_of_predictions = []
 
     def predict(self, x: torch.Tensor, *args, **kwargs):
         x = self.flatten(x)
@@ -64,3 +66,14 @@ class GeneticRegressor(BaseRegressor):
             if len(hidden_sizes) > 2:
                 hidden_sizes.pop(-2)
         return tuple(hidden_sizes)
+
+    def __hash__(self):
+        return self.hidden_sizes.__hash__()
+
+    def __eq__(self, other):
+        if not isinstance(other, GeneticRegressor):
+            return False
+        return other.hidden_sizes == self.hidden_sizes
+
+    def __repr__(self):
+        return self.name
