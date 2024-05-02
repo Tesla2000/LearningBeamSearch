@@ -58,8 +58,8 @@ class _ConfigWithoutModels(_GeneticConfig):
     results_average_size = 100
     train_buffer_size = 100
     beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
-    genetic_beta = dict((tasks, 2) for tasks in range(n_tasks + 1))
     beta_attrition = 1
+    genetic_beta = dict((tasks, 2) for tasks in range(n_tasks + 1))
     gamma = 0.995
     save_interval = 10
     max_status_length = 10000
@@ -102,7 +102,6 @@ class Config(_ConfigWithoutModels):
         # ZeroPaddedWideMultilayerPerceptron,
         # ZeroPaddedPerceptron,
         # ZeroPaddedConvRegressor,
-        # EncodingPerceptron,
     )
     recurrent_models = (
         # RecurrentModel,

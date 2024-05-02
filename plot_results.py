@@ -8,7 +8,7 @@ from table2latex import table2latex
 
 if __name__ == "__main__":
     labels_translator = {
-        "MultilayerPerceptron": "Wielowarstwowy Perceptron",
+        "MultilayerPerceptron": "Trójwarstwowy Perceptron",
         "ConvRegressor": "CNN",
         "ConvRegressorAnySizeOneHot": "CNN enkodowany jedynkowo",
         "ConvRegressorAnySize": "CNN z globalnym poolingiem",
@@ -41,12 +41,12 @@ if __name__ == "__main__":
     # plt.show()
     # plt.clf()
 
-    print(table2latex((["", ["beta", "", "", "", ""], ["czas [s]", "", ""]], [""] + Config.time_constraints, *tuple(
-        (labels_translator[model_type], *tuple(
-            round(fmean(
-                eval(
-                    Config.OUTPUT_RL_RESULTS.joinpath(f"{model_type}_{constraint}").read_text()
-                )
-            )) for constraint in Config.time_constraints
-        )) for model_type in labels_translator
-    )), caption="Wyniki sieci neuronowych w zależności od szerokości snopu i czasu", label="evaluation", placement="h"))
+    # print(table2latex((["", ["beta", "", "", "", ""], ["czas [s]", "", ""]], [""] + Config.time_constraints, *tuple(
+    #     (labels_translator[model_type], *tuple(
+    #         round(fmean(
+    #             eval(
+    #                 Config.OUTPUT_RL_RESULTS.joinpath(f"{model_type}_{constraint}").read_text()
+    #             )
+    #         )) for constraint in Config.time_constraints
+    #     )) for model_type in labels_translator
+    # )), caption="Wyniki sieci neuronowych w zależności od szerokości snopu i czasu", label="evaluation", placement="h"))
