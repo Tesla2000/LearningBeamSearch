@@ -12,7 +12,7 @@ from models.ZeroPaddedWideMultilayerPerceptron import ZeroPaddedWideMultilayerPe
 class _GeneticConfig:
     gen_train_epochs = 3
     n_population_samples = 10
-    n_genetic_models = 20
+    n_genetic_models = 50
     pop_retrain_rate = 0.2
     pareto_retrain_rate = 0
     size_penalty = 100
@@ -33,6 +33,8 @@ class _ConfigWithoutModels(_GeneticConfig):
     OUTPUT_REGRESSION_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_MODELS = ROOT / "output_rl_models"
     OUTPUT_RL_MODELS.mkdir(exist_ok=True)
+    OUTPUT_RL_MODELS = ROOT / "output_genetic_models"
+    OUTPUT_RL_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_RESULTS = ROOT / "output_rl_results"
     OUTPUT_RL_RESULTS.mkdir(exist_ok=True)
     MODEL_TRAIN_LOG = ROOT / "model_train_log"
@@ -52,21 +54,22 @@ class _ConfigWithoutModels(_GeneticConfig):
     recurrent_models = tuple()
     series_models = tuple()
 
-    n_tasks, m_machines = 20, 10
+    n_tasks, m_machines = 50, 10
     min_size = 4
-    train_time = 4 * 3600
+    train_time = 12 * 3600
     # train_time = 30
     minimal_counting_time = 000
     results_average_size = 100
     train_buffer_size = 100
     beta = dict((tasks, 100) for tasks in range(n_tasks + 1))
     beta_attrition = 1
+    genetic_beta = dict((tasks, 2) for tasks in range(n_tasks + 1))
     gamma = 0.995
     save_interval = 10
     max_status_length = 10000
 
     time_constraints = [
-        10,
+        1, 2, 3, 4, 5, 25, 50, 100
     ]
     eval_iterations = 50
 
@@ -81,7 +84,7 @@ class Config(_ConfigWithoutModels):
     from models import ConvRegressor, MultilayerPerceptron
     from models.ConvRegressorAnySize import ConvRegressorAnySize
     from models.ConvRegressorAnySizeOneHot import ConvRegressorAnySizeOneHot
-    from models.GeneticRegressorCreator import GeneticRegressor
+    from models.GeneticRegressor import GeneticRegressor
     from models.Perceptron import Perceptron
     from models.WideMultilayerPerceptron import WideMultilayerPerceptron
     from models.EncodingPerceptron import EncodingPerceptron
@@ -91,21 +94,21 @@ class Config(_ConfigWithoutModels):
     seed = 42
     evaluation_seed = 2137
     series_models = (
-        Perceptron,
-        ConvRegressor,
-        WideMultilayerPerceptron,
-        MultilayerPerceptron,
+        # Perceptron,
+        # ConvRegressor,
+        # WideMultilayerPerceptron,
+        # MultilayerPerceptron,
     )
     universal_models = (
-        ConvRegressorAnySize,
-        ConvRegressorAnySizeOneHot,
-        ZeroPaddedMultilayerPerceptron,
-        ZeroPaddedWideMultilayerPerceptron,
-        ZeroPaddedPerceptron,
-        ZeroPaddedConvRegressor,
+        # ConvRegressorAnySize,
+        # ConvRegressorAnySizeOneHot,
+        # ZeroPaddedMultilayerPerceptron,
+        # ZeroPaddedWideMultilayerPerceptron,
+        # ZeroPaddedPerceptron,
+        # ZeroPaddedConvRegressor,
     )
     recurrent_models = (
-        RecurrentModel,
+        # RecurrentModel,
     )
 
     genetic_models = (

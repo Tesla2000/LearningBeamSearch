@@ -15,7 +15,6 @@ from model_training.RLDataset import RLDataset
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.generate_taillard import generate_taillard
 from model_training.save_models import save_models
-from models.GeneticRegressorCreator import GeneticRegressorCreator
 
 
 def series_of_models(
@@ -39,9 +38,7 @@ def series_of_models(
         (
             model,
             optim.Adam(
-                (
-                    model.best_model if isinstance(model, GeneticRegressorCreator) else model
-                ).parameters(),
+                model.parameters(),
                 lr=getattr(model, "learning_rate", 1e-5),
             ),
         )

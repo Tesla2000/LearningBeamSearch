@@ -16,7 +16,7 @@ from model_training.RLDataset import RLDataset
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.generate_taillard import generate_taillard
 from model_training.save_models import save_models
-from models.GeneticRegressorCreator import GeneticRegressorCreator
+from models.GeneticRegressor import GeneticRegressorCreator
 from models.RecurrentModel import RecurrentModel
 
 
