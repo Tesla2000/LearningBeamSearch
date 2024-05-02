@@ -35,14 +35,14 @@ class RecurrentTree:
                     for task in filterfalse(node.__contains__, range(self.n_tasks))
                 )
             )
-            if len(temp_buffer) > max(Config.minimal_beta[tasks], int(beta[tasks])):
+            if len(temp_buffer) > beta[tasks]:
                 if tasks < Config.min_size:
                     break
                 results = tuple(chain.from_iterable(model(Tensor(self.working_time_matrix[task]).unsqueeze(0).to(Config.device), hn) for node, hn in zip(buffer, hns)
                                          for task in filterfalse(node.__contains__, range(self.n_tasks))))
                 predictions = results[::2]
                 indexes_to_leave = torch.argsort(Tensor(predictions))[
-                                   : max(Config.minimal_beta[tasks], int(beta[tasks]))
+                                   : beta[tasks]
                                    ]
                 del predictions
                 hns = results[1::2]
@@ -52,6 +52,8 @@ class RecurrentTree:
             else:
                 hns = tuple(model.update_hn(Tensor(self.working_time_matrix[task]).unsqueeze(0).to(Config.device), hn) for node, hn in zip(buffer, hns)
                             for task in filterfalse(node.__contains__, range(self.n_tasks)))
+            if len(temp_buffer.shape) == 1:
+                temp_buffer = temp_buffer.reshape((1, -1))
             buffer = temp_buffer
         final_permutations = np.array(
             tuple(

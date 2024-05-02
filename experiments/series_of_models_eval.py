@@ -22,7 +22,7 @@ def series_of_models_eval(
 ):
     model_type = type(next(iter(models.values())))
     for beta in chain.from_iterable(
-            ((_calc_beta(models, time_constraint) for time_constraint in time_constraints), beta_constraints)):
+            (beta_constraints, (_calc_beta(models, time_constraint) for time_constraint in time_constraints))):
         results = []
         beta_dict = defaultdict(lambda: beta)
         torch.manual_seed(Config.evaluation_seed)
@@ -36,4 +36,4 @@ def series_of_models_eval(
             _, state = tree.beam_search(beta_dict)
             results.append(state[-1, -1])
             print(i, model_type.__name__, fmean(results))
-        Config.OUTPUT_RL_RESULTS.joinpath(model_type.__name__ + "_" + str(beta)).write_text(str(results))
+        Config.OUTPUT_RL_RESULTS.joinpath(f"{model_type.__name__}_{beta}_{Config.n_tasks}").write_text(str(results))

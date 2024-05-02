@@ -23,8 +23,8 @@ class _ConfigWithoutModels(_GeneticConfig):
     series_model_experiment = 'series_of_models'
     recurrent_model_experiment = 'recurrent_model'
     genetic_model_experiment = 'genetic_model'
-    train = True
-    # train = False
+    # train = True
+    train = False
 
     ROOT = Path(__file__).parent
     OUTPUT_GENETIC_MODELS = ROOT / "output_genetic_models"
@@ -66,7 +66,7 @@ class _ConfigWithoutModels(_GeneticConfig):
     max_status_length = 10000
 
     time_constraints = [
-        1, 2, 3, 4, 5, 25, 50, 100
+        10,
     ]
     eval_iterations = 50
 
@@ -75,7 +75,8 @@ class _ConfigWithoutModels(_GeneticConfig):
 
 
 class Config(_ConfigWithoutModels):
-    beta_constraints = range(1, 6)
+    # beta_constraints = range(1, 6)
+    beta_constraints = tuple()
     from models.RecurrentModel import RecurrentModel
     from models import ConvRegressor, MultilayerPerceptron
     from models.ConvRegressorAnySize import ConvRegressorAnySize
@@ -94,7 +95,6 @@ class Config(_ConfigWithoutModels):
         ConvRegressor,
         WideMultilayerPerceptron,
         MultilayerPerceptron,
-        # GeneticRegressor,
     )
     universal_models = (
         ConvRegressorAnySize,
@@ -103,7 +103,6 @@ class Config(_ConfigWithoutModels):
         ZeroPaddedWideMultilayerPerceptron,
         ZeroPaddedPerceptron,
         ZeroPaddedConvRegressor,
-        # EncodingPerceptron,
     )
     recurrent_models = (
         RecurrentModel,
