@@ -10,12 +10,13 @@ if __name__ == "__main__":
     labels_translator = {
         "MultilayerPerceptron": "Trójwarstwowy Perceptron",
         "ConvRegressor": "CNN",
-        "ConvRegressorAnySizeOneHot": "CNN enkodowany jedynkowo",
-        "ConvRegressorAnySize": "CNN z globalnym poolingiem",
+        # "ConvRegressorAnySizeOneHot": "CNN enkodowany jedynkowo",
+        # "ConvRegressorAnySize": "CNN z globalnym poolingiem",
         "Perceptron": "Perceptron",
-        "WideMultilayerPerceptron": "Perceptron z blokiem gęstym",
+        # "WideMultilayerPerceptron": "Perceptron z blokiem gęstym",
         # "RecurrentModel": "RNN",
-        "ZeroPaddedPerceptron": "Perceptron z wypełniamiem zerami",
+        # "ZeroPaddedPerceptron": "Perceptron z wypełniamiem zerami",
+        "GeneticRegressor": "Mikstura modeli",
         # "EncodingPerceptron": "EP",
         # "MultilayerPerceptron": "trójwarstwory perceptron",
         # "ConvRegressor": "model konwolucyjny",
@@ -26,20 +27,22 @@ if __name__ == "__main__":
         # "RecurrentModel": "model rekurencyjny",
     }
 
-    # for log_file in Config.MODEL_TRAIN_LOG.iterdir():
-    #     data = np.loadtxt(log_file, delimiter=",")
-    #     x = np.linspace(*data[[0, -1], 0], num=len(data))
-    #     y = data[:, 1][np.where(x > Config.minimal_counting_time)]
-    #     x = x[np.where(x > Config.minimal_counting_time)]
-    #     del data
-    #     plt.plot(x, y, label=labels_translator.get(log_file.name.partition('_')[0], log_file.name.partition('_')[0]))
-    # plt.ylabel(f"Uśrednione {Config.results_average_size} ostatnich wyników")
-    # plt.xlabel("Czas szkolenia [s]")
-    # plt.legend(bbox_to_anchor=(0, -.2), loc='upper left')
-    # plt.subplots_adjust(bottom=.5)
-    # plt.savefig(Config.PLOTS / 'training.png')
-    # plt.show()
-    # plt.clf()
+    for log_file in Config.MODEL_TRAIN_LOG.glob("*50*"):
+        data = np.loadtxt(log_file, delimiter=",")
+        x = np.linspace(*data[[0, -1], 0], num=len(data))
+        y = data[:, 1][np.where(x > Config.minimal_counting_time)]
+        x = x[np.where(x > Config.minimal_counting_time)]
+        del data
+        conv_name = log_file.name.partition('_')[0]
+        if conv_name in labels_translator:
+            plt.plot(x, y, label=labels_translator.get(conv_name, conv_name))
+    plt.ylabel(f"Uśrednione {Config.results_average_size} ostatnich wyników")
+    plt.xlabel("Czas szkolenia [s]")
+    plt.legend(bbox_to_anchor=(0, -.2), loc='upper left')
+    plt.subplots_adjust(bottom=.5)
+    plt.savefig(Config.PLOTS / 'training.png')
+    plt.show()
+    plt.clf()
 
     # print(table2latex((["", ["beta", "", "", "", ""], ["czas [s]", "", ""]], [""] + Config.time_constraints, *tuple(
     #     (labels_translator[model_type], *tuple(

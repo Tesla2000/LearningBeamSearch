@@ -73,7 +73,8 @@ class GeneticRegressor(BaseRegressor):
 
     @classmethod
     def mutate_randomly(cls, specimen: Self) -> Self:
-        return cls(hidden_sizes=cls.mutate(specimen.hidden_sizes, random.choice(cls.mutations)))
+        from Config import Config
+        return cls(hidden_sizes=cls.mutate(specimen.hidden_sizes, random.choice(cls.mutations))).to(Config.device)
 
     def __hash__(self):
         return self.hidden_sizes.__hash__()

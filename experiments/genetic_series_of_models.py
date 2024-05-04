@@ -15,7 +15,7 @@ from beam_search.GeneticTree import GeneticTree
 from model_training.RLDataset import RLDataset
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.generate_taillard import generate_taillard
-from model_training.save_models import save_models
+from model_training.save_models import save_genetic_models
 from models.GeneticRegressor import GeneticRegressor
 
 
@@ -53,8 +53,7 @@ def genetic_series_of_models(
         for optimizer in optimizers.values()
     )
     start = time()
-    generation_counter = count(1)
-    generation = next(generation_counter)
+    generation = 0
     for epoch in count(1):
         if start + train_time < time():
             break
@@ -100,16 +99,31 @@ def genetic_series_of_models(
                     loss.backward()
                     optimizer.step()
                 schedulers[optimizer].step()
-            if epoch % Config.save_interval == 0:
-                folder = Config.OUTPUT_GENETIC_MODELS.joinpath(str(generation))
-                folder.mkdir(exist_ok=True, parents=True)
-                save_models(dict((tasks, model) for model in models), folder)
         if epoch % Config.genetic_iterations == 0:
-            generation = next(generation_counter)
+            generation += 1
+            folder = Config.OUTPUT_GENETIC_MODELS.joinpath(str(generation))
+            folder.mkdir(exist_ok=True, parents=True)
+            for tasks, models in models_lists.items():
+                save_genetic_models(models, folder)
             for tasks in range(min_size, n_tasks):
                 chosen_models = random.choices(models_lists[tasks], tuple(fmean(model.correctness_of_predictions) for model in models_lists[tasks]), k=Config.n_genetic_models)
-                models_lists[tasks] = list(map(GeneticRegressor.mutate_randomly, chosen_models))
+                models_lists[tasks] = list(set(map(GeneticRegressor.mutate_randomly, chosen_models)))
+            optimizers = dict(
+                (
+                    model,
+                    optim.Adam(
+                        model.parameters(),
+                        lr=getattr(model, "learning_rate", 1e-5),
+                    ),
+                )
+                for models in models_lists.values() for model in models
+            )
+            schedulers = dict(
+                (optimizer, ExponentialLR(optimizer, Config.gamma))
+                for optimizer in optimizers.values()
+            )
+    generation += 1
+    folder = Config.OUTPUT_GENETIC_MODELS.joinpath(str(generation))
+    folder.mkdir(exist_ok=True, parents=True)
     for tasks, models in models_lists.items():
-        folder = Config.OUTPUT_GENETIC_MODELS.joinpath(str(next(generation_counter)))
-        folder.mkdir(exist_ok=True, parents=True)
-        save_models(dict((tasks, model) for model in models), folder)
+        save_genetic_models(models, folder)
