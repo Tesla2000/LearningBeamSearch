@@ -6,6 +6,7 @@ import torch
 
 from Config import Config
 from model_training.RandomNumberGenerator import RandomNumberGenerator
+from models.GeneticRegressor import GeneticRegressor
 
 if __name__ == "__main__":
     if Config.train:
@@ -59,6 +60,7 @@ if __name__ == "__main__":
             *Config.series_models,
             *Config.universal_models,
             *Config.recurrent_models,
+            *Config.genetic_models,
         ):
             models = {}
             if model_type in (*Config.recurrent_models, *Config.universal_models):
@@ -71,6 +73,16 @@ if __name__ == "__main__":
                     (tasks, model)
                     for tasks in range(Config.min_size, Config.n_tasks + 1)
                 )
+            elif model_type in Config.genetic_models:
+                last_completed_generation = max(int(path.name) for path in Config.OUTPUT_GENETIC_MODELS.iterdir()) - 1
+                models = dict(
+                    (tasks, dict(((regressor := GeneticRegressor(tasks, Config.m_machines, tuple(
+                        map(int, model_path.name.partition("Regressor")[-1].rpartition("_")[0].split("_")))).to(Config.device), regressor.load_state_dict(torch.load(model_path)))[0],
+                                  float(model_path.name.rpartition("_")[-1].rpartition(".")[0])) for model_path in
+                                 Config.OUTPUT_GENETIC_MODELS.joinpath(str(last_completed_generation)).glob(
+                                     f"GeneticRegressor{10 * (tasks + 1)}_*")))
+                    for tasks in range(Config.min_size, Config.n_tasks + 1)
+                )
             else:
                 for model_path in Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}_*"):
                     tasks = int(re.findall(r"_(\d+)", model_path.name)[0])
@@ -79,14 +91,15 @@ if __name__ == "__main__":
                     model.eval()
                     model.to(Config.device)
                     models[tasks] = model
-            if model_type not in Config.recurrent_models:
-                evaluation = getattr(
-                    getattr(__import__(f'experiments.{Config.series_model_experiment}_eval'), Config.series_model_experiment + '_eval'),
-                    Config.series_model_experiment + '_eval')
+            if model_type in (*Config.series_models, *Config.universal_models):
+                experiment_path = Config.series_model_experiment
+            elif model_type in Config.genetic_models:
+                experiment_path = Config.genetic_model_experiment
             else:
-                evaluation = getattr(
-                    getattr(__import__(f'experiments.{Config.recurrent_model_experiment}_eval'), Config.recurrent_model_experiment + '_eval'),
-                    Config.recurrent_model_experiment + '_eval')
+                experiment_path = Config.recurrent_model_experiment
+            evaluation = getattr(
+                getattr(__import__(f'experiments.{experiment_path}_eval'), experiment_path + '_eval'),
+                experiment_path + '_eval')
             evaluation(
                 Config.eval_iterations,
                 models,

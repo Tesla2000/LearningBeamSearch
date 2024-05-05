@@ -27,7 +27,7 @@ class GeneticTree:
         self.verbose = verbose
 
     @torch.no_grad()
-    def beam_search(self, beta: dict[int, int]):
+    def beam_search(self, beta: dict[int, dict[GeneticRegressor, int]]):
         tuple(model.eval() for models in self.models_list.values() for model in models)
         buffer = [self.root]
         for tasks in (tqdm(range(self.n_tasks - 1, 0, -1)) if self.verbose else range(self.n_tasks - 1, 0, -1)):
@@ -48,7 +48,6 @@ class GeneticTree:
                 for tasks in temp_buffer
             )
             states = self.working_time_matrix[remaining_tasks]
-            del remaining_tasks
             states = np.append(headers, states, axis=1)
             del headers
             states = Tensor(states).to(
@@ -57,8 +56,10 @@ class GeneticTree:
             for model in self.models_list[tasks]:
                 predictions = model(states).flatten().cpu()
                 model.predictions = temp_buffer[
-                    torch.argsort(Tensor(predictions))[:beta[tasks]]
+                    torch.argsort(Tensor(predictions))[:beta[tasks][model]]
                 ]
+                if len(model.predictions.shape) == 1:
+                    model.predictions = model.predictions.reshape((1, -1))
             del states
             temp_buffer = np.unique(np.concatenate(tuple(model.predictions for model in self.models_list[tasks])), axis=0)
             if len(temp_buffer.shape) == 1:

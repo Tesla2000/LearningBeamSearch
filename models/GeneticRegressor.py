@@ -1,7 +1,7 @@
 import random
 from collections import deque
 from itertools import pairwise, starmap
-from typing import Self
+from typing import Self, Sequence
 
 import torch
 from torch import nn
@@ -19,7 +19,7 @@ class GeneticRegressor(BaseRegressor):
     ]
 
     def __init__(
-        self, n_tasks: int = None, m_machines: int = None, hidden_sizes: tuple[int, ...] = None
+        self, n_tasks: int = None, m_machines: int = None, hidden_sizes: Sequence[int] = None
     ):
         from Config import Config
         super().__init__()
