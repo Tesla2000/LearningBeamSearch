@@ -37,6 +37,6 @@ def genetic_series_of_models_eval(
             _, state = tree.beam_search(beta_dict)[0]
             results.append(state[-1, -1])
             print(i, GeneticRegressor.__name__, fmean(results))
-        Config.OUTPUT_RL_RESULTS.joinpath(GeneticRegressor.__name__ + "_" + str(beta)).write_text(str(results))
+        Config.OUTPUT_RL_RESULTS.joinpath(f"{GeneticRegressor.__name__}_{beta}_{Config.n_tasks}").write_text(str(results))
 
 

@@ -38,4 +38,4 @@ def recurrent_model_eval(
             _, state = tree.beam_search(model, beta_dict)
             results.append(state[-1, -1])
             print(i, type(model).__name__, fmean(results))
-        Config.OUTPUT_RL_RESULTS.joinpath(type(model).__name__ + "_" + str(beta)).write_text(str(results))
+        Config.OUTPUT_RL_RESULTS.joinpath(f"{type(model).__name__}_{beta}_{Config.n_tasks}").write_text(str(results))

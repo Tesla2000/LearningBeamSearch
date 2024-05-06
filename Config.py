@@ -49,9 +49,9 @@ class _ConfigWithoutModels(_GeneticConfig):
     recurrent_models = tuple()
     series_models = tuple()
 
-    n_tasks, m_machines = 50, 10
+    n_tasks, m_machines = 20, 10
     min_size = 4
-    train_time = 12 * 3600
+    train_time = 4 * 3600
     # train_time = 30
     minimal_counting_time = 000
     results_average_size = 100
@@ -64,7 +64,7 @@ class _ConfigWithoutModels(_GeneticConfig):
     max_status_length = 10000
 
     time_constraints = [
-        25, 50, 100
+        5, 10
     ]
     eval_iterations = 50
 
