@@ -60,7 +60,8 @@ class GeneticTree:
                     torch.argsort(Tensor(predictions))[:beta[tasks]]
                 ]
             del states
-            temp_buffer = np.unique(np.concatenate(tuple(model.predictions for model in self.models_list[tasks])), axis=0)
+            temp_buffer = np.unique(np.concatenate(tuple(model.predictions for model in self.models_list[tasks])),
+                                    axis=0)
             if len(temp_buffer.shape) == 1:
                 temp_buffer = temp_buffer.reshape((1, -1))
             buffer = temp_buffer
@@ -81,10 +82,9 @@ class GeneticTree:
         final_states = self._get_states(final_permutations)
         indexes = np.argwhere(np.min(final_states[:, -1, -1]) == final_states[:, -1, -1]).flatten()
         return tuple((
-            final_permutations[index],
-            self._get_states([final_permutations[index]])[0],
-        ) for index in indexes)
-
+                         final_permutations[index],
+                         self._get_states([final_permutations[index]])[0],
+                     ) for index in indexes)
 
     def _get_states(self, perms: Sequence):
         states = np.zeros((len(perms), len(perms[0]) + 1, self.m_machines + 1))

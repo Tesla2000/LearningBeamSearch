@@ -25,8 +25,6 @@ class _ConfigWithoutModels(_GeneticConfig):
     ROOT = Path(__file__).parent
     OUTPUT_GENETIC_MODELS = ROOT / "output_genetic_models"
     OUTPUT_GENETIC_MODELS.mkdir(exist_ok=True)
-    OUTPUT_REGRESSION_MODELS = ROOT / "output_regression_models"
-    OUTPUT_REGRESSION_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_MODELS = ROOT / "output_rl_models"
     OUTPUT_RL_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_MODELS = ROOT / "output_genetic_models"
@@ -65,7 +63,7 @@ class _ConfigWithoutModels(_GeneticConfig):
     max_status_length = 10000
 
     time_constraints = [
-        1, 2, 3, 4, 5, 25, 50, 100
+        25, 50, 100,
     ]
     eval_iterations = 50
 

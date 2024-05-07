@@ -14,3 +14,5 @@
 /plots/
 /output_genetic_models/
 /table2latex.py
+/model_train_log_20_tasks/
+/model_train_log_50_tasks/
