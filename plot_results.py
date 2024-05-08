@@ -8,21 +8,29 @@ from Config import Config
 from table2latex import table2latex
 
 
-def plot(labels_translator: dict, name: str):
+def plot(labels_translator: dict, name: str, norm: bool = False):
     for n_tasks in (50, 20,):
-        greedy_result = fmean(
-            eval(Config.OUTPUT_RL_RESULTS.joinpath("Greedy_20" if n_tasks == 20 else "Greedy").read_text()))
-
+        normalizer = np.array([tuple(map(lambda line: float(line.split(',')[1]), next(
+            Config.MODEL_TRAIN_LOG.glob(f"ZeroPaddedPerceptron_{n_tasks}*")).read_text().splitlines()))[-1]])
+        if norm:
+            normalizer = np.array(tuple(map(lambda line: float(line.split(',')[1]),
+                                            next(Config.MODEL_TRAIN_LOG.glob(
+                                                f"ZeroPaddedConvRegressor_{n_tasks}*")).read_text().splitlines())))
         for log_file in Config.MODEL_TRAIN_LOG.glob(f"*{n_tasks}*"):
+
             data = np.loadtxt(log_file, delimiter=",")
             x = np.linspace(*data[[0, -1], 0], num=len(data))
-            y = data[:, 1][np.where(x > Config.minimal_counting_time)] / greedy_result
+            y = data[:, 1][np.where(x > Config.minimal_counting_time)] / normalizer[np.array(
+                np.round(np.linspace(0, len(normalizer), len(np.where(x > Config.minimal_counting_time)[0]))).clip(0,
+                                                                                                                   len(normalizer) - 1),
+                dtype=int)]
             x = x[np.where(x > Config.minimal_counting_time)]
             del data
             conv_name = log_file.name.partition('_')[0]
             if conv_name in labels_translator:
                 plt.plot(x, y, label=labels_translator.get(conv_name, conv_name))
-        plt.axhline(y=1, color='black', linestyle='dotted')
+        if not norm:
+            plt.axhline(y=1, color='black', linestyle='dotted')
         plt.ylabel(f"Uśrednione {Config.results_average_size} wyników\nw relacji do algorytmu zachłannego")
         plt.xlabel("Czas szkolenia [s]")
         plt.legend(bbox_to_anchor=(0, -.2), loc='upper left')
@@ -39,7 +47,12 @@ def plot(labels_translator: dict, name: str):
                         Config.OUTPUT_RL_RESULTS.joinpath(
                             f"{model_type}_{constraint}_20" if n_tasks == 20 else f"{model_type}_{constraint}").read_text()
                     )
-                ) / greedy_result, 3) for constraint in Config.beta_constraints
+                ) / fmean(
+                    eval(
+                        Config.OUTPUT_RL_RESULTS.joinpath(
+                            f"ZeroPaddedPerceptron_{constraint}_20" if n_tasks == 20 else f"{model_type}_{constraint}").read_text()
+                    )
+                ), 3) for constraint in Config.beta_constraints
             )) for model_type in labels_translator
         )),
                           caption=f"Wyniki sieci neuronowych w zależności od szerokości snopu w relacji do algorytmu chciwego dla {n_tasks} zadań",
@@ -52,10 +65,17 @@ def plot(labels_translator: dict, name: str):
                     eval(
                         path.read_text()
                     )
-                ) / greedy_result, 3) for path in sorted(
+                ) / fmean(
+                    eval(
+                        reference_path.read_text()
+                    )
+                ), 3) for path, reference_path in zip(sorted(
                     filter(lambda path: path.name.endswith("_20") if n_tasks == 20 else not path.name.endswith("_20"),
                            Config.OUTPUT_RL_RESULTS.glob(f"{model_type}*")),
-                    key=lambda path: int(re.findall(r'\d+', path.name)[0]))[-(3 if n_tasks == 50 else 2):]
+                    key=lambda path: int(re.findall(r'\d+', path.name)[0]))[-(3 if n_tasks == 50 else 2):], sorted(
+                    filter(lambda path: path.name.endswith("_20") if n_tasks == 20 else not path.name.endswith("_20"),
+                           Config.OUTPUT_RL_RESULTS.glob("ZeroPaddedPerceptron*")),
+                    key=lambda path: int(re.findall(r'\d+', path.name)[0]))[-(3 if n_tasks == 50 else 2):])
             )) for model_type in labels_translator
         )),
                           caption=f"Wyniki sieci neuronowych w zależności od czasu w relacji do algorytmu chciwego dla {n_tasks} zadań",
@@ -76,5 +96,8 @@ if __name__ == "__main__":
         "ConvRegressor": "CNN",
         "ConvRegressorAnySizeOneHot": "CNN enkodowany jedynkowo",
         "ConvRegressorAnySize": "CNN z liczbą zadań jako skalarem",
+        "EncodingConvRegressor": "CNN z enkodowaniem",
+        "ZeroPaddedConvRegressor": "CNN z wypełnianiem zerami",
     }
-    plot(labels_translator_different_size_comparison, "Porównanie sposóbów rozwiązania różnych rozmiarów wejść")
+    plot(labels_translator_different_size_comparison, "Porównanie sposóbów rozwiązania różnych rozmiarów wejść",
+         norm=True)
