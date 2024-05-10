@@ -4,6 +4,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
+from models.EncodingConvRegressor import EncodingConvRegressor
 from models.ZeroPaddedConvRegressor import ZeroPaddedConvRegressor
 from models.ZeroPaddedMultilayerPerceptron import ZeroPaddedMultilayerPerceptron
 from models.ZeroPaddedPerceptron import ZeroPaddedPerceptron
@@ -74,8 +75,8 @@ class _ConfigWithoutModels(_GeneticConfig):
 
 class Config(_ConfigWithoutModels):
     correctness_of_prediction_length = 100
-    # beta_constraints = range(1, 6)
-    beta_constraints = tuple()
+    beta_constraints = range(1, 6)
+    # beta_constraints = tuple()
     from models.RecurrentModel import RecurrentModel
     from models import ConvRegressor, MultilayerPerceptron
     from models.ConvRegressorAnySize import ConvRegressorAnySize
@@ -102,11 +103,12 @@ class Config(_ConfigWithoutModels):
         # ZeroPaddedWideMultilayerPerceptron,
         # ZeroPaddedPerceptron,
         # ZeroPaddedConvRegressor,
+        EncodingConvRegressor,
     )
     recurrent_models = (
         # RecurrentModel,
     )
 
     genetic_models = (
-        GeneticRegressor,
+        # GeneticRegressor,
     )
