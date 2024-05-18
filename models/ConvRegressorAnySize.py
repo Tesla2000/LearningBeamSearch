@@ -42,10 +42,11 @@ if __name__ == '__main__':
     import torch
     from torchviz import make_dot
 
-    model = ConvRegressor()
-    x = torch.randn(1, 50, 10)
+    model_type = ConvRegressorAnySize
+    model = model_type(50, 10)
+    x = torch.randn(1, 51, 10)
     y = model(x)
-    make_dot(y, params=dict(list(model.named_parameters()))).render(ConvRegressor.__name__, format="png")
-    os.system(f"dot -Tpng {ConvRegressor.__name__} -o network_images/{ConvRegressor.__name__}.png")
-    os.remove(ConvRegressor.__name__)
-    os.remove(ConvRegressor.__name__ + ".png")
+    make_dot(y, params=dict(list(model.named_parameters()))).render(model_type.__name__, format="png")
+    os.system(f"dot -Tpng {model_type.__name__} -o network_images/{model_type.__name__}.png")
+    os.remove(model_type.__name__)
+    os.remove(model_type.__name__ + ".png")

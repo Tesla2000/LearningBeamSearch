@@ -25,7 +25,7 @@ def series_of_models(
     models: dict[int, nn.Module] = None,
     output_file: IO = None,
     train_time: int = Config.train_time,
-    output_model_path = Config.OUTPUT_RL_MODELS,
+    output_model_path=Config.OUTPUT_RL_MODELS,
     **_,
 ):
     training_buffers = dict(
@@ -55,36 +55,47 @@ def series_of_models(
         working_time_matrix = generate_taillard(generator)
         tree = Tree(working_time_matrix, models)
         task_order, state = tree.beam_search(Config.beta)
-        for tasks in range(min_size, n_tasks + 1):
-            if tasks == n_tasks:
-                header = np.zeros((1, m_machines))
-            else:
-                header = state[-tasks - 1].reshape(1, -1)
-            data = working_time_matrix[list(task_order[-tasks:])]
-            data = np.append(header, data, axis=0)
-            label = state[-1, -1]
-            training_buffers[tasks].append((data, label))
-        buffered_results.append(label.item())
-        results.append(fmean(buffered_results))
-        output_file.write(f"{int(time() - start)},{results[-1]:.2f}\n")
+        add_sample_to_buffers(min_size, n_tasks, m_machines, state, working_time_matrix, task_order, training_buffers,
+                              buffered_results, results, output_file, start)
         print(epoch, results[-1])
-        for tasks, model in models.items():
-            model.train()
-            dataset = RLDataset(training_buffers[tasks])
-            optimizer = optimizers[model]
-            train_loader = DataLoader(
-                dataset, batch_size=min(Config.max_status_length, batch_size)
-            )
-            for inputs, labels in train_loader:
-                inputs, labels = inputs.to(Config.device), labels.to(Config.device)
-                labels = labels.float().unsqueeze(1)
-                optimizer.zero_grad()
-                outputs = model(inputs.float())
-                loss = Config.criterion(outputs, labels)
-                loss.backward()
-                optimizer.step()
-            schedulers[optimizer].step()
-            Config.beta[tasks] *= Config.beta_attrition
+        train(models, training_buffers, optimizers, schedulers, batch_size)
         if epoch % Config.save_interval == 0:
             save_models(models, output_model_path)
     save_models(models, output_model_path)
+
+
+def train(models, training_buffers, optimizers, schedulers, batch_size):
+    for tasks, model in models.items():
+        model.train()
+        dataset = RLDataset(training_buffers[tasks])
+        optimizer = optimizers[model]
+        train_loader = DataLoader(
+            dataset, batch_size=batch_size
+        )
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(Config.device), labels.to(Config.device)
+            labels = labels.float().unsqueeze(1)
+            optimizer.zero_grad()
+            outputs = model(inputs.float())
+            loss = Config.criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+        schedulers[optimizer].step()
+        Config.beta[tasks] *= Config.beta_attrition
+
+
+def add_sample_to_buffers(min_size, n_tasks, m_machines, state, working_time_matrix, task_order, training_buffers,
+                          buffered_results, results, output_file, start):
+    for tasks in range(min_size, n_tasks + 1):
+        if tasks == n_tasks:
+            header = np.zeros((1, m_machines))
+        else:
+            header = state[-tasks - 1].reshape(1, -1)
+        data = working_time_matrix[
+            list(task_order[-tasks:])]
+        data = np.append(header, data, axis=0)
+        label = state[-1, -1]
+        training_buffers[tasks].append((data, label))
+    buffered_results.append(label.item())
+    results.append(fmean(buffered_results))
+    output_file.write(f"{int(time() - start)},{results[-1]:.2f}\n")

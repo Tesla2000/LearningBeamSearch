@@ -1,17 +1,13 @@
-from collections import defaultdict
-
-from Config import Config
-from beam_search.Tree import Tree
-from model_training.RandomNumberGenerator import RandomNumberGenerator
-from model_training.generate_taillard import generate_taillard
-from models.Perceptron import Perceptron
+import os
+from pathlib import Path
 
 if __name__ == "__main__":
-    generator = RandomNumberGenerator(Config.evaluation_seed)
-    models = dict(
-        (tasks, Perceptron(tasks, 10).to(Config.device))
-        for tasks in range(Config.min_size, Config.n_tasks + 1)
-    )
-    working_time_matrix = generate_taillard(generator)
-    tree = Tree(working_time_matrix, models)
-    _, state = tree.beam_search(defaultdict(lambda: 2))
+    for path in Path("output_rl_results").iterdir():
+        if path.is_dir():
+            continue
+        name, beta, tasks = path.name.split("_")
+        if int(beta) <= 5:
+            continue
+        folder = Path("output_rl_results") / tasks / "10" / "time" / beta
+        folder.mkdir(exist_ok=True, parents=True)
+        os.rename(path, folder.joinpath(name))
