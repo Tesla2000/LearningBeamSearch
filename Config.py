@@ -27,8 +27,6 @@ class _ConfigWithoutModels(_GeneticConfig):
     ROOT = Path(__file__).parent
     OUTPUT_GENETIC_MODELS = ROOT / "output_genetic_models"
     OUTPUT_GENETIC_MODELS.mkdir(exist_ok=True)
-    OUTPUT_REGRESSION_MODELS = ROOT / "output_regression_models"
-    OUTPUT_REGRESSION_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_MODELS = ROOT / "output_rl_models"
     OUTPUT_RL_MODELS.mkdir(exist_ok=True)
     OUTPUT_RL_RESULTS = ROOT / "output_rl_results"
@@ -50,9 +48,9 @@ class _ConfigWithoutModels(_GeneticConfig):
     recurrent_models = tuple()
     series_models = tuple()
 
-    n_tasks, m_machines = 20, 10
+    n_tasks, m_machines = 50, 10
     min_size = 4
-    train_time = 4 * 3600
+    train_time = 7 * 3600
     # train_time = 30
     minimal_counting_time = 000
     results_average_size = 100
@@ -65,7 +63,7 @@ class _ConfigWithoutModels(_GeneticConfig):
     max_status_length = 10000
 
     time_constraints = [
-        5, 10
+        2, 5, 10, 25, 50
     ]
     eval_iterations = 50
 
@@ -75,8 +73,8 @@ class _ConfigWithoutModels(_GeneticConfig):
 
 class Config(_ConfigWithoutModels):
     correctness_of_prediction_length = 100
-    beta_constraints = range(1, 6)
-    # beta_constraints = tuple()
+    # beta_constraints = range(1, 6)
+    beta_constraints = tuple()
     from models.RecurrentModel import RecurrentModel
     from models import ConvRegressor, MultilayerPerceptron
     from models.ConvRegressorAnySize import ConvRegressorAnySize
@@ -103,12 +101,12 @@ class Config(_ConfigWithoutModels):
         # ZeroPaddedWideMultilayerPerceptron,
         # ZeroPaddedPerceptron,
         # ZeroPaddedConvRegressor,
-        EncodingConvRegressor,
+        # EncodingConvRegressor,
     )
     recurrent_models = (
         # RecurrentModel,
     )
 
     genetic_models = (
-        # GeneticRegressor,
+        GeneticRegressor,
     )

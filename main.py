@@ -64,7 +64,7 @@ if __name__ == "__main__":
         ):
             models = {}
             if model_type in (*Config.recurrent_models, *Config.universal_models):
-                model_path = next(Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}*"))
+                model_path = next(Config.OUTPUT_RL_MODELS.joinpath(str(Config.n_tasks)).joinpath(str(Config.m_machines)).glob(f"{model_type.__name__}*"))
                 model = model_type()
                 model.load_state_dict(torch.load(model_path))
                 model.eval()
@@ -84,7 +84,7 @@ if __name__ == "__main__":
                     for tasks in range(Config.min_size, Config.n_tasks + 1)
                 )
             else:
-                for model_path in Config.OUTPUT_RL_MODELS.glob(f"{model_type.__name__}_*"):
+                for model_path in Config.OUTPUT_RL_MODELS.joinpath(str(Config.n_tasks)).rglob(f"{model_type.__name__}_*"):
                     tasks = int(re.findall(r"_(\d+)", model_path.name)[0])
                     model = model_type(tasks, Config.m_machines)
                     model.load_state_dict(torch.load(model_path))
