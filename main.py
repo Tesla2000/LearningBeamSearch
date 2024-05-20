@@ -77,7 +77,7 @@ if __name__ == "__main__":
                 last_completed_generation = max(int(path.name) for path in Config.OUTPUT_GENETIC_MODELS.iterdir()) - 1
                 models = dict(
                     (tasks, dict(((regressor := GeneticRegressor(tasks, Config.m_machines, tuple(
-                        map(int, model_path.name.partition("Regressor")[-1].rpartition("_")[0].split("_")))).to(Config.device), regressor.load_state_dict(torch.load(model_path)))[0],
+                        map(int, model_path.name.partition("Regressor")[-1].rpartition("_")[0].split("_")))).to(Config.device), regressor.load_state_dict(torch.load(model_path, map_location=Config.device)))[0],
                                   float(model_path.name.rpartition("_")[-1].rpartition(".")[0])) for model_path in
                                  Config.OUTPUT_GENETIC_MODELS.joinpath(str(last_completed_generation)).glob(
                                      f"GeneticRegressor{10 * (tasks + 1)}_*")))
