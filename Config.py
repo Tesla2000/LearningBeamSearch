@@ -35,6 +35,8 @@ class _ConfigWithoutModels(_GeneticConfig):
     MODEL_TRAIN_LOG.mkdir(exist_ok=True)
     PLOTS = ROOT / "plots"
     PLOTS.mkdir(exist_ok=True)
+    SVG_PLOTS = ROOT / "svg_plots"
+    SVG_PLOTS.mkdir(exist_ok=True)
     DATA_PATH = ROOT / Path("data.db")
     RL_DATA_PATH = ROOT / Path("rl_data.db")
 

@@ -35,9 +35,10 @@ def plot(labels_translator: dict, name: str, ylabel: str, norm: bool = False,
                 plt.plot(x, y, label=labels_translator.get(conv_name, conv_name))
         if not norm:
             plt.axhline(y=1, color='black', linestyle='dotted')
+        plt.ylim(.9, 1.3)
         plt.ylabel(ylabel)
         plt.xlabel("Czas szkolenia [s]")
-        plt.legend(loc='upper right')
+        plt.legend()
         # plt.subplots_adjust(bottom=.35)
         plt.savefig(Config.PLOTS / f'training_{n_tasks}_{name}.png')
         plt.show()
@@ -74,7 +75,7 @@ def plot_results(labels_translator: dict, n_tasks: int, normalize: str, name: st
         plt.ylabel("Uśredniony znormalizowany C_max")
         plt.plot(ticks, beta_results)
         plt.legend(labels_translator.values())
-        plt.savefig(Config.PLOTS / f"evaluation_{kind}_{name}.png")
+        # plt.savefig(Config.PLOTS / f"evaluation_{kind}_{name}.png")
         plt.show()
     # print(table2latex((["Architektura sieci", [r"$\beta$ [-]", "", "", "", ""]],
     #                    [""] + list(map(str, Config.beta_constraints)), *tuple(
@@ -130,25 +131,25 @@ def plot_perceptron_frequency():
     plt.plot(range(Config.min_size, len(paths) + Config.min_size), paths)
     plt.xlabel("Liczba zadań do uszeregowania [-]")
     plt.ylabel("Część ścieżek [%]")
-    plt.savefig(Config.PLOTS / 'perceptron_frequency.png')
+    # plt.savefig(Config.PLOTS / 'perceptron_frequency.png')
     plt.show()
     plt.clf()
 
 
 if __name__ == "__main__":
     # plot_perceptron_frequency()
-    # y_label = "Uśredniony znormalizowany C_max"
-    # labels_translator_model_comparison = {
-    #     "MultilayerPerceptron": "Trójwarstwowy Perceptron",
-    #     "ConvRegressor": "CNN",
-    #     "Perceptron": "Perceptron",
-    #     "WideMultilayerPerceptron": "Perceptron z blokiem gęstym",
-    #     "RecurrentModel": "RNN",
-    #     "GeneticRegressor": "Mieszanka modeli",
-    # }
-    # plot(labels_translator_model_comparison, "Prównanie modeli",
-    #      y_label,
-    #      maximal_counting_times=(21600, 3600))
+    y_label = "Uśredniony znormalizowany C_max"
+    labels_translator_model_comparison = {
+        "MultilayerPerceptron": "Trójwarstwowy Perceptron",
+        "ConvRegressor": "CNN",
+        "Perceptron": "Perceptron",
+        "WideMultilayerPerceptron": "Perceptron z blokiem gęstym",
+        "RecurrentModel": "RNN",
+        "GeneticRegressor": "Mieszanka modeli",
+    }
+    plot(labels_translator_model_comparison, "Prównanie modeli",
+         y_label,
+         maximal_counting_times=(21600, 3600))
     # labels_translator_different_size_comparison = {
     #     "ConvRegressor": "MARL CNN",
     #     "ConvRegressorAnySizeOneHot": "CNN enkodowany jedynkowo",
@@ -159,21 +160,21 @@ if __name__ == "__main__":
     # plot(labels_translator_different_size_comparison, "Porównanie sposóbów rozwiązania różnych rozmiarów wejść",
     #      y_label,
     #      norm=True, maximal_counting_times=(21600, 3600))
-    plt_results_over_n_tasks()
-    labels_translator_different_size_comparison = {
-        "MultilayerPerceptron": "Trójwarstwowy Perceptron",
-        "ConvRegressor": "CNN",
-        "Perceptron": "Perceptron",
-        "WideMultilayerPerceptron": "Perceptron z blokiem gęstym",
-        "RecurrentModel": "RNN",
-        "GeneticRegressor": "Mieszanka modeli",
-    }
-    plot_results(labels_translator_different_size_comparison, 50, "ZeroPaddedPerceptron", "modele")
-    labels_translator_different_size_comparison = {
-        "ConvRegressor": "MARL CNN",
-        "ConvRegressorAnySizeOneHot": "CNN enkodowany jedynkowo",
-        "ConvRegressorAnySize": "CNN z liczbą zadań jako skalarem",
-        "EncodingConvRegressor": "CNN z enkodowaniem",
-        "ZeroPaddedConvRegressor": "CNN z wypełnianiem zerami",
-    }
-    plot_results(labels_translator_different_size_comparison, 50, "ZeroPaddedConvRegressor", "size")
+    # plt_results_over_n_tasks()
+    # labels_translator_different_size_comparison = {
+    #     "MultilayerPerceptron": "Trójwarstwowy Perceptron",
+    #     "ConvRegressor": "CNN",
+    #     "Perceptron": "Perceptron",
+    #     "WideMultilayerPerceptron": "Perceptron z blokiem gęstym",
+    #     "RecurrentModel": "RNN",
+    #     "GeneticRegressor": "Mieszanka modeli",
+    # }
+    # plot_results(labels_translator_different_size_comparison, 50, "ZeroPaddedPerceptron", "modele")
+    # labels_translator_different_size_comparison = {
+    #     "ConvRegressor": "MARL CNN",
+    #     "ConvRegressorAnySizeOneHot": "CNN enkodowany jedynkowo",
+    #     "ConvRegressorAnySize": "CNN z liczbą zadań jako skalarem",
+    #     "EncodingConvRegressor": "CNN z enkodowaniem",
+    #     "ZeroPaddedConvRegressor": "CNN z wypełnianiem zerami",
+    # }
+    # plot_results(labels_translator_different_size_comparison, 50, "ZeroPaddedConvRegressor", "size")
