@@ -9,6 +9,7 @@ import torch
 from Config import Config
 from beam_search.RecurrentTree import RecurrentTree
 from experiments._calc_beta import _calc_beta
+from experiments.save_results import save_results
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.generate_taillard import generate_taillard
 from models.RecurrentModel import RecurrentModel
@@ -38,4 +39,4 @@ def recurrent_model_eval(
             _, state = tree.beam_search(model, beta_dict)
             results.append(state[-1, -1])
             print(i, type(model).__name__, fmean(results))
-        Config.OUTPUT_RL_RESULTS.joinpath(f"{type(model).__name__}_{beta}_{Config.n_tasks}").write_text(str(results))
+        save_results(RecurrentModel, Config.n_tasks, False, results)

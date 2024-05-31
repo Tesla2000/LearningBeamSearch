@@ -62,9 +62,9 @@ class _ConfigWithoutModels(_GeneticConfig):
     save_interval = 10
     max_status_length = 10000
 
-    time_constraints = [
-        2, 5, 10, 25, 50
-    ]
+    time_constraints = (
+        2, 5, 10,
+    )
     eval_iterations = 50
 
     criterion = nn.MSELoss()
@@ -104,7 +104,7 @@ class Config(_ConfigWithoutModels):
         # EncodingConvRegressor,
     )
     recurrent_models = (
-        # RecurrentModel,
+        RecurrentModel,
     )
 
     genetic_models = (

@@ -9,7 +9,9 @@ import torch
 
 from Config import Config
 from beam_search.GeneticTree import GeneticTree
+from experiments._calc_beta import _calc_beta
 from experiments._get_beta_genetic_models import _get_beta_genetic_models
+from experiments.save_results import save_results
 from model_training.RandomNumberGenerator import RandomNumberGenerator
 from model_training.generate_taillard import generate_taillard
 from models.GeneticRegressor import GeneticRegressor
@@ -23,8 +25,7 @@ def genetic_series_of_models_eval(
         **_,
 ):
     for time_constraint in time_constraints:
-        # beta = _calc_beta(models_lists, time_constraint, genetic=True)
-        beta = 10
+        beta = _calc_beta(models_lists, time_constraint, genetic=True)
         beta_dict, filtered_models = _get_beta_genetic_models(models_lists, beta)
         results = []
         torch.manual_seed(Config.evaluation_seed)
@@ -51,6 +52,7 @@ def genetic_series_of_models_eval(
             results.append(state[-1, -1])
             print(i, GeneticRegressor.__name__, fmean(results))
             print(perceptron_predictions_correct)
-        # Config.OUTPUT_RL_RESULTS.joinpath(f"{Config.n_tasks}/{Config.m_machines}/{GeneticRegressor.__name__}_{beta}_").write_text(str(results))
+        save_results(GeneticRegressor, Config.n_tasks, False, results)
+        Config.OUTPUT_RL_RESULTS.joinpath(f"{Config.n_tasks}/{Config.m_machines}/time/{GeneticRegressor.__name__}_{beta}_").write_text(str(results))
 
 
